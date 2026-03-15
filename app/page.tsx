@@ -6,8 +6,8 @@ export default function Dashboard() {
       
       {/* Header */}
       <header className="mb-8 border-b border-gray-200 pb-4">
-        <h1 className="text-3xl font-bold text-[#ee3224]">Cruz Roja Argentina</h1>
-        <p className="text-gray-500 text-sm mt-1">Equipo Nacional de Monitoreo de Emergencias y Desastres</p>
+        <h1 className="text-3xl font-bold text-[#ee3224]">Prueba Argentina</h1>
+        <p className="text-gray-500 text-sm mt-1">Equipo Monitoreo </p>
       </header>
 
       {/* Top Metric Cards */}
@@ -55,7 +55,7 @@ export default function Dashboard() {
           <p className="text-gray-500 font-medium">Leyenda:</p>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#ee3224]"></span>
-            <span className="text-gray-700">Con respuesta de IFRC</span>
+            <span className="text-gray-700">Con respuest</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#ff9e00]"></span>
@@ -63,7 +63,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-            <span className="text-gray-700">Sin respuesta de IFRC</span>
+            <span className="text-gray-700">Sin respuesta</span>
           </div>
         </div>
         
@@ -93,7 +93,7 @@ export default function Dashboard() {
               <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">2025-12-29</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  COR: Inundaciones en Corrientes
+                  Inundaciones en Corrientes
                 </td>
                 <td className="px-6 py-4">Inundación</td>
                 <td className="px-6 py-4">Corrientes, Argentina</td>
@@ -104,7 +104,7 @@ export default function Dashboard() {
               <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-05</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  PAT: Incendios Forestales en Patagonia
+                  Incendios Forestales en Patagonia
                 </td>
                 <td className="px-6 py-4">Incendio</td>
                 <td className="px-6 py-4">Epuyén y El Bolsón</td>
@@ -115,7 +115,7 @@ export default function Dashboard() {
               <tr className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-11</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  TUC: Inundación en Tucumán
+                  Inundaciones en Tucumán
                 </td>
                 <td className="px-6 py-4">Inundación</td>
                 <td className="px-6 py-4">Sur de Tucumán, Argentina</td>
