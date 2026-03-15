@@ -1,4 +1,46 @@
 import React from 'react';
+{/* Map Section - IFRC Style */}
+      <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden mt-8 mb-8">
+        
+        {/* Map Header */}
+        <div className="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">Mapa de Emergencias: Argentina</h2>
+          <span className="text-sm text-gray-500">Últimos 30 días</span>
+        </div>
+        
+        {/* Map Viewer (OpenStreetMap Embed) */}
+        <div className="w-full h-[400px] bg-gray-100 relative">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            frameBorder="0" 
+            scrolling="no" 
+            marginHeight="0" 
+            marginWidth="0" 
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.5%2C-55.5%2C-53.5%2C-21.5&amp;layer=mapnik" 
+            style={{ border: 0 }}
+            title="Mapa de Argentina"
+          ></iframe>
+        </div>
+
+        {/* IFRC Map Legend */}
+        <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-wrap gap-6 text-sm">
+          <p className="text-gray-500 font-medium">Leyenda:</p>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#ee3224]"></span>
+            <span className="text-gray-700">Con respuesta de IFRC</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#ff9e00]"></span>
+            <span className="text-gray-700">Respuesta Mixta</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+            <span className="text-gray-700">Sin respuesta de IFRC</span>
+          </div>
+        </div>
+        
+      </div>
 
 export default function Dashboard() {
   return (
