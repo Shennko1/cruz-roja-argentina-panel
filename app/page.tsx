@@ -7,7 +7,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="mb-8 border-b border-gray-200 pb-4">
         <h1 className="text-3xl font-bold text-[#ee3224]">Cruz Roja Argentina</h1>
-        <p className="text-gray-500 text-sm mt-1">Panel de Emergencias y Operaciones</p>
+        <p className="text-gray-500 text-sm mt-1">Equipo Nacional de Monitoreo de Emergencias y Desastres</p>
       </header>
 
       {/* Top Metric Cards */}
@@ -48,35 +48,35 @@ export default function Dashboard() {
               
               {/* Row 1 */}
               <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-12</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2025-29-12</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  BUE: Tormenta Severa - Zona Sur
+                  COR: Inundaciones en Corrientes
                 </td>
                 <td className="px-6 py-4">Inundación</td>
-                <td className="px-6 py-4">Gerli, Buenos Aires</td>
-                <td className="px-6 py-4 font-semibold">4,200</td>
+                <td className="px-6 py-4">Corrientes, Argentina</td>
+                <td className="px-6 py-4 font-semibold">83,728</td>
               </tr>
 
               {/* Row 2 */}
               <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-05</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  COR: Incendios Forestales - Punilla
+                  PAT: Incendios Forestales en Patagonia
                 </td>
                 <td className="px-6 py-4">Incendio</td>
-                <td className="px-6 py-4">Córdoba</td>
-                <td className="px-6 py-4 font-semibold">1,850</td>
+                <td className="px-6 py-4">Epuyén y El Bolsón</td>
+                <td className="px-6 py-4 font-semibold">3,500</td>
               </tr>
 
               {/* Row 3 */}
               <tr className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-02-28</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-11</td>
                 <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  LIT: Crecida del Río Paraná
+                  TUC: Inundación en Tucumán
                 </td>
                 <td className="px-6 py-4">Inundación</td>
-                <td className="px-6 py-4">Corrientes, Chaco</td>
-                <td className="px-6 py-4 font-semibold">5,100</td>
+                <td className="px-6 py-4">Sur de Tucumán, Argentina</td>
+                <td className="px-6 py-4 font-semibold">15,000</td>
               </tr>
 
             </tbody>
