@@ -113,7 +113,7 @@ export default function Dashboard() {
   </td>
   <td className="px-6 py-4">Inundación</td>
   <td className="px-6 py-4">Corrientes, Argentina</td>
-  <td className="px-6 py-4 font-semibold">83,728</td>
+  <td className="px-6 py-4 font-semibold">~1.500</td>
 </tr>
 
 {/* Row 2 */}
@@ -126,7 +126,7 @@ export default function Dashboard() {
   </td>
   <td className="px-6 py-4">Incendio forestal</td>
   <td className="px-6 py-4">Patagonia, Argentina</td>
-  <td className="px-6 py-4 font-semibold">-</td>
+  <td className="px-6 py-4 font-semibold">~5.000</td>
 </tr>
 
 {/* Row 3 */}
@@ -178,7 +178,7 @@ export default function Dashboard() {
   </td>
   <td className="px-6 py-4">Inundación</td>
   <td className="px-6 py-4">Tucumán, Argentina</td>
-  <td className="px-6 py-4 font-semibold">-</td>
+  <td className="px-6 py-4 font-semibold">~15.000</td>
 </tr>
 
 {/* Row 7 */}
@@ -191,7 +191,7 @@ export default function Dashboard() {
   </td>
   <td className="px-6 py-4">Tormenta</td>
   <td className="px-6 py-4">Centro, Argentina</td>
-  <td className="px-6 py-4 font-semibold">-</td>
+  <td className="px-6 py-4 font-semibold">~250</td>
 </tr>
 
             </tbody>
