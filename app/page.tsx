@@ -89,38 +89,96 @@ export default function Dashboard() {
             </thead>
             <tbody className="text-sm text-gray-800">
               
-              {/* Row 1 */}
-              <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2025-12-29</td>
-                <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  Inundaciones en Corrientes
-                </td>
-                <td className="px-6 py-4">Inundación</td>
-                <td className="px-6 py-4">Corrientes, Argentina</td>
-                <td className="px-6 py-4 font-semibold">83,728</td>
-              </tr>
+             {/* Row 1 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2025-12-29</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1ynnE4ImxwgSoqw6hZwRRws1pcZrXSdLv&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Inundaciones en Corrientes
+    </a>
+  </td>
+  <td className="px-6 py-4">Inundación</td>
+  <td className="px-6 py-4">Corrientes, Argentina</td>
+  <td className="px-6 py-4 font-semibold">83,728</td>
+</tr>
 
-              {/* Row 2 */}
-              <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-05</td>
-                <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  Incendios Forestales en Patagonia
-                </td>
-                <td className="px-6 py-4">Incendio</td>
-                <td className="px-6 py-4">Epuyén y El Bolsón</td>
-                <td className="px-6 py-4 font-semibold">3,500</td>
-              </tr>
+{/* Row 2 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-01-07</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1Mju0AhqmPyhD_q0IV4mvjk3rmInmgOzy&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Incendios Forestales en Patagonia
+    </a>
+  </td>
+  <td className="px-6 py-4">Incendio forestal</td>
+  <td className="px-6 py-4">Patagonia, Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
 
-              {/* Row 3 */}
-              <tr className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-11</td>
-                <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700 cursor-pointer">
-                  Inundaciones en Tucumán
-                </td>
-                <td className="px-6 py-4">Inundación</td>
-                <td className="px-6 py-4">Sur de Tucumán, Argentina</td>
-                <td className="px-6 py-4 font-semibold">15,000</td>
-              </tr>
+{/* Row 3 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-01-18</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1jKqBPCmJtUG8K3DCrksUqXimXz3KyNl6&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Remoción en masa en Comodoro Rivadavia
+    </a>
+  </td>
+  <td className="px-6 py-4">Remoción en masa</td>
+  <td className="px-6 py-4">Chubut, Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
+
+{/* Row 4 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-01-21</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1_8-Md0odJnFP6E0OphvTKI9OvyRMXLqB&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Crecidas del Pilcomayo
+    </a>
+  </td>
+  <td className="px-6 py-4">Inundación</td>
+  <td className="px-6 py-4">Norte de Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
+
+{/* Row 5 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-01-30</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1AFLAv3z9Bu0WVKBCUj798PVClxCCC6ei&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Tormentas en Cuyo y Patagonia
+    </a>
+  </td>
+  <td className="px-6 py-4">Tormenta</td>
+  <td className="px-6 py-4">Cuyo y Patagonia, Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
+
+{/* Row 6 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-03-11</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1nIYO0WNQxa8feAhbgOehh3-YW7OGMxKa&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Inundaciones en Tucumán
+    </a>
+  </td>
+  <td className="px-6 py-4">Inundación</td>
+  <td className="px-6 py-4">Tucumán, Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
+
+{/* Row 7 */}
+<tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+  <td className="px-6 py-4 whitespace-nowrap text-gray-500">2026-04-01</td>
+  <td className="px-6 py-4 font-medium text-[#ee3224] hover:text-red-700">
+    <a href="https://drive.google.com/open?id=1F8E3Tqh3bAMiq_BkF8LdxhITNZ3G5yL2&usp=drive_copy" target="_blank" rel="noopener noreferrer">
+      Tormentas en la región Centro
+    </a>
+  </td>
+  <td className="px-6 py-4">Tormenta</td>
+  <td className="px-6 py-4">Centro, Argentina</td>
+  <td className="px-6 py-4 font-semibold">-</td>
+</tr>
 
             </tbody>
           </table>
