@@ -5,28 +5,9 @@ export default function Monitoreo() {
   const [items, setItems] = useState([])
 
   useEffect(() => {
-    fetch("https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml")
-      .then(res => res.text())
-      .then(str => {
-        const parser = new DOMParser()
-        const xml = parser.parseFromString(str, "text/xml")
-
-        const nodes = Array.from(xml.getElementsByTagName("item"))
-
-        const parsed = nodes.map(node => {
-          const title = node.getElementsByTagName("title")[0]?.textContent
-          const description = node.getElementsByTagName("description")[0]?.textContent
-          const onset = node.getElementsByTagName("onset")[0]?.textContent
-
-          return {
-            title,
-            description,
-            onset
-          }
-        })
-
-        setItems(parsed)
-      })
+    fetch("https://api.rss2json.com/v1/api.json?rss_url=https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml")
+      .then(res => res.json())
+      .then(data => setItems(data.items || []))
       .catch(() => setItems([]))
   }, [])
 
@@ -40,14 +21,12 @@ export default function Monitoreo() {
       <div className="space-y-4">
 
         {items.map((item, i) => {
-
           const textoPlano = (item.description || "").replace(/<[^>]+>/g, "")
 
-          const fecha = item.onset
-            ? new Date(item.onset).toLocaleString("es-AR")
+          const fecha = item.pubDate
+            ? new Date(item.pubDate).toLocaleString("es-AR")
             : "Sin fecha"
 
-          // intento simple de ubicación
           const ubicacionMatch = textoPlano.match(/en (.*?)(\.|,)/i)
           const ubicacion = ubicacionMatch ? ubicacionMatch[1] : "No especificado"
 
