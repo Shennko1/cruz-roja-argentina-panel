@@ -39,8 +39,8 @@ export default function Dashboard() {
     </li>
 
     <li>
-      <a href="#" className="text-gray-600 hover:text-[#ee3224]">
-        Otra página
+      <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">
+        Monitoreo
       </a>
     </li>
 
