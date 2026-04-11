@@ -5,10 +5,24 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#f4f4f4] p-8 font-sans">
       
       {/* Header */}
-      <header className="mb-8 border-b border-gray-200 pb-4">
-        <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
-        <p className="text-gray-500 text-sm mt-1">Cruz Roja Argentina</p>
-      </header>
+     <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
+  
+  <img 
+    src="https://lh3.googleusercontent.com/sitesv/APaQ0SQWYLV56QBq_hxdDh8jMcNDI5Q43I-AIwdG_iHEuHj6_6qNz3acjzXkU0oLuev3CpGhGlFeYbrkyGbxKm7z4WPOXGhBeb0c3PdnvfUNeIZav4sCJVi49mqQXQGhrj67hChtjJHU9N_p1gGL7_-eVLOTvRCwHxWow-Ba_st4GZ9vIKkpxkN5TJc3w3E=w16383"
+    alt="Equipo"
+    className="h-12 w-auto object-contain"
+  />
+
+  <div>
+    <h1 className="text-3xl font-bold text-[#ee3224]">
+      Equipo Nacional de Monitoreo
+    </h1>
+    <p className="text-gray-500 text-sm mt-1">
+      Cruz Roja Argentina
+    </p>
+  </div>
+
+</header>
 
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
