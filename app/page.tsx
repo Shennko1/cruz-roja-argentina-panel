@@ -6,8 +6,8 @@ export default function Dashboard() {
       
       {/* Header */}
       <header className="mb-8 border-b border-gray-200 pb-4">
-        <h1 className="text-3xl font-bold text-[#ee3224]">Prueba Argentina</h1>
-        <p className="text-gray-500 text-sm mt-1">Equipo Monitoreo </p>
+        <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
+        <p className="text-gray-500 text-sm mt-1">Cruz Roja Argentina</p>
       </header>
 
       {/* Top Metric Cards */}
@@ -44,7 +44,7 @@ export default function Dashboard() {
             scrolling="no" 
             marginHeight="0" 
             marginWidth="0" 
-            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.5%2C-55.5%2C-53.5%2C-21.5&amp;layer=mapnik" 
+            src="https://www.google.com/maps/d/embed?mid=1H0v0xCT3MHMmLZtA93Rfb-wdHIgX0Zc&ehbc=2E312F" 
             style={{ border: 0 }}
             title="Mapa de Argentina"
           ></iframe>
