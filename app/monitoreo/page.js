@@ -1,47 +1,22 @@
-"use client"
-import { useEffect, useState } from "react"
-
-export default function Monitoreo() {
-  const [items, setItems] = useState([])
-
-  useEffect(() => {
-    fetch("https://api.rss2json.com/v1/api.json?rss_url=https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml")
-      .then(res => res.json())
-      .then(data => {
-        setItems(data.items || [])
-      })
-  }, [])
+{items.map((item, i) => {
+  const fecha = new Date(item.pubDate).toLocaleString("es-AR")
+  const textoPlano = item.description.replace(/<[^>]+>/g, "")
 
   return (
-    <div className="min-h-screen bg-[#f4f4f4] p-8">
+    <div key={i} className="bg-white p-4 rounded shadow-sm border-l-4 border-[#ee3224]">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Monitoreo - Alertas SMN
-      </h1>
+      <h2 className="font-semibold text-[#ee3224]">
+        {item.title}
+      </h2>
 
-      <div className="space-y-4">
+      <p className="text-xs text-gray-500 mt-1">
+        {fecha}
+      </p>
 
-        {items.map((item, i) => (
-          <div key={i} className="bg-white p-4 rounded shadow-sm">
-
-            <h2 className="font-semibold text-[#ee3224]">
-              {item.title}
-            </h2>
-
-            <p className="text-sm text-gray-600 mt-1">
-              {item.pubDate}
-            </p>
-
-            <p 
-              className="text-sm mt-2"
-              dangerouslySetInnerHTML={{ __html: item.description }}
-            />
-
-          </div>
-        ))}
-
-      </div>
+      <p className="text-sm mt-2 text-gray-800">
+        {textoPlano}
+      </p>
 
     </div>
   )
-}
+})}
