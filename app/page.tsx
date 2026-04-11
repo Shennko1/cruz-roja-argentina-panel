@@ -18,7 +18,7 @@ export default function Dashboard() {
       Equipo Nacional de Monitoreo
     </h1>
     <p className="text-gray-500 text-sm mt-1">
-      Cruz Roja Argentina
+      PRUEBA
     </p>
   </div>
 
@@ -51,15 +51,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
           <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Emergencias Activas (30 Días)</h2>
-          <p className="text-4xl font-bold text-gray-900 mt-2">4</p>
+          <p className="text-4xl font-bold text-gray-900 mt-2">X</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
           <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Personas Afectadas</h2>
-          <p className="text-4xl font-bold text-gray-900 mt-2">12,450</p>
+          <p className="text-4xl font-bold text-gray-900 mt-2">0</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
-          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Fondos Requeridos (ARS)</h2>
-          <p className="text-4xl font-bold text-gray-900 mt-2">$45.2M</p>
+          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Texto 3</h2>
+          <p className="text-4xl font-bold text-gray-900 mt-2">0</p>
         </div>
       </div>
 
