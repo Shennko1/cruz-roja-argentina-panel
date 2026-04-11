@@ -23,7 +23,30 @@ export default function Dashboard() {
   </div>
 
 </header>
+<nav className="mb-6 border-b border-gray-200">
+  <ul className="flex gap-6 text-sm font-medium">
+    
+    <li>
+      <a href="/" className="text-gray-600 hover:text-[#ee3224]">
+        Dashboard
+      </a>
+    </li>
 
+    <li>
+      <a href="/visor-mendoza" className="text-gray-600 hover:text-[#ee3224]">
+        Visor Mendoza
+      </a>
+    </li>
+
+    <li>
+      <a href="#" className="text-gray-600 hover:text-[#ee3224]">
+        Otra página
+      </a>
+    </li>
+
+  </ul>
+</nav>
+      
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
