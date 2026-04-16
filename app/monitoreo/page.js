@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 async function getSmnData() {
   let isAlertActive = false;
+  let description = "El equipo mantiene el monitoreo de los canales oficiales. Por el momento no se han emitido reportes de contingencia, pero la guardia sigue atenta a cualquier actualización climática en el territorio nacional antes de realizar el relevo a las 00:30.";
   let date = "S/D";
   let polygons = [];
 
