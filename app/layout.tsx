@@ -52,9 +52,6 @@ export default function RootLayout({
               <li>
                 <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">SMN - Alertas</a>
               </li>
-              <li>
-                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224]">Monitoreo y Guardias</a>
-              </li>
             </ul>
           </nav>
 
