@@ -6,7 +6,6 @@ async function getSmnAcpData() {
   let isAlertActive = false;
   let description = "Monitoreando canales oficiales. Sin novedades en el reporte a corto plazo.";
   let date = "S/D";
-  let link = "https://www.smn.gob.ar/alertas";
 
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -28,9 +27,6 @@ async function getSmnAcpData() {
       if (descMatch) {
          description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
       }
-      
-      const linkMatch = itemMatch[1].match(/<link>(.*?)<\/link>/);
-      if (linkMatch) link = linkMatch[1];
     }
     
     isAlertActive = !description.includes('No se han emitido Avisos');
@@ -38,7 +34,7 @@ async function getSmnAcpData() {
     console.error("Fallo al leer el RSS de corto plazo:", e);
   }
 
-  return { isAlertActive, description, date, link };
+  return { isAlertActive, description, date };
 }
 
 export default async function MonitoreoSMNPage() {
@@ -49,18 +45,21 @@ export default async function MonitoreoSMNPage() {
   const textClass = data.isAlertActive ? 'border-[#ee3224] text-red-900' : 'border-green-200 text-green-900';
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto p-4">
+      
+      {/* Encabezado */}
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Avisos a Muy Corto Plazo (ACP)</h2>
-          <p className="text-gray-600 text-sm">Monitoreo exclusivo del feed oficial del SMN.</p>
+          <h2 className="text-2xl font-bold text-gray-800">Monitoreo Meteorológico</h2>
+          <p className="text-gray-600 text-sm mt-1">Avisos a corto plazo y visor oficial del Sistema de Alertas Tempranas.</p>
         </div>
       </div>
 
+      {/* SECCIÓN 1: Avisos a Muy Corto Plazo (ACP) */}
       <div className={"p-6 rounded-xl shadow-md border-l-8 transition-colors " + alertClass}>
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-gray-900 leading-tight">Estado Operativo</h3>
-          <span className={"inline-block mt-2 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest " + badgeClass}>
+        <div className="mb-4 flex items-center gap-3">
+          <h3 className="text-lg font-bold text-gray-900 leading-tight">Avisos a Muy Corto Plazo (ACP)</h3>
+          <span className={"text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest " + badgeClass}>
             {data.isAlertActive ? 'ALERTA ACTIVA' : 'SIN NOVEDAD'}
           </span>
         </div>
@@ -78,13 +77,27 @@ export default async function MonitoreoSMNPage() {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-200/50">
-          <a href={data.link} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-600 hover:underline">
-            Acceder a la Fuente Oficial
-          </a>
+      <hr className="border-gray-200" />
+
+      {/* SECCIÓN 2: Visor Oficial SMN incrustado */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="text-blue-600">🌍</span> Visor Nacional de Alertas (SMN)
+        </h3>
+        
+        {/* El iframe actúa como una ventana embebida de la URL original */}
+        <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[800px] w-full">
+          <iframe 
+            src="https://www.smn.gob.ar/alertas" 
+            className="w-full h-full border-0"
+            title="Página Oficial SMN Alertas"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
         </div>
       </div>
+
     </div>
   );
 }
