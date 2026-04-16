@@ -4,55 +4,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f4f4f4] p-8 font-sans">
       
-      {/* Header */}
-     <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
-  
-  <img 
-    src="https://lh3.googleusercontent.com/sitesv/APaQ0SQWYLV56QBq_hxdDh8jMcNDI5Q43I-AIwdG_iHEuHj6_6qNz3acjzXkU0oLuev3CpGhGlFeYbrkyGbxKm7z4WPOXGhBeb0c3PdnvfUNeIZav4sCJVi49mqQXQGhrj67hChtjJHU9N_p1gGL7_-eVLOTvRCwHxWow-Ba_st4GZ9vIKkpxkN5TJc3w3E=w16383"
-    alt="Equipo"
-    className="h-12 w-auto object-contain"
-  />
-
-  <div>
-    <h1 className="text-3xl font-bold text-[#ee3224]">
-      Equipo Nacional de Monitoreo
-    </h1>
-    <p className="text-gray-500 text-sm mt-1">
-      PRUEBA
-    </p>
-  </div>
-
-</header>
-<nav className="mb-6 border-b border-gray-200">
-  <ul className="flex gap-6 text-sm font-medium">
-    
-    <li>
-      <a href="/" className="text-gray-600 hover:text-[#ee3224]">
-        Dashboard
-      </a>
-    </li>
-
-    <li>
-      <a href="/visor-mendoza" className="text-gray-600 hover:text-[#ee3224]">
-        Visor Mendoza
-      </a>
-    </li>
-
-    <li>
-      <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">
-        SMN - Alertas
-      </a>
-    </li>
-
-    <li>
-      <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224]">
-        Monitoreo y Guardias
-      </a>
-    </li>
-
-  </ul>
-</nav>
-      
+ 
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
