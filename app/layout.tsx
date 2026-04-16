@@ -47,7 +47,7 @@ export default function RootLayout({
                 <a href="/" className="text-gray-600 hover:text-[#ee3224]">Dashboard</a>
               </li>
               <li>
-                <a href="/monitoreo-guardias" className="text-gray-600 hover:text-[#ee3224]">Monitoreo y Guardias</a>
+                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224]">Monitoreo y Guardias</a>
               </li>
               <li>
                 <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">SMN - Alertas</a>
