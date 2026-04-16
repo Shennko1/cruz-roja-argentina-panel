@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 async function getSmnData() {
   let isAlertActive = false;
-  let description = "El equipo mantiene el monitoreo de los canales oficiales. Por el momento no se han emitido reportes de contingencia, pero la guardia sigue atenta a cualquier actualización climática en el territorio nacional antes de realizar el relevo a las 00:30.";
+  let description = "Sin novedades en el reporte o no se pudo establecer conexión con los canales oficiales.";
   let date = "S/D";
   let polygons = [];
 
@@ -22,12 +22,11 @@ async function getSmnData() {
     const pubDateMatch = indexXml.match(/<pubDate>(.*?)<\/pubDate>/);
     if (pubDateMatch) date = pubDateMatch[1];
 
-    const itemMatches = [...indexXml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+    // Capturamos todos los items y nos quedamos solo con los primeros dos
+    const itemMatches = [...indexXml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 2);
     
-    let alertasIndexadas = [];
     let descNarrativa = "";
 
-    // Primero leemos el índice para guardar los títulos y las fechas
     if (itemMatches.length > 0) {
        for(let i=0; i < itemMatches.length; i++) {
          let item = itemMatches[i][1];
@@ -37,20 +36,42 @@ async function getSmnData() {
          let itemDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
          
          if(titleMatch && guidMatch) {
-            let tituloLimpiado = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            let descLimpiada = descMatch ? descMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim() : "";
-            let itemDate = itemDateMatch ? itemDateMatch[1] : date;
+            let titulo = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+            let desc = descMatch ? descMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim() : "";
+            let fecha = itemDateMatch ? itemDateMatch[1] : "Fecha no especificada";
             let url = guidMatch[1].trim();
 
-            if (descLimpiada) {
-               descNarrativa += tituloLimpiado + ". " + descLimpiada + " ";
-            }
+            // Construcción del texto narrativo con distinción de fecha
+            descNarrativa += "Con fecha " + fecha + " se registra " + titulo + ". " + desc + " ";
 
-            alertasIndexadas.push({
-              url: url,
-              title: tituloLimpiado,
-              date: itemDate
-            });
+            let color = '#ffc107'; 
+            let t = titulo.toLowerCase();
+            if (t.includes('naranja')) color = '#ff9800';
+            else if (t.includes('roja')) color = '#f44336';
+
+            // Procesamiento de polígonos solo para este item
+            try {
+              let fileUrl = url.startsWith('//') ? 'https:' + url : url;
+              const capRes = await fetch(fileUrl, { headers });
+              const capText = await capRes.text();
+              const polyMatches = [...capText.matchAll(/<polygon>(.*?)<\/polygon>/g)];
+              
+              for (let p of polyMatches) {
+                 let rawCoords = p[1].trim().split(/\s+/).filter(c => c.includes(','));
+                 let leafletCoords = rawCoords.map(coord => {
+                   let [lat, lon] = coord.split(',');
+                   return [parseFloat(lat), parseFloat(lon)];
+                 });
+                 if (leafletCoords.length > 0) {
+                   polygons.push({
+                     coords: leafletCoords,
+                     title: titulo,
+                     date: fecha,
+                     color: color
+                   });
+                 }
+              }
+            } catch(e) { console.error("Error en CAP:", url); }
          }
        }
        if (descNarrativa.trim() !== "") {
@@ -58,50 +79,7 @@ async function getSmnData() {
          isAlertActive = !description.includes('No se han emitido Avisos');
        }
     }
-
-    // Ahora entramos a cada archivo secundario llevando los datos con nosotros
-    for (let alerta of alertasIndexadas) {
-      let fileUrl = alerta.url;
-      if (fileUrl.startsWith('//')) {
-        fileUrl = 'https:' + fileUrl;
-      }
-
-      // Definimos el color según el nivel de severidad en el título
-      let polyColor = '#ee3224'; // Rojo por defecto
-      let tituloMinuscula = alerta.title.toLowerCase();
-      if (tituloMinuscula.includes('amarilla')) polyColor = '#ffc107'; // Amarillo
-      else if (tituloMinuscula.includes('naranja')) polyColor = '#ff9800'; // Naranja
-      else if (tituloMinuscula.includes('roja')) polyColor = '#f44336'; // Rojo
-
-      try {
-        const capRes = await fetch(fileUrl, { headers });
-        const capText = await capRes.text();
-
-        const polyMatches = [...capText.matchAll(/<polygon>(.*?)<\/polygon>/g)];
-        for (let p of polyMatches) {
-           let rawCoords = p[1].trim().split(/\s+/).filter(c => c.includes(','));
-           let leafletCoords = rawCoords.map(coord => {
-             let [lat, lon] = coord.split(',');
-             return [parseFloat(lat), parseFloat(lon)];
-           });
-           
-           if (leafletCoords.length > 0) {
-             // Guardamos las coordenadas JUNTO con el título, fecha y color
-             polygons.push({
-               coords: leafletCoords,
-               title: alerta.title,
-               date: alerta.date,
-               color: polyColor
-             });
-           }
-        }
-      } catch(e) {
-        console.error("Fallo al leer las coordenadas de alerta:", fileUrl);
-      }
-    }
-  } catch (e) {
-    console.error("Fallo general en la lectura del índice SMN:", e);
-  }
+  } catch (e) { console.error("Error en índice:", e); }
 
   return { isAlertActive, description, date, polygons };
 }
@@ -109,61 +87,30 @@ async function getSmnData() {
 export default async function MonitoreoSMNPage() {
   const data = await getSmnData();
 
-  const alertClass = data.isAlertActive ? 'bg-red-50 border-[#ee3224]' : 'bg-green-50 border-green-500';
-  const badgeClass = data.isAlertActive ? 'bg-[#ee3224] text-white' : 'bg-green-500 text-white';
-  const textClass = data.isAlertActive ? 'border-[#ee3224] text-red-900' : 'border-green-200 text-green-900';
-
   const mapHtml = `
     <!DOCTYPE html>
     <html>
     <head>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
       <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-      <style>
-        body { margin: 0; padding: 0; background: #f0f0f0; font-family: sans-serif; }
-        #map { width: 100%; height: 100vh; }
-      </style>
+      <style>body { margin: 0; padding: 0; } #map { width: 100%; height: 100vh; }</style>
     </head>
     <body>
       <div id="map"></div>
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          try {
-            var map = L.map('map').setView([-38.4161, -63.6167], 4);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-              attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            var polyDataArray = ${JSON.stringify(data.polygons)};
-            
-            if (polyDataArray && polyDataArray.length > 0) {
-              var bounds = [];
-              
-              polyDataArray.forEach(function(polyData) {
-                // Dibuja el polígono con su color específico
-                var poly = L.polygon(polyData.coords, {
-                  color: polyData.color, 
-                  weight: 2, 
-                  fillColor: polyData.color, 
-                  fillOpacity: 0.5
-                }).addTo(map);
-                
-                // Agrega el cartelito rápido al pasar el mouse
-                poly.bindTooltip("<b>" + polyData.title + "</b>", { sticky: true });
-                
-                // Agrega el detalle completo al hacer clic
-                var popupContenido = "<b>" + polyData.title + "</b><br><span style='font-size:11px; color:#555;'>Emisión: " + polyData.date + "</span>";
-                poly.bindPopup(popupContenido);
-
-                polyData.coords.forEach(function(c) { bounds.push(c); });
-              });
-              
-              if (bounds.length > 0) {
-                map.fitBounds(bounds);
-              }
-            }
-          } catch (error) {
-            console.error("Error al cargar el motor de mapas: ", error);
+          var map = L.map('map').setView([-38.4161, -63.6167], 4);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+          var polys = ${JSON.stringify(data.polygons)};
+          if (polys.length > 0) {
+            var bounds = [];
+            polys.forEach(function(p) {
+              var poly = L.polygon(p.coords, {color: p.color, weight: 2, fillColor: p.color, fillOpacity: 0.5}).addTo(map);
+              poly.bindTooltip("<b>" + p.title + "</b>", {sticky: true});
+              poly.bindPopup("<b>" + p.title + "</b><br>Fecha: " + p.date);
+              p.coords.forEach(function(c) { bounds.push(c); });
+            });
+            map.fitBounds(bounds);
           }
         });
       </script>
@@ -173,47 +120,19 @@ export default async function MonitoreoSMNPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Monitoreo de Alertas Nacionales</h2>
-          <p className="text-gray-600 text-sm">Extracción automática de zonas afectadas y reportes en formato narrativo.</p>
-        </div>
-      </div>
-
+      <h2 className="text-2xl font-bold text-gray-800">Monitoreo de Alertas (Últimos 2 Eventos)</h2>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-1 space-y-6">
-          <div className={"p-6 rounded-xl shadow-md border-l-8 transition-colors " + alertClass}>
-            <div className="mb-4">
-              <h3 className="text-lg font-bold text-gray-900 leading-tight">Estado Operativo</h3>
-              <span className={"inline-block mt-2 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest " + badgeClass}>
-                {data.isAlertActive ? 'ALERTA ACTIVA' : 'SIN NOVEDAD'}
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Corte Horario</p>
-                <p className="text-gray-700 font-mono text-xs bg-white p-2 rounded border border-gray-100">{data.date}</p>
-              </div>
-
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Informe Consolidado</p>
-                <div className={"text-sm font-medium p-4 rounded-lg bg-white border leading-relaxed " + textClass}>
-                  {data.description}
-                </div>
-              </div>
+        <div className="xl:col-span-1">
+          <div className={`p-6 rounded-xl shadow-md border-l-8 ${data.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Informe Consolidado</p>
+            <div className="text-sm font-medium leading-relaxed text-gray-800">
+              {data.description}
             </div>
           </div>
         </div>
-
         <div className="xl:col-span-2">
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[600px] flex flex-col">
-            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Trazado Satelital y Coordenadas CAP</span>
-            </div>
-            <div className="flex-grow relative bg-[#f0f0f0]">
-              <iframe srcDoc={mapHtml} className="absolute inset-0 w-full h-full border-0" title="Mapa de Contingencias" />
-            </div>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden h-[600px]">
+            <iframe srcDoc={mapHtml} className="w-full h-full border-0" />
           </div>
         </div>
       </div>
