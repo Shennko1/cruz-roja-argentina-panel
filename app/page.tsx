@@ -40,7 +40,13 @@ export default function Dashboard() {
 
     <li>
       <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">
-        Monitoreo
+        SMN - Alertas
+      </a>
+    </li>
+
+    <li>
+      <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224]">
+        Monitoreo y Guardias
       </a>
     </li>
 
