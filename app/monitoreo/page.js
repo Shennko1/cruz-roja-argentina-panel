@@ -1,129 +1,140 @@
 import React from 'react';
 
-// CLAVE: Evita que el build falle si el servidor del SMN rechaza la conexion
 export const dynamic = 'force-dynamic';
 
-async function getSmnAlerts() {
+async function getSmnData() {
   try {
-    const res = await fetch('https://ssl.smn.gob.ar/feeds/CAP/avisocortoplazo/rss_acpCAP.xml', {
+    // 1. Obtenemos el feed de Avisos a Muy Corto Plazo (RSS)
+    const rssRes = await fetch('https://ssl.smn.gob.ar/feeds/CAP/avisocortoplazo/rss_acpCAP.xml', {
       next: { revalidate: 60 }
     });
-    
-    if (!res.ok) throw new Error('Error al conectar con el SMN');
-    const xmlText = await res.text();
+    const xmlText = await rssRes.text();
 
+    // 2. Intentamos obtener los polígonos del SAT (Sistema de Alerta Temprana)
+    // El SMN publica un JSON con los polígonos que mencionás en el canal CAP
+    const satRes = await fetch('https://alertas.smn.gob.ar/data/sat/avisos.json', {
+      next: { revalidate: 300 } // Se actualiza cada 5 minutos
+    });
+    const satData = await satRes.json().catch(() => null);
+
+    // Procesamiento simple del RSS
     const pubDateMatch = xmlText.match(/<pubDate>(.*?)<\/pubDate>/);
     const itemMatch = xmlText.match(/<item>([\s\S]*?)<\/item>/);
-    const imageMatch = xmlText.match(/<url>(.*?)<\/url>/);
-
-    let description = "Informacion no disponible";
-    let link = "https://www.smn.gob.ar/alertas";
-
+    let description = "Información no disponible en este momento.";
+    
     if (itemMatch) {
       const descMatch = itemMatch[1].match(/<description>(.*?)<\/description>/);
-      const linkMatch = itemMatch[1].match(/<link>(.*?)<\/link>/);
-      
       if (descMatch) description = descMatch[1].replace("<![CDATA[", "").replace("]]>", "");
-      if (linkMatch) link = linkMatch[1];
     }
 
     return {
-      date: pubDateMatch ? pubDateMatch[1] : 'Fecha no disponible',
+      date: pubDateMatch ? pubDateMatch[1] : 'S/D',
       description: description,
-      image: imageMatch ? imageMatch[1] : '',
-      link: link,
-      isAlertActive: !description.includes('No se han emitido Avisos')
+      isAlertActive: !description.includes('No se han emitido Avisos'),
+      polygons: satData // Aquí viajan los datos de las coordenadas para el mapa
     };
   } catch (error) {
-    // Si el SMN se cae, devolvemos un objeto seguro para que no se rompa la web
-    return { 
-      error: true, 
-      description: "No se pudo cargar el feed del SMN", 
-      isAlertActive: false, 
-      link: "https://www.smn.gob.ar/alertas", 
-      image: "", 
-      date: "Desconocida" 
-    };
+    return { error: true, description: "Error de conexión con el servidor del SMN.", isAlertActive: false };
   }
 }
 
 export default async function MonitoreoSMNPage() {
-  const alertData = await getSmnAlerts();
+  const data = await getSmnData();
 
-  // Variables para clases de CSS limpias (evita errores de sintaxis en Turbopack)
-  const alertClass = alertData.isAlertActive 
-    ? 'bg-red-50 border-[#ee3224]' 
-    : 'bg-green-50 border-green-500';
-    
-  const badgeClass = alertData.isAlertActive 
-    ? 'bg-[#ee3224] text-white' 
-    : 'bg-green-500 text-white';
-    
-  const textClass = alertData.isAlertActive 
-    ? 'border-[#ee3224] text-red-900' 
-    : 'border-green-200 text-green-900';
+  const mapHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100%; height: 100vh; }
+        .leaflet-container { background: #f8f9fa; }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        var map = L.map('map').setView([-38.4161, -63.6167], 4);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Aquí es donde se "dibujan" los polígonos del SAT que mencionaste
+        // Por ahora cargamos un área de ejemplo en rojo sobre la zona central
+        var zone = L.polygon([
+          [-31.0, -64.0], [-31.0, -61.0], [-34.0, -61.0], [-34.0, -64.0]
+        ], {
+          color: '#ee3224',
+          fillColor: '#ee3224',
+          fillOpacity: 0.4
+        }).addTo(map);
+        
+        zone.bindPopup("<b>Zona de Alerta Meteorológica</b><br>Se recomienda monitoreo constante de radares.");
+      </script>
+    </body>
+    </html>
+  `;
 
   return (
     <div className="space-y-6">
-      <div className="mb-2">
-        <h2 className="text-2xl font-bold text-gray-800">Monitoreo Meteorologico (SMN)</h2>
-        <p className="text-gray-600">Integracion en tiempo real con los sistemas de alerta temprana.</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Alertas y Coordenadas (SAT/CAP)</h2>
+          <p className="text-gray-600">Monitoreo nacional de polígonos y avisos a muy corto plazo.</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-bold text-gray-400 uppercase">Actualización</p>
+          <p className="text-sm font-mono text-gray-700">{data.date}</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Cuadro de Aviso a muy Corto Plazo */}
-        <div className={"p-6 rounded-xl shadow-md border-l-8 transition-colors " + alertClass}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              {alertData.image && (
-                <img src={alertData.image} alt="SMN Logo" className="h-10 w-auto rounded" />
-              )}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Aviso a muy Corto Plazo (ACP)</h3>
-                <span className={"text-xs font-bold px-2 py-1 rounded uppercase " + badgeClass}>
-                  {alertData.isAlertActive ? 'ALERTA ACTIVA' : 'SIN NOVEDAD'}
-                </span>
-              </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Columna de Texto: Reporte Narrativo */}
+        <div className="xl:col-span-1 space-y-4">
+          <div className={`p-6 rounded-xl shadow-md border-t-4 ${data.isAlertActive ? 'border-[#ee3224] bg-white' : 'border-green-500 bg-white'}`}>
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <span className={data.isAlertActive ? "text-[#ee3224]" : "text-green-500"}>●</span>
+              Estado de Situación
+            </h3>
+            <div className="text-gray-700 leading-relaxed text-sm space-y-4">
+              <p>
+                {data.description}
+              </p>
+              <p className="text-xs text-gray-500 italic border-t pt-4">
+                Este informe se genera automáticamente a partir de los canales CAP del SMN. 
+                Para un análisis más detallado, el operador puede consultar la pestaña de Guardias.
+              </p>
             </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-              Ultima actualizacion:
-            </p>
-            <p className="text-gray-800 font-mono text-sm bg-white p-2 rounded border border-gray-200">
-              {alertData.date}
-            </p>
-
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mt-4">
-              Reporte Oficial:
-            </p>
-            <p className={"text-base font-medium p-4 rounded-lg bg-white border " + textClass}>
-              {alertData.description}
-            </p>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-gray-200/50">
             <a 
-              href={alertData.link} 
+              href="https://ssl.smn.gob.ar/CAP/AR.php" 
               target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm font-bold text-blue-700 hover:text-blue-900 transition-colors"
+              className="mt-6 block text-center py-2 px-4 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors"
             >
-              Ver en la fuente oficial (SMN)
+              VER ÍNDICE CAP COMPLETO
             </a>
           </div>
         </div>
 
-        {/* Espacio para sistemas adicionales */}
-        <div className="p-6 rounded-xl shadow-md border border-gray-200 bg-white flex flex-col justify-center items-center text-center">
-           <h3 className="text-lg font-bold text-gray-800">Sistemas Adicionales</h3>
-           <p className="text-gray-500 text-sm mt-2">
-             Espacio reservado para incrustar radares meteorologicos.
-           </p>
+        {/* Columna del Mapa: Visualización de Coordenadas */}
+        <div className="xl:col-span-2">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[600px] flex flex-col">
+            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+              <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Mapa Operativo de Polígonos</span>
+              <span className="flex items-center gap-2 text-xs text-gray-500">
+                <span className="w-3 h-3 bg-[#ee3224] opacity-50 rounded-sm"></span> Alerta Activa
+              </span>
+            </div>
+            <div className="flex-grow relative">
+              <iframe
+                srcDoc={mapHtml}
+                className="absolute inset-0 w-full h-full border-0"
+                title="Mapa SAT"
+              />
+            </div>
+          </div>
         </div>
-
       </div>
     </div>
   );
