@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 async function getSmnData() {
   let isAlertActive = false;
-  let description = "Informacion no disponible en este momento. El equipo se encuentra monitoreando la evolucion de los canales oficiales.";
+  let description = "Informacion no disponible en este momento.";
   let date = "S/D";
   let link = "https://www.smn.gob.ar/alertas";
   let polygons = [];
@@ -57,7 +57,7 @@ async function getSmnData() {
         if (fileUrl.startsWith('/')) {
           fileUrl = 'https://ssl.smn.gob.ar' + fileUrl;
         } else {
-          fileUrl = 'https://ssl.smn.gob.ar/CAP/' + fileUrl;
+          fileUrl = 'https://ssl.smn.gob.ar/CAP/cap_salida/' + fileUrl;
         }
       }
 
@@ -140,7 +140,7 @@ export default async function MonitoreoSMNPage() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Monitoreo de Alertas CAP</h2>
-          <p className="text-gray-600 text-sm">Integracion directa con los sistemas del SMN para conciencia situacional.</p>
+          <p className="text-gray-600 text-sm">Integracion directa con los sistemas del SMN.</p>
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default async function MonitoreoSMNPage() {
         <div className="xl:col-span-2">
           <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[600px] flex flex-col">
             <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Visualizador de Poligonos Operativos</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Visualizador de Alertas</span>
             </div>
             <div className="flex-grow relative">
               <iframe srcDoc={mapHtml} className="absolute inset-0 w-full h-full border-0" title="Mapa CAP" />
