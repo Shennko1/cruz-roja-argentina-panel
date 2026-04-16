@@ -51,7 +51,7 @@ export default async function MonitoreoSMNPage() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Monitoreo Meteorológico</h2>
-          <p className="text-gray-600 text-sm mt-1">Avisos a corto plazo y visor oficial del Sistema de Alertas Tempranas.</p>
+          <p className="text-gray-600 text-sm mt-1">Avisos a corto plazo y accesos operativos del Sistema de Alertas Tempranas.</p>
         </div>
       </div>
 
@@ -81,20 +81,28 @@ export default async function MonitoreoSMNPage() {
 
       <hr className="border-gray-200" />
 
-      {/* SECCIÓN 2: Visor Oficial SMN incrustado */}
+      {/* SECCIÓN 2: Acceso Directo al Visor */}
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="text-blue-600">🌍</span> Visor Nacional de Alertas (SMN)
+          <span className="text-blue-600">🌍</span> Visor Nacional de Alertas
         </h3>
         
-        {/* El iframe actúa como una ventana embebida de la URL original */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[800px] w-full">
-          <iframe 
-            src="https://www.smn.gob.ar/alertas" 
-            className="w-full h-full border-0"
-            title="Página Oficial SMN Alertas"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          />
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            🗺️
+          </div>
+          <h4 className="text-gray-800 font-bold mb-2">Plataforma Externa Requerida</h4>
+          <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            Por protocolos de seguridad del Servicio Meteorológico Nacional, el mapa interactivo no puede incrustarse de forma directa. Accedé al visor oficial desde el siguiente enlace seguro.
+          </p>
+          <a 
+            href="https://www.smn.gob.ar/alertas" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
+          >
+            Abrir Mapa SMN en nueva pestaña
+          </a>
         </div>
       </div>
 
