@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 async function getSmnData() {
   let isAlertActive = false;
-  let description = "El equipo mantiene el monitoreo de los canales oficiales. Por el momento no se han emitido reportes de contingencia, pero la guardia sigue atenta a cualquier actualización climática en el territorio nacional antes de realizar el relevo.";
   let date = "S/D";
   let polygons = [];
 
@@ -24,17 +23,33 @@ async function getSmnData() {
 
     const itemMatches = [...indexXml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
     
+    let alertasIndexadas = [];
+    let descNarrativa = "";
+
+    // Primero leemos el índice para guardar los títulos y las fechas
     if (itemMatches.length > 0) {
-       let descNarrativa = "";
        for(let i=0; i < itemMatches.length; i++) {
          let item = itemMatches[i][1];
          let titleMatch = item.match(/<title>(.*?)<\/title>/);
          let descMatch = item.match(/<description>(.*?)<\/description>/);
+         let guidMatch = item.match(/<guid>(.*?)<\/guid>/);
+         let itemDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
          
-         if(titleMatch && descMatch) {
+         if(titleMatch && guidMatch) {
             let tituloLimpiado = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            let descLimpiada = descMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            descNarrativa += tituloLimpiado + ". " + descLimpiada + " ";
+            let descLimpiada = descMatch ? descMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim() : "";
+            let itemDate = itemDateMatch ? itemDateMatch[1] : date;
+            let url = guidMatch[1].trim();
+
+            if (descLimpiada) {
+               descNarrativa += tituloLimpiado + ". " + descLimpiada + " ";
+            }
+
+            alertasIndexadas.push({
+              url: url,
+              title: tituloLimpiado,
+              date: itemDate
+            });
          }
        }
        if (descNarrativa.trim() !== "") {
@@ -43,16 +58,19 @@ async function getSmnData() {
        }
     }
 
-    const regexGuid = /<guid>(.*?)<\/guid>/g;
-    const guidMatches = [...indexXml.matchAll(regexGuid)];
-    const urls = [...new Set(guidMatches.map(m => m[1]))];
-
-    for (let url of urls) {
-      let fileUrl = url.trim();
-      
+    // Ahora entramos a cada archivo secundario llevando los datos con nosotros
+    for (let alerta of alertasIndexadas) {
+      let fileUrl = alerta.url;
       if (fileUrl.startsWith('//')) {
         fileUrl = 'https:' + fileUrl;
       }
+
+      // Definimos el color según el nivel de severidad en el título
+      let polyColor = '#ee3224'; // Rojo por defecto
+      let tituloMinuscula = alerta.title.toLowerCase();
+      if (tituloMinuscula.includes('amarilla')) polyColor = '#ffc107'; // Amarillo
+      else if (tituloMinuscula.includes('naranja')) polyColor = '#ff9800'; // Naranja
+      else if (tituloMinuscula.includes('roja')) polyColor = '#f44336'; // Rojo
 
       try {
         const capRes = await fetch(fileUrl, { headers });
@@ -65,8 +83,15 @@ async function getSmnData() {
              let [lat, lon] = coord.split(',');
              return [parseFloat(lat), parseFloat(lon)];
            });
+           
            if (leafletCoords.length > 0) {
-             polygons.push(leafletCoords);
+             // Guardamos las coordenadas JUNTO con el título, fecha y color
+             polygons.push({
+               coords: leafletCoords,
+               title: alerta.title,
+               date: alerta.date,
+               color: polyColor
+             });
            }
         }
       } catch(e) {
@@ -94,7 +119,7 @@ export default async function MonitoreoSMNPage() {
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
       <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
       <style>
-        body { margin: 0; padding: 0; background: #f0f0f0; }
+        body { margin: 0; padding: 0; background: #f0f0f0; font-family: sans-serif; }
         #map { width: 100%; height: 100vh; }
       </style>
     </head>
@@ -108,15 +133,28 @@ export default async function MonitoreoSMNPage() {
               attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            var realPolygons = ${JSON.stringify(data.polygons)};
+            var polyDataArray = ${JSON.stringify(data.polygons)};
             
-            if (realPolygons && realPolygons.length > 0) {
+            if (polyDataArray && polyDataArray.length > 0) {
               var bounds = [];
-              realPolygons.forEach(function(coords) {
-                var poly = L.polygon(coords, {
-                  color: '#ee3224', weight: 2, fillColor: '#ee3224', fillOpacity: 0.4
+              
+              polyDataArray.forEach(function(polyData) {
+                // Dibuja el polígono con su color específico
+                var poly = L.polygon(polyData.coords, {
+                  color: polyData.color, 
+                  weight: 2, 
+                  fillColor: polyData.color, 
+                  fillOpacity: 0.5
                 }).addTo(map);
-                coords.forEach(function(c) { bounds.push(c); });
+                
+                // Agrega el cartelito rápido al pasar el mouse
+                poly.bindTooltip("<b>" + polyData.title + "</b>", { sticky: true });
+                
+                // Agrega el detalle completo al hacer clic
+                var popupContenido = "<b>" + polyData.title + "</b><br><span style='font-size:11px; color:#555;'>Emisión: " + polyData.date + "</span>";
+                poly.bindPopup(popupContenido);
+
+                polyData.coords.forEach(function(c) { bounds.push(c); });
               });
               
               if (bounds.length > 0) {
