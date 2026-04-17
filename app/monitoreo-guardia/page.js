@@ -1,13 +1,15 @@
 import React from 'react';
+import Link from 'next/link';
 
 export default function MonitoreoGuardiasPage() {
   return (
-    <div className="space-y-8 max-w-6xl mx-auto p-4">
+    <div className="space-y-8 max-w-6xl mx-auto p-4 font-sans">
+      
       {/* Encabezado */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Monitoreo y Guardias</h2>
+      <div className="border-b border-gray-200 pb-4">
+        <h2 className="text-3xl font-bold text-gray-800">Monitoreo y Guardias</h2>
         <p className="text-gray-600 text-sm mt-1">
-          Accesos rápidos y lineamientos básicos para llevar adelante el turno.
+          Accesos rápidos, visores de contingencias y lineamientos operativos.
         </p>
       </div>
 
@@ -57,9 +59,44 @@ export default function MonitoreoGuardiasPage() {
         </a>
       </div>
 
+      {/* SECCIÓN 2: Hub de Monitoreo por Evento (NUEVO) */}
+      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="text-blue-600">🌍</span> Visores de Contingencias
+        </h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <Link href="/monitoreo-guardias/meteorologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">⛈️</div>
+            <h4 className="font-bold text-gray-800 text-sm">Meteorología</h4>
+            <p className="text-xs text-gray-500 mt-1">Alertas SMN y radares en vivo.</p>
+          </Link>
+
+          <Link href="/monitoreo-guardias/hidrologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🌊</div>
+            <h4 className="font-bold text-gray-800 text-sm">Hidrología</h4>
+            <p className="text-xs text-gray-500 mt-1">Niveles INA y predictivo Flood Hub.</p>
+          </Link>
+
+          <Link href="/monitoreo-guardias/incendios" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🔥</div>
+            <h4 className="font-bold text-gray-800 text-sm">Incendios</h4>
+            <p className="text-xs text-gray-500 mt-1">Focos de calor y datos satelitales.</p>
+          </Link>
+
+          <Link href="/monitoreo-guardias/geofisica" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🌋</div>
+            <h4 className="font-bold text-gray-800 text-sm">Geofísica</h4>
+            <p className="text-xs text-gray-500 mt-1">Reportes sísmicos del INPRES.</p>
+          </Link>
+
+        </div>
+      </div>
+
       <hr className="border-gray-200" />
 
-      {/* SECCIÓN 2: Protocolo Operativo */}
+      {/* SECCIÓN 3: Protocolo Operativo */}
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
           <span className="text-blue-600">📋</span> Guía Práctica de Guardia
@@ -67,8 +104,7 @@ export default function MonitoreoGuardiasPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Bloque 1 */}
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">1. Al arrancar el turno</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Revisá el calendario para ver si hay seguimientos activos.</li>
@@ -79,8 +115,7 @@ export default function MonitoreoGuardiasPage() {
             </ul>
           </div>
 
-          {/* Bloque 2 */}
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">2. Durante la guardia</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Hacé un paneo de medios, redes y alertas oficiales cada 20 o 30 minutos.</li>
@@ -90,8 +125,7 @@ export default function MonitoreoGuardiasPage() {
             </ul>
           </div>
 
-          {/* Bloque 3 */}
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">3. Detección de una noticia/evento</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Validá siempre con fuentes oficiales (SMN, INPRES, Defensa Civil).</li>
@@ -101,19 +135,19 @@ export default function MonitoreoGuardiasPage() {
             </ul>
           </div>
 
-          {/* Bloque 4 */}
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">4. Pase y cierre de guardia</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Asegurate de que todo haya quedado en la carpeta y en la MS.</li>
               <li>• Dejá el pase por escrito en el Chat ENMO (eventos en curso, alertas vigentes y recomendaciones).</li>
-              <li>• Si hay seguimientos muy críticos, dejalo bien aclarado en el chat para el relevo de las 00:30.</li>
+              <li>• Si hay seguimientos muy críticos, dejalo bien aclarado en el chat.</li>
               <li>• Cerrá sesión en las herramientas internas (MS, Drive, etc.).</li>
             </ul>
           </div>
 
         </div>
       </div>
+      
     </div>
   );
 }
