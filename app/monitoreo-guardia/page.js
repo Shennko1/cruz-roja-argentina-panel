@@ -9,7 +9,7 @@ export default function MonitoreoGuardiasPage() {
       <div className="border-b border-gray-200 pb-4">
         <h2 className="text-3xl font-bold text-gray-800">Monitoreo y Guardias</h2>
         <p className="text-gray-600 text-sm mt-1">
-          Accesos rápidos, visores de contingencias y lineamientos operativos.
+          ACCESOS Y VISORES.
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function MonitoreoGuardiasPage() {
           </div>
           <div>
             <h3 className="font-bold text-gray-800 text-sm">Reportar un evento</h3>
-            <p className="text-xs text-gray-500">Para casos que requieran monitoreo</p>
+            <p className="text-xs text-gray-500">Para eventos que requieran monitoreo</p>
           </div>
         </a>
 
@@ -62,7 +62,7 @@ export default function MonitoreoGuardiasPage() {
       {/* SECCIÓN 2: Hub de Monitoreo por Evento (NUEVO) */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="text-blue-600">🌍</span> Visores de Contingencias
+          <span className="text-blue-600">🌍</span> MONITOREO
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -70,13 +70,13 @@ export default function MonitoreoGuardiasPage() {
           <Link href="/monitoreo-guardias/meteorologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">⛈️</div>
             <h4 className="font-bold text-gray-800 text-sm">Meteorología</h4>
-            <p className="text-xs text-gray-500 mt-1">Alertas SMN y radares en vivo.</p>
+            <p className="text-xs text-gray-500 mt-1">Alertas SMN, radares y reportes.</p>
           </Link>
 
           <Link href="/monitoreo-guardias/hidrologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🌊</div>
             <h4 className="font-bold text-gray-800 text-sm">Hidrología</h4>
-            <p className="text-xs text-gray-500 mt-1">Niveles INA y predictivo Flood Hub.</p>
+            <p className="text-xs text-gray-500 mt-1">Niveles INA y predicción de inundaciones.</p>
           </Link>
 
           <Link href="/monitoreo-guardias/incendios" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
@@ -99,7 +99,7 @@ export default function MonitoreoGuardiasPage() {
       {/* SECCIÓN 3: Protocolo Operativo */}
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span className="text-blue-600">📋</span> Guía Práctica de Guardia
+          <span className="text-blue-600">📋</span> Guía de Buenas Prácticas de la Guardia
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
