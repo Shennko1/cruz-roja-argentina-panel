@@ -99,5 +99,19 @@ export default function Dashboard() {
             ))}
           </MapContainer>
         </div>
-
-        <div className="bg
+        {/* IFRC Map Legend */}
+        <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-wrap gap-6 text-sm">
+          <p className="text-gray-500 font-medium">Leyenda:</p>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ee3224' }}></span>
+            <span className="text-gray-700">Con respuesta</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff9e00' }}></span>
+            <span className="text-gray-700">Respuesta Mixta</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+            <span className="text-gray-700">Sin respuesta</span>
+          </div>
+        </div>
