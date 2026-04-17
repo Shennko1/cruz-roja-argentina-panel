@@ -53,7 +53,7 @@ export default function Dashboard() {
           <p className="text-4xl font-bold text-gray-900 mt-2">{totalAfectados.toLocaleString('es-AR')}</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
-          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Texto 3</h2>
+          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Métricas Adicionales</h2>
           <p className="text-4xl font-bold text-gray-900 mt-2">0</p>
         </div>
       </div>
@@ -66,52 +66,4 @@ export default function Dashboard() {
         </div>
         
         <div className="w-full h-[400px] bg-gray-100 relative z-0">
-          <MapContainer center={[-38.4161, -63.6167]} zoom={4} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            />
-            {reportesTerreno.map((evento) => (
-              <CircleMarker 
-                key={evento.id} 
-                center={[evento.lat, evento.lng]} 
-                pathOptions={{ color: '#ee3224', fillColor: '#ee3224', fillOpacity: 0.7, weight: 1 }}
-                radius={8}
-              >
-                <Tooltip sticky>
-                  <div className="text-xs">
-                    <strong className="block text-gray-900">{evento.nombre}</strong>
-                    <span className="text-gray-600">{evento.tipo}</span>
-                  </div>
-                </Tooltip>
-                <Popup>
-                  <div className="text-sm">
-                    <strong className="block text-[#ee3224] text-base mb-1">{evento.nombre}</strong>
-                    <p className="m-0 text-gray-700"><strong>Fecha:</strong> {evento.fecha}</p>
-                    <p className="m-0 text-gray-700"><strong>Ubicación:</strong> {evento.ubicacion}</p>
-                    <p className="m-0 text-gray-700"><strong>Afectados:</strong> {evento.afectadosText}</p>
-                    <a href={evento.link} target="_blank" rel="noopener noreferrer" className="block mt-2 text-blue-600 hover:underline">
-                      Abrir Carpeta de Evento
-                    </a>
-                  </div>
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
-        </div>
-        {/* IFRC Map Legend */}
-        <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-wrap gap-6 text-sm">
-          <p className="text-gray-500 font-medium">Leyenda:</p>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ee3224' }}></span>
-            <span className="text-gray-700">Con respuesta</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff9e00' }}></span>
-            <span className="text-gray-700">Respuesta Mixta</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-            <span className="text-gray-700">Sin respuesta</span>
-          </div>
-        </div>
+          <MapContainer center={[-38.416
