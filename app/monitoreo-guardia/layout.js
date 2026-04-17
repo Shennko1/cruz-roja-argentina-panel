@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 
 export default function MonitoreoLayout({ children }) {
@@ -12,7 +11,7 @@ export default function MonitoreoLayout({ children }) {
             <nav className="flex text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
               <Link href="/" className="hover:text-blue-600">Inicio</Link>
               <span className="mx-2">/</span>
-              <span className="text-gray-600">Monitoreo y Guardias</span>
+              <span className="text-gray-600">Monitoreo y Guardia</span>
             </nav>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
