@@ -27,13 +27,13 @@ export default function MonitoreoRedesPage() {
           
           {/* El enlace oficial. El script de arriba detecta esta etiqueta <a> y la transforma en el feed interactivo */}
           <a 
-            className="twitter-timeline" 
-            data-height="700" 
-            data-theme="light" 
-            href="https://twitter.com/i/lists/2044983870605435128?s=20" 
-          >
-            Cargando publicaciones de la red oficial...
-          </a>
+  className="twitter-timeline" 
+  data-height="700" 
+  data-theme="light" 
+  href="https://twitter.com/i/lists/2044983870605435128" 
+>
+  Cargando publicaciones de la red oficial...
+</a>
 
         </div>
       </div>
