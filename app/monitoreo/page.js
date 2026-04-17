@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 async function getSmnAcpData() {
   let isAlertActive = false;
-  let description = "El equipo mantiene el monitoreo continuo de los canales oficiales. Sin novedades en el reporte meteorológico a corto plazo por el momento.";
+  let description = "Por el momento no se han detectado avisos de corto plazo significativos.";
   let date = "S/D";
 
   const headers = {
@@ -37,28 +37,26 @@ async function getSmnAcpData() {
   return { isAlertActive, description, date };
 }
 
-export default async function AlertasGeneralesPage() {
+export default async function PanelAlertasGenerales() {
   const data = await getSmnAcpData();
 
-  const alertClass = data.isAlertActive ? 'bg-red-50 border-[#ee3224]' : 'bg-green-50 border-green-500';
-  const badgeClass = data.isAlertActive ? 'bg-[#ee3224] text-white' : 'bg-green-500 text-white';
-  const textClass = data.isAlertActive ? 'border-[#ee3224] text-red-900' : 'border-green-200 text-green-900';
+  const alertClass = data.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500';
+  const badgeClass = data.isAlertActive ? 'bg-red-600 text-white' : 'bg-green-500 text-white';
+  const textClass = data.isAlertActive ? 'text-red-900' : 'text-green-900';
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4">
       
-      {/* Encabezado */}
-      <div className="flex justify-between items-end border-b border-gray-200 pb-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800">Panel de Alertas Generales</h2>
-          <p className="text-gray-600 text-sm mt-1">Monitoreo unificado de contingencias meteorológicas (SMN) y sísmicas (INPRES).</p>
-        </div>
+      {/* Encabezado Principal */}
+      <div className="border-b border-gray-200 pb-4">
+        <h2 className="text-3xl font-bold text-gray-800">Panel de Alertas y Monitoreo</h2>
+        <p className="text-gray-600 text-sm mt-1">Consolidado de eventos meteorológicos, sísmicos e hidrológicos a nivel nacional.</p>
       </div>
 
-      {/* SECCIÓN 1: Estado Meteorológico Narrativo */}
+      {/* SECCIÓN 1: Reporte Narrativo Meteorológico (SMN) */}
       <div className={"p-6 rounded-xl shadow-md border-l-8 transition-colors " + alertClass}>
         <div className="mb-4 flex items-center gap-3">
-          <h3 className="text-lg font-bold text-gray-900 leading-tight">Estado Meteorológico (ACP)</h3>
+          <h3 className="text-lg font-bold text-gray-900 leading-tight">Situación Meteorológica Actual</h3>
           <span className={"text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest " + badgeClass}>
             {data.isAlertActive ? 'ALERTA ACTIVA' : 'SIN NOVEDAD'}
           </span>
@@ -66,13 +64,12 @@ export default async function AlertasGeneralesPage() {
 
         <div className="space-y-4">
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Corte Horario Oficial</p>
-            <p className="text-gray-700 font-mono text-xs bg-white p-2 rounded border border-gray-100">{data.date}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Corte Horario</p>
+            <p className="text-gray-700 font-mono text-xs bg-white p-2 rounded border border-gray-100 inline-block">{data.date}</p>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Reporte de Situación</p>
-            {/* Texto narrativo continuo para fácil lectura */}
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Informe Consolidado</p>
             <div className={"text-sm font-medium p-4 rounded-lg bg-white border leading-relaxed " + textClass}>
               {data.description}
             </div>
@@ -80,21 +77,51 @@ export default async function AlertasGeneralesPage() {
         </div>
       </div>
 
-      {/* SECCIÓN 2: Visores Embebidos (SMN e INPRES) */}
+      {/* SECCIÓN 2: Monitoreo Hidrológico (Niveles de Ríos - INA) */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <span className="text-blue-600">🌊</span> Monitoreo Hidrológico (Niveles Hidrométricos)
+        </h3>
+        <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[600px] w-full">
+          <iframe 
+            src="https://alerta.ina.gob.ar/pub/mapa" 
+            className="w-full h-full border-0"
+            title="Mapa Hidrológico INA"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
+        </div>
+      </div>
+
+      {/* SECCIÓN 3: Visores de Contingencias (Sismos y Mapa Meteorológico) */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         
-        {/* Columna Izquierda: SMN */}
+        {/* Actividad Sísmica (INPRES) */}
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <span className="text-blue-600">⛈️</span> Alertas Meteorológicas
+            <span className="text-orange-600">🌋</span> Actividad Sísmica Reciente (INPRES)
           </h3>
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center shadow-sm h-[600px] flex flex-col items-center justify-center">
-             <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[500px] w-full">
+            <iframe 
+              src="https://www.inpres.gob.ar/desktop/" 
+              className="w-full h-full border-0"
+              title="Sismos INPRES"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+            />
+          </div>
+        </div>
+
+        {/* Acceso a Mapa SMN */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span className="text-blue-500">⛈️</span> Mapa de Alertas Meteorológicas
+          </h3>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center shadow-sm h-[500px] flex flex-col items-center justify-center">
+            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
               🗺️
             </div>
-            <h4 className="text-gray-800 font-bold mb-2">Visor Externo SMN</h4>
+            <h4 className="text-gray-800 font-bold mb-2">Visor Oficial SAT</h4>
             <p className="text-sm text-gray-600 mb-6 max-w-sm mx-auto">
-              Por protocolos de seguridad, el mapa interactivo del SMN no puede incrustarse dentro de plataformas externas. Ingresá al visor oficial desde el siguiente enlace seguro.
+              El mapa interactivo del SMN requiere acceso directo para su correcta visualización.
             </p>
             <a 
               href="https://www.smn.gob.ar/alertas" 
@@ -102,24 +129,8 @@ export default async function AlertasGeneralesPage() {
               rel="noopener noreferrer"
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
             >
-              Abrir Mapa SMN en nueva pestaña
+              Abrir Mapa SMN
             </a>
-          </div>
-        </div>
-
-        {/* Columna Derecha: INPRES */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <span className="text-red-600">🌋</span> Actividad Sísmica
-          </h3>
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 h-[600px] w-full">
-            {/* Ventana incrustada de la web de sismos */}
-            <iframe 
-              src="https://www.inpres.gob.ar/desktop/" 
-              className="w-full h-full border-0"
-              title="Sismos INPRES"
-              sandbox="allow-scripts allow-same-origin allow-popups"
-            />
           </div>
         </div>
 
