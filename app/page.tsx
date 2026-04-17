@@ -1,7 +1,6 @@
-"use client";
 import React from 'react';
-import dynamic from 'next/dynamic';
 
+// Interfaz TypeScript para definir la estructura de los datos
 interface ReporteTerreno {
   id: number;
   fecha: string;
@@ -15,12 +14,7 @@ interface ReporteTerreno {
   link: string;
 }
 
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
-const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
-
+// Base de datos tipada
 const reportesTerreno: ReporteTerreno[] = [
   { id: 1, fecha: "2025-12-29", nombre: "Inundaciones en Corrientes", tipo: "Inundación", ubicacion: "Corrientes, Argentina", afectadosText: "~1.500", afectadosNum: 1500, lat: -28.65, lng: -59.04, link: "https://drive.google.com/open?id=1ynnE4ImxwgSoqw6hZwRRws1pcZrXSdLv&usp=drive_copy" },
   { id: 2, fecha: "2026-01-07", nombre: "Incendios Forestales en Patagonia", tipo: "Incendio forestal", ubicacion: "Patagonia, Argentina", afectadosText: "~5.000", afectadosNum: 5000, lat: -42.0, lng: -71.5, link: "https://drive.google.com/open?id=1Mju0AhqmPyhD_q0IV4mvjk3rmInmgOzy&usp=drive_copy" },
@@ -35,9 +29,58 @@ export default function Dashboard() {
   const totalEmergencias = reportesTerreno.length;
   const totalAfectados = reportesTerreno.reduce((acc, curr) => acc + curr.afectadosNum, 0);
 
+  // Armamos el mapa inyectado para saltarnos los errores de react-leaflet
+  const mapHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+      <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { width: 100%; height: 100vh; }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          var map = L.map('map').setView([-38.4161, -63.6167], 4);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+
+          var eventos = ${JSON.stringify(reportesTerreno)};
+          
+          eventos.forEach(function(evento) {
+            var marker = L.circleMarker([evento.lat, evento.lng], {
+              color: '#ee3224',
+              fillColor: '#ee3224',
+              fillOpacity: 0.7,
+              radius: 8,
+              weight: 1
+            }).addTo(map);
+
+            // Tooltip (Hover)
+            marker.bindTooltip("<b>" + evento.nombre + "</b><br><span style='color:#666;'>" + evento.tipo + "</span>");
+
+            // Popup (Click)
+            var popupContent = "<b><span style='color:#ee3224; font-size:14px;'>" + evento.nombre + "</span></b><br/>" +
+                               "<b>Fecha:</b> " + evento.fecha + "<br/>" +
+                               "<b>Ubicación:</b> " + evento.ubicacion + "<br/>" +
+                               "<b>Afectados:</b> " + evento.afectadosText + "<br/>" +
+                               "<a href='" + evento.link + "' target='_blank' style='display:inline-block; margin-top:8px; color:#2563eb; text-decoration:none; font-weight:bold;'>Abrir Carpeta</a>";
+            
+            marker.bindPopup(popupContent);
+          });
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
   return (
     <div className="min-h-screen bg-[#f4f4f4] p-8 font-sans">
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -62,39 +105,14 @@ export default function Dashboard() {
           <span className="text-sm text-gray-500">Eventos Activos</span>
         </div>
         
-        <div className="w-full h-[400px] bg-gray-100 relative z-0">
-          <MapContainer center={[-38.4161, -63.6167]} zoom={4} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            />
-            {reportesTerreno.map((evento) => (
-              <CircleMarker 
-                key={evento.id} 
-                center={[evento.lat, evento.lng]} 
-                pathOptions={{ color: '#ee3224', fillColor: '#ee3224', fillOpacity: 0.7, weight: 1 }}
-                radius={8}
-              >
-                <Tooltip sticky>
-                  <div className="text-xs">
-                    <strong className="block text-gray-900">{evento.nombre}</strong>
-                    <span className="text-gray-600">{evento.tipo}</span>
-                  </div>
-                </Tooltip>
-                <Popup>
-                  <div className="text-sm">
-                    <strong className="block text-[#ee3224] text-base mb-1">{evento.nombre}</strong>
-                    <p className="m-0 text-gray-700"><strong>Fecha:</strong> {evento.fecha}</p>
-                    <p className="m-0 text-gray-700"><strong>Ubicación:</strong> {evento.ubicacion}</p>
-                    <p className="m-0 text-gray-700"><strong>Afectados:</strong> {evento.afectadosText}</p>
-                    <a href={evento.link} target="_blank" rel="noopener noreferrer" className="block mt-2 text-blue-600 hover:underline">
-                      Abrir Carpeta de Evento
-                    </a>
-                  </div>
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
+        {/* El visor de mapa embebido que funciona sin dependencias */}
+        <div className="w-full h-[400px] bg-gray-100 relative">
+          <iframe 
+            srcDoc={mapHtml} 
+            className="w-full h-full border-0 absolute inset-0" 
+            title="Mapa de Emergencias" 
+            sandbox="allow-scripts allow-same-origin allow-popups"
+          />
         </div>
 
         {/* Leyenda */}
