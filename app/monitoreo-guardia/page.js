@@ -21,25 +21,25 @@ export default function MonitoreoGuardiasPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <Link href="/monitoreo-guardias/meteorologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+          <Link href="/monitoreo-guardia/meteorologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">⛈️</div>
             <h4 className="font-bold text-gray-800 text-sm">Meteorología</h4>
             <p className="text-xs text-gray-500 mt-1">Alertas SMN, radares y reportes.</p>
           </Link>
 
-          <Link href="/monitoreo-guardias/hidrologia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+          <Link href="/monitoreo-guardia" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🌊</div>
             <h4 className="font-bold text-gray-800 text-sm">Hidrología</h4>
             <p className="text-xs text-gray-500 mt-1">Niveles INA y predicción de inundaciones.</p>
           </Link>
 
-          <Link href="/monitoreo-guardias/incendios" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+          <Link href="/monitoreo-guardia/incendios" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🔥</div>
             <h4 className="font-bold text-gray-800 text-sm">Incendios</h4>
             <p className="text-xs text-gray-500 mt-1">Focos de calor y datos satelitales.</p>
           </Link>
 
-          <Link href="/monitoreo-guardias/geofisica" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
+          <Link href="/monitoreo-guardia/geofisica" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group">
             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🌋</div>
             <h4 className="font-bold text-gray-800 text-sm">Geofísica</h4>
             <p className="text-xs text-gray-500 mt-1">Reportes sísmicos del INPRES.</p>
