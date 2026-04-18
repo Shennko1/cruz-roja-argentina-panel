@@ -14,12 +14,13 @@ export default function PanelIntegradoPage() {
         Agregar información.
       </div>
 
-      {/* SECCIÓN 1: REDES SOCIALES (Arriba) */}
+      {/* SECCIÓN 1: REDES OFICIALES Y COMUNITARIAS */}
       <div className="mb-8">
-        <h3 className="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-1">Redes Oficiales</h3>
-        <div className="flex flex-col lg:flex-row justify-center gap-4 w-full">
+        <h3 className="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-1">Fuentes de Información</h3>
+        <div className="flex flex-wrap justify-center gap-4 w-full">
           
-          <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
+          {/* Feed SMN */}
+          <div className="bg-white p-2 rounded-xl border border-gray-200 flex flex-col items-center">
             <div className="w-full flex justify-center overflow-hidden">
               <iframe 
                 src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
@@ -33,7 +34,8 @@ export default function PanelIntegradoPage() {
             </div>
           </div>
 
-          <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
+          {/* Feed Tiempo en Argentina */}
+          <div className="bg-white p-2 rounded-xl border border-gray-200 flex flex-col items-center">
             <div className="w-full flex justify-center overflow-hidden">
               <iframe 
                 src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
@@ -47,18 +49,47 @@ export default function PanelIntegradoPage() {
             </div>
           </div>
 
+          {/* Feed METRA */}
+          <div className="bg-white p-2 rounded-xl border border-gray-200 flex flex-col items-center">
+            <div className="w-full flex justify-center overflow-hidden">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="340" 
+                height="500" 
+                style={{ border: 'none', overflow: 'hidden' }} 
+                scrolling="no" 
+                frameBorder="0" 
+                allowFullScreen={true} 
+              ></iframe>
+            </div>
+          </div>
+
+          {/* Feed Pronóstico Extendido */}
+          <div className="bg-white p-2 rounded-xl border border-gray-200 flex flex-col items-center">
+            <div className="w-full flex justify-center overflow-hidden">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="340" 
+                height="500" 
+                style={{ border: 'none', overflow: 'hidden' }} 
+                scrolling="no" 
+                frameBorder="0" 
+                allowFullScreen={true} 
+              ></iframe>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* SECCIÓN 2: MAPA WINDY (Abajo, compacto y con instructivo) */}
+      {/* SECCIÓN 2: MAPA WINDY (Abajo) */}
       <div>
         <h3 className="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-1">Radar Meteorológico</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           
-          {/* Instructivo */}
           <div className="md:col-span-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex flex-col justify-between">
             <div>
-              <h4 className="text-xs font-bold text-gray-600 mb-2">[Instructivo]</h4>
+              <h4 className="text-xs font-bold text-gray-600 mb-2">Guía de uso</h4>
               <ul className="text-[11px] text-gray-500 space-y-2">
                 <li>• <strong>Partículas:</strong> Dirección del viento.</li>
                 <li>• <strong>Colores:</strong> Intensidad (azul = calma).</li>
@@ -76,7 +107,6 @@ export default function PanelIntegradoPage() {
             </a>
           </div>
 
-          {/* Mapa Reducido */}
           <div className="md:col-span-3 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
             <iframe
               width="100%"
