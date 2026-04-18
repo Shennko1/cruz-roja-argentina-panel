@@ -14,49 +14,81 @@ export default function PanelIntegradoPage() {
         Agregar información.
       </div>
 
+      {/* SECCIÓN 1: REDES SOCIALES (Arriba) */}
       <div className="mb-8">
-        <div className="w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-          <iframe
-            width="100%"
-            height="650"
-            src="https://embed.windy.com/embed2.html?lat=-38.416&lon=-63.617&zoom=4&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
-            frameBorder="0"
-            title="Windy"
-            allowFullScreen
-          ></iframe>
+        <h3 className="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-1">Redes Oficiales</h3>
+        <div className="flex flex-col lg:flex-row justify-center gap-4 w-full">
+          
+          <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
+            <div className="w-full flex justify-center overflow-hidden">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="340" 
+                height="500" 
+                style={{ border: 'none', overflow: 'hidden' }} 
+                scrolling="no" 
+                frameBorder="0" 
+                allowFullScreen={true} 
+              ></iframe>
+            </div>
+          </div>
+
+          <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
+            <div className="w-full flex justify-center overflow-hidden">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="340" 
+                height="500" 
+                style={{ border: 'none', overflow: 'hidden' }} 
+                scrolling="no" 
+                frameBorder="0" 
+                allowFullScreen={true} 
+              ></iframe>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row justify-center gap-4 w-full">
-        
-        <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
-          <div className="w-full flex justify-center overflow-hidden">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="340" 
-              height="500" 
-              style={{ border: 'none', overflow: 'hidden' }} 
-              scrolling="no" 
-              frameBorder="0" 
-              allowFullScreen={true} 
+      {/* SECCIÓN 2: MAPA WINDY (Abajo, compacto y con instructivo) */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-1">Radar Meteorológico</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          
+          {/* Instructivo */}
+          <div className="md:col-span-1 bg-gray-50 p-3 rounded-lg border border-gray-200 flex flex-col justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-gray-600 mb-2">[Instructivo]</h4>
+              <ul className="text-[11px] text-gray-500 space-y-2">
+                <li>• <strong>Partículas:</strong> Dirección del viento.</li>
+                <li>• <strong>Colores:</strong> Intensidad (azul = calma).</li>
+                <li>• <strong>Menú derecho:</strong> Cambiar a lluvia/truenos.</li>
+                <li>• <strong>Ubicación:</strong> Arrastrar para mover el mapa.</li>
+              </ul>
+            </div>
+            <a 
+              href="https://www.youtube.com/watch?v=RhNgxywKjw4" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="text-[11px] text-blue-600 hover:text-blue-800 mt-4 block font-bold"
+            >
+              Ver Tutorial en Español ↗
+            </a>
+          </div>
+
+          {/* Mapa Reducido */}
+          <div className="md:col-span-3 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+            <iframe
+              width="100%"
+              height="350"
+              src="https://embed.windy.com/embed2.html?lat=-38.416&lon=-63.617&zoom=4&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+              frameBorder="0"
+              title="Windy"
+              allowFullScreen
             ></iframe>
           </div>
-        </div>
 
-        <div className="bg-white p-2 rounded-xl border border-gray-200 w-full lg:w-auto flex flex-col items-center">
-          <div className="w-full flex justify-center overflow-hidden">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="340" 
-              height="500" 
-              style={{ border: 'none', overflow: 'hidden' }} 
-              scrolling="no" 
-              frameBorder="0" 
-              allowFullScreen={true} 
-            ></iframe>
-          </div>
         </div>
-
       </div>
       
     </div>
