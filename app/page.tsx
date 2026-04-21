@@ -14,7 +14,7 @@ interface ReporteTerreno {
   link: string;
 }
 
-// Base de datos tipada
+// ACÁ PUEDEN MODIFICARSE LOS EVENTOS, AGREGARSE, O SACARSE. Copiar el formato, cambiar los datos necesarios y sumar o restar +-1 en "id" dependiendo el orden
 const reportesTerreno: ReporteTerreno[] = [
   { id: 1, fecha: "2025-12-29", nombre: "Inundaciones en Corrientes", tipo: "Inundación", ubicacion: "Corrientes, Argentina", afectadosText: "~1.500", afectadosNum: 1500, lat: -28.65, lng: -59.04, link: "https://drive.google.com/open?id=1ynnE4ImxwgSoqw6hZwRRws1pcZrXSdLv&usp=drive_copy" },
   { id: 2, fecha: "2026-01-07", nombre: "Incendios Forestales en Patagonia", tipo: "Incendio forestal", ubicacion: "Patagonia, Argentina", afectadosText: "~5.000", afectadosNum: 5000, lat: -42.0, lng: -71.5, link: "https://drive.google.com/open?id=1Mju0AhqmPyhD_q0IV4mvjk3rmInmgOzy&usp=drive_copy" },
@@ -120,15 +120,11 @@ export default function Dashboard() {
           <p className="text-gray-500 font-medium">Leyenda:</p>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ee3224' }}></span>
-            <span className="text-gray-700">Con respuesta</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff9e00' }}></span>
-            <span className="text-gray-700">Respuesta Mixta</span>
+            <span className="text-gray-700">Con movilización en terreno</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-            <span className="text-gray-700">Sin respuesta</span>
+            <span className="text-gray-700">Sin movilización en terreno</span>
           </div>
         </div>
       </div>
@@ -136,7 +132,7 @@ export default function Dashboard() {
       {/* Main Data Table */}
       <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
-          <h2 className="text-lg font-bold text-gray-900">Reportes de Terreno Recientes</h2>
+          <h2 className="text-lg font-bold text-gray-900">Últimos seguimientos</h2>
           <button className="text-sm font-medium text-blue-600 hover:underline">Ver Todos</button>
         </div>
         
@@ -146,7 +142,7 @@ export default function Dashboard() {
               <tr className="bg-[#f4f4f4] text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
                 <th className="px-6 py-3 font-semibold">Fecha de Inicio</th>
                 <th className="px-6 py-3 font-semibold">Nombre</th>
-                <th className="px-6 py-3 font-semibold">Tipo de Desastre</th>
+                <th className="px-6 py-3 font-semibold">Tipo de evento</th>
                 <th className="px-6 py-3 font-semibold">Ubicación</th>
                 <th className="px-6 py-3 font-semibold">Personas Afectadas</th>
               </tr>
