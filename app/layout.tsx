@@ -26,7 +26,7 @@ export default function RootLayout({
           {/* Header Global */}
           <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
             <img 
-              src="https://lh3.googleusercontent.com/sitesv/APaQ0SQWYLV56QBq_hxdDh8jMcNDI5Q43I-AIwdG_iHEuHj6_6qNz3acjzXkU0oLuev3CpGhGlFeYbrkyGbxKm7z4WPOXGhBeb0c3PdnvfUNeIZav4sCJVi49mqQXQGhrj67hChtjJHU9N_p1gGL7_-eVLOTvRCwHxWow-Ba_st4GZ9vIKkpxkN5TJc3w3E=w16383"
+              src="/enmo.jpg"
               alt="Equipo"
               className="h-12 w-auto object-contain"
             />
