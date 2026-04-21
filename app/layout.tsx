@@ -52,7 +52,7 @@ export default function RootLayout({
               <li>
                 <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">Alertas</a>
               </li>
-                li>
+                <li>
                 <a href="/guias" className="text-gray-600 hover:text-[#ee3224]">Guías y Procesos</a>
               </li>
             </ul>
