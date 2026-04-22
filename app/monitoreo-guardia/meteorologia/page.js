@@ -34,22 +34,18 @@ export default function HidrometeorologiaPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col justify-between shadow-sm">
             <div>
-              <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">Guía rápida</h4>
+              <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">¿Para qué sirve este mapa?</h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Visualiza el desplazamiento de frentes de tormenta y la intensidad de las precipitaciones sobre el territorio.
+                Muestra dónde está lloviendo ahora mismo y hacia dónde se mueven las tormentas. Úsalo para ver rápido si una zona está siendo afectada.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Capa activa:</strong> Lluvia y truenos (automático).</span>
+                  <span><strong>Colores:</strong> Indican qué tan fuerte llueve. Si ves amarillo o rojo, es tormenta fuerte.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Colores:</strong> Intensidad de precipitación (Amarillo/Rojo = Fuerte).</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Previsión:</strong> Usar la barra inferior para ver la evolución.</span>
+                  <span><strong>Evolución:</strong> Toca la línea de tiempo abajo para ver el pronóstico de las próximas horas.</span>
                 </li>
               </ul>
             </div>
@@ -60,7 +56,7 @@ export default function HidrometeorologiaPage() {
                 rel="noreferrer" 
                 className="text-[11px] text-blue-600 hover:underline flex items-center gap-1 font-bold"
               >
-                Tutorial de herramientas ↗
+                Ver tutorial del mapa ↗
               </a>
             </div>
           </div>
@@ -86,7 +82,7 @@ export default function HidrometeorologiaPage() {
         >
           <div className="flex items-center gap-3">
             <img src="/floods.png" alt="Ícono Riesgo Hídrico" className="w-9 h-9 object-contain" />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Riesgo Hídrico y Condiciones del Suelo</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Riesgo Hídrico y Estado de los Ríos</h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRiesgoOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -96,33 +92,43 @@ export default function HidrometeorologiaPage() {
         {isRiesgoOpen && (
           <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
             
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
-              <h4 className="text-sm font-bold text-gray-700 mb-2">Google FloodHub</h4>
-              <p className="text-[12px] text-gray-600 mb-5 px-4 leading-relaxed">
-                Permite identificar áreas geográficas bajo alerta y visualizar las proyecciones de riesgo hídrico en el territorio.
-              </p>
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Google FloodHub</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2">
+                  <strong>Qué vas a encontrar:</strong> Un mapa global que marca específicamente las zonas con peligro de inundación.
+                </p>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  <strong>Para qué usarlo:</strong> Al hacer clic, te lleva a la plataforma para ver si hay pronósticos de desbordes en los próximos días y analizar qué áreas podrían verse afectadas.
+                </p>
+              </div>
               <a 
                 href="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0" 
                 target="_blank" 
                 rel="noreferrer"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block"
               >
-                Abrir Plataforma Oficial ↗
+                Abrir FloodHub ↗
               </a>
             </div>
 
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
-              <h4 className="text-sm font-bold text-gray-700 mb-2">Niveles de Ríos (PNA)</h4>
-              <p className="text-[12px] text-gray-600 mb-5 px-4 leading-relaxed">
-                Facilita la consulta del estado hidrométrico actual y sus variaciones recientes en los distintos puertos del país.
-              </p>
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Niveles de Ríos (Prefectura)</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2">
+                  <strong>Qué vas a encontrar:</strong> El mapa interactivo oficial con las mediciones reales de todos los puertos del país.
+                </p>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  <strong>Para qué usarlo:</strong> Haz clic para confirmar datos fácticos. Te sirve para ver la altura exacta del agua hoy y saber si el río está creciendo, bajando o estacionado.
+                </p>
+              </div>
               <a 
                 href="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php" 
                 target="_blank" 
                 rel="noreferrer"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block"
               >
-                Abrir Mapa Interactivo ↗
+                Abrir Mapa de Prefectura ↗
               </a>
             </div>
 
@@ -138,7 +144,7 @@ export default function HidrometeorologiaPage() {
         >
           <div className="flex items-center gap-3">
             <img src="/media.png" alt="Ícono Redes Sociales" className="w-9 h-9 object-contain" />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Reportes en Tiempo Real (Redes Sociales)</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Redes Sociales (Muros de Facebook)</h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRedesOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -186,7 +192,7 @@ export default function HidrometeorologiaPage() {
         >
           <div className="flex items-center gap-3">
             <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Noticias y Búsqueda (Últimas 24h)</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Buscar en Noticias (Últimas 24h)</h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -198,41 +204,38 @@ export default function HidrometeorologiaPage() {
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
               
               <div className="mb-5 pb-4 border-b border-gray-200">
-                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Filtros Activos: Argentina</h4>
+                <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">¿Para qué usar estos botones?</h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Busca y estructura la información en medios de prensa locales para relevar evidencia narrativa sobre incidentes climáticos y su impacto poblacional en el último día.
+                  Cada botón abre una pestaña nueva en Google News ya configurada para buscar solo en Argentina y solo noticias publicadas en las últimas 24 horas. Son un atajo. Úsalos para rastrear rápido qué está pasando en los medios, confirmar si hay evacuados, o ver los daños de un evento sin tener que escribir la búsqueda a mano.
                 </p>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Botón Query 1: Tormentas */}
                 <a 
                   href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  Tormentas y Lluvias
+                  Ver noticias de Tormentas
                 </a>
 
-                {/* Botón Query 2: Inundaciones */}
                 <a 
                   href="https://news.google.com/search?q=(inundacion%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  Inundaciones y Crecidas
+                  Ver noticias de Inundaciones
                 </a>
 
-                {/* Botón Query 3: Impacto */}
                 <a 
                   href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  Impacto y Evacuados
+                  Ver reportes de Daños y Evacuados
                 </a>
               </div>
 
