@@ -45,17 +45,19 @@ export default function RootLayout({
             <ul className="flex gap-6 text-sm font-medium">
               <li>
                 <a href="/" className="flex items-center gap-1.5 text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">
-  <img src="/net.png" alt="" className="w-5 h-5 object-contain"/> Inicio
-</a>
+  <img src="/net.png" alt="" className="w-9 h-9 object-contain"/> Inicio</a>
               </li>
               <li>
-                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Monitoreo</a>
+                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">  
+                  <img src="/mt.png" alt="" className="w-9 h-9 object-contain"/>Monitoreo</a>
               </li>
               <li>
-                <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Alertas</a>
+                <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase"> 
+                   <img src="/alert.png" alt="" className="w-9 h-9 object-contain"/> Alertas</a>
               </li>
                 <li>
-                <a href="/guias" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Guías y Procesos</a>
+                <a href="/guias" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">
+                   <img src="/guia.png" alt="" className="w-9 h-9 object-contain"/>Guías y Procesos</a>
               </li>
             </ul>
           </nav>
