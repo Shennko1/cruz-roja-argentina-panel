@@ -36,7 +36,7 @@ export default function HidrometeorologiaPage() {
             <div>
               <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">¿Para qué sirve este mapa?</h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Muestra dónde está lloviendo ahora mismo y hacia dónde se mueven las tormentas. Úsalo para ver rápido si una zona está siendo afectada.
+                Muestra dónde está lloviendo ahora mismo y hacia dónde se mueven las tormentas. Usalo para ver rápido si una zona está siendo afectada.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
@@ -45,7 +45,7 @@ export default function HidrometeorologiaPage() {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Evolución:</strong> Toca la línea de tiempo abajo para ver el pronóstico de las próximas horas.</span>
+                  <span><strong>Evolución:</strong> Tocá la línea de tiempo abajo para ver el pronóstico de las próximas horas.</span>
                 </li>
               </ul>
             </div>
@@ -99,7 +99,7 @@ export default function HidrometeorologiaPage() {
                   <strong>Qué vas a encontrar:</strong> Un mapa global que marca específicamente las zonas con peligro de inundación.
                 </p>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  <strong>Para qué usarlo:</strong> Al hacer clic, te lleva a la plataforma para ver si hay pronósticos de desbordes en los próximos días y analizar qué áreas podrían verse afectadas.
+                  <strong>Para qué usarlo:</strong> Al hacer clic, te lleva a la plataforma para ver si hay pronósticos de desbordes en los próximos días, o si hay inundaciones repentinas (flash floods) y analizar qué áreas podrían verse afectadas.
                 </p>
               </div>
               <a 
@@ -119,7 +119,7 @@ export default function HidrometeorologiaPage() {
                   <strong>Qué vas a encontrar:</strong> El mapa interactivo oficial con las mediciones reales de todos los puertos del país.
                 </p>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  <strong>Para qué usarlo:</strong> Haz clic para confirmar datos fácticos. Te sirve para ver la altura exacta del agua hoy y saber si el río está creciendo, bajando o estacionado.
+                  <strong>Para qué usarlo:</strong> Te sirve para ver la altura exacta del agua hoy y saber si el río está creciendo, bajando o estacionado.
                 </p>
               </div>
               <a 
