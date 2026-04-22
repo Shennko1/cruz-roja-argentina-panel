@@ -2,54 +2,37 @@ import React from 'react';
 
 export const dynamic = 'force-dynamic';
 
-/* =======================
-   SMN (igual que antes)
-======================= */
+/* ================= SMN ================= */
 async function getSmnAcpData() {
   let isAlertActive = false;
   let description = "Sin avisos de corto plazo.";
   let date = "S/D";
 
-  const headers = {
-    'User-Agent': 'Mozilla/5.0'
-  };
-
   try {
-    const rssRes = await fetch('https://ssl.smn.gob.ar/feeds/CAP/avisocortoplazo/rss_acpCAP.xml', { 
-      headers, 
-      next: { revalidate: 60 } 
+    const res = await fetch('https://ssl.smn.gob.ar/feeds/CAP/avisocortoplazo/rss_acpCAP.xml', {
+      next: { revalidate: 60 }
     });
-    const xmlText = await rssRes.text();
+    const xml = await res.text();
 
-    const pubDateMatch = xmlText.match(/<pubDate>(.*?)<\/pubDate>/);
-    if (pubDateMatch) date = pubDateMatch[1];
-
-    const itemMatch = xmlText.match(/<item>([\s\S]*?)<\/item>/);
-    if (itemMatch) {
-      const descMatch = itemMatch[1].match(/<description>(.*?)<\/description>/);
-      if (descMatch) {
-        description = descMatch[1]
-          .replace(/<!\[CDATA\[/g, "")
-          .replace(/]]>/g, "")
-          .trim();
-      }
+    const descMatch = xml.match(/<description>(.*?)<\/description>/);
+    if (descMatch) {
+      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
     }
 
-    isAlertActive = !description.includes('No se han emitido');
-  } catch (e) {
-    console.error("SMN error:", e);
-  }
+    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
+    if (dateMatch) date = dateMatch[1];
+
+    isAlertActive = !description.includes("No se han emitido");
+  } catch {}
 
   return { isAlertActive, description, date };
 }
 
-/* =======================
-   INPRES (simplificado)
-======================= */
+/* ================= INPRES ================= */
 async function getInpresData() {
-  let isEvent = false;
-  let description = "Sin sismos sentidos reportados recientemente.";
+  let description = "Sin sismos sentidos.";
   let date = "S/D";
+  let isEvent = false;
 
   try {
     const res = await fetch('http://contenidos.inpres.gob.ar/formatos/sentidos.xml', {
@@ -57,69 +40,85 @@ async function getInpresData() {
     });
     const xml = await res.text();
 
-    const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
-    if (itemMatch) {
-      const descMatch = itemMatch[1].match(/<description>(.*?)<\/description>/);
-      if (descMatch) {
-        description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
-        isEvent = true;
-      }
+    const descMatch = xml.match(/<description>(.*?)<\/description>/);
+    if (descMatch) {
+      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
+      isEvent = true;
     }
 
-    const pubDateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
-    if (pubDateMatch) date = pubDateMatch[1];
+    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
+    if (dateMatch) date = dateMatch[1];
 
-  } catch (e) {
-    console.error("INPRES error:", e);
-  }
+  } catch {}
 
   return { isEvent, description, date };
+}
+
+/* ================= CAP (scraping HTML) ================= */
+async function getCapData(url: string) {
+  let description = "Sin datos.";
+  let isAlert = false;
+
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: 300 }
+    });
+    const html = await res.text();
+
+    // muy básico: sacar texto del body
+    const text = html
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    description = text.slice(0, 500); // recorte
+    isAlert = !text.toLowerCase().includes("sin aviso");
+
+  } catch {}
+
+  return { description, isAlert };
 }
 
 export default async function PanelAlertasGenerales() {
   const smn = await getSmnAcpData();
   const inpres = await getInpresData();
+  const capRP = await getCapData('http://www.hidro.gob.ar/cap/CapRP.asp');
+  const capCosta = await getCapData('http://www.hidro.gob.ar/cap/CapCosta.asp');
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4">
 
       {/* HEADER */}
-      <div className="border-b border-gray-200 pb-4">
+      <div className="border-b pb-4">
         <h2 className="text-3xl font-bold text-gray-800">Panel de Alertas</h2>
       </div>
 
-      {/* ================= SMN ================= */}
-      <div className={`p-6 rounded-xl border-l-8 ${smn.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold mb-2">SMN - Avisos de Corto Plazo</h3>
-        <p className="text-xs mb-2">{smn.date}</p>
-        <div className="text-sm">{smn.description}</div>
+      {/* SMN */}
+      <div className={`p-4 rounded border-l-4 ${smn.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
+        <h3 className="font-bold">SMN</h3>
+        <p className="text-xs">{smn.date}</p>
+        <p className="text-sm">{smn.description}</p>
       </div>
 
-      {/* ================= INPRES ================= */}
-      <div className={`p-6 rounded-xl border-l-8 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold mb-2">INPRES - Sismos Sentidos</h3>
-        <p className="text-xs mb-2">{inpres.date}</p>
-        <div className="text-sm">{inpres.description}</div>
+      {/* INPRES */}
+      <div className={`p-4 rounded border-l-4 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-gray-50 border-gray-300'}`}>
+        <h3 className="font-bold">INPRES</h3>
+        <p className="text-xs">{inpres.date}</p>
+        <p className="text-sm">{inpres.description}</p>
       </div>
 
-      {/* ================= SHN iframe ================= */}
-      <div className="space-y-2">
-        <h3 className="font-bold">Avisos Mareológicos</h3>
-        <iframe
-          src="https://www.hidro.gov.ar/oceanografia/AACRIOPLA.asp"
-          className="w-full h-[400px] border rounded"
-        />
+      {/* CAP RP */}
+      <div className={`p-4 rounded border-l-4 ${capRP.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
+        <h3 className="font-bold">Río de la Plata</h3>
+        <p className="text-sm">{capRP.description}</p>
       </div>
 
-      {/* ================= SHN Twitter ================= */}
-      <div className="space-y-2">
-        <h3 className="font-bold">SHN - Alertas de Mareas</h3>
-
-        <a className="twitter-timeline" href="https://x.com/SHN_ALERTAS?s=20">
-          SHN Alertas
-        </a>
-
-        <script async src="https://platform.twitter.com/widgets.js"></script>
+      {/* CAP COSTA */}
+      <div className={`p-4 rounded border-l-4 ${capCosta.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
+        <h3 className="font-bold">Costa Bonaerense</h3>
+        <p className="text-sm">{capCosta.description}</p>
       </div>
 
     </div>
