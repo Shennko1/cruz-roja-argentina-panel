@@ -17,16 +17,13 @@ export default function MonitoreoLayout({ children }) {
           {/* Navegación con Emojis (En una sola línea) */}
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar w-full lg:w-auto justify-center">
             <Link href="/monitoreo-guardia/meteorologia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <img src="/weather.png" alt="Meteorología" className="h-4 w-4" /> Meteorología
-            </Link>
-            <Link href="/monitoreo-guardia/hidrologia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <span>🌊</span> Hidrología
+             <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Meteorología
             </Link>
             <Link href="/monitoreo-guardia/incendios" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <span>🔥</span> Incendios
+              <img src="/fire.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Incendios
             </Link>
             <Link href="/monitoreo-guardia/geofisica" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <span>🌋</span> Geofísica
+             <img src="/geo.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Geofísica
             </Link>
             <Link href="/monitoreo-guardia/redes" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
               <span>📡</span> Redes
