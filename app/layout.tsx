@@ -44,19 +44,19 @@ export default function RootLayout({
           <nav className="mb-6 border-b border-gray-200 pb-2">
             <ul className="flex gap-6 text-sm font-medium">
               <li>
-                <a href="/" className="flex items-center gap-1.5 text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">
+                <a href="/" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
   <img src="/net.png" alt="" className="w-9 h-9 object-contain"/> Inicio</a>
               </li>
               <li>
-                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">  
+                <a href="/monitoreo-guardia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">  
                   <img src="/mt.png" alt="" className="w-9 h-9 object-contain"/>Monitoreo</a>
               </li>
               <li>
-                <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase"> 
+                <a href="/monitoreo" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap"> 
                    <img src="/alert.png" alt="" className="w-9 h-9 object-contain"/> Alertas</a>
               </li>
                 <li>
-                <a href="/guias" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">
+                <a href="/guias" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
                    <img src="/guia.png" alt="" className="w-9 h-9 object-contain"/>Guías y Procesos</a>
               </li>
             </ul>
