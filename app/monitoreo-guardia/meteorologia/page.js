@@ -21,8 +21,8 @@ export default function HidrometeorologiaPage() {
 
       {/* 1. RADAR METEOROLÓGICO (Windy) */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-1">
-          <span className="text-lg">🌧️</span>
+        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+          <img src="/storm.png" alt="Ícono Lluvia" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">1. Mapa de lluvia en tiempo real</h3>
         </div>
         
@@ -74,8 +74,8 @@ export default function HidrometeorologiaPage() {
 
       {/* 2. RIESGO HÍDRICO (FloodHub / Niveles) */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-1">
-          <span className="text-lg">🌊</span>
+        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+          <img src="/floods.png" alt="Ícono Riesgo Hídrico" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">2. Riesgo Hídrico y Condiciones del Suelo</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -90,8 +90,8 @@ export default function HidrometeorologiaPage() {
 
       {/* 3. REPORTES EN TIEMPO REAL (Feeds) */}
       <div className="mb-10">
-        <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-1">
-          <span className="text-lg">📱</span>
+        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+          <img src="/media.png" alt="Ícono Redes Sociales" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">3. Reportes en Tiempo Real (Redes Sociales)</h3>
         </div>
         
@@ -132,8 +132,8 @@ export default function HidrometeorologiaPage() {
 
       {/* 4. NOTICIAS (Google News) */}
       <div>
-        <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-1">
-          <span className="text-lg">📰</span>
+        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+          <img src="/news.png" alt="Ícono Noticias" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">4. Noticias y Búsqueda</h3>
         </div>
         <div className="bg-gray-50 p-10 rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500">
