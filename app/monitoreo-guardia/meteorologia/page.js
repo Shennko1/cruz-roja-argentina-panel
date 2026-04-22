@@ -206,7 +206,7 @@ export default function HidrometeorologiaPage() {
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">¿Para qué usar estos botones?</h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Cada botón abre una pestaña nueva en Google News ya configurada para buscar solo en Argentina y solo noticias publicadas en las últimas 24 horas. Son un atajo. Úsalos para rastrear rápido qué está pasando en los medios, confirmar si hay evacuados, o ver los daños de un evento sin tener que escribir la búsqueda a mano.
+                  Cada botón abre una pestaña nueva en Google News ya configurada para buscar solo en Argentina y solo noticias publicadas en las últimas 24 horas. Son un atajo. Usalos para rastrear rápido qué está pasando en los medios, confirmar si hay eventos, evacuados, o ver los daños de un incidente sin tener que escribir la búsqueda a mano.
                 </p>
               </div>
               
