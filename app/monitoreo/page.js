@@ -2,96 +2,111 @@ import React from 'react';
 
 export const dynamic = 'force-dynamic';
 
-/* ================= SMN ================= */
-async function getSmnAcpData() {
-  let isAlertActive = false;
-  let description = "Sin avisos de corto plazo.";
-  let date = "S/D";
+/* ================= UTIL ================= */
+function clean(str) {
+  return str
+    .replace(/<!\[CDATA\[/g, "")
+    .replace(/]]>/g, "")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+}
 
+function parseItems(xml) {
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+
+  return items.map(item => {
+    const content = item[1];
+
+    const title = clean((content.match(/<title>(.*?)<\/title>/) || [])[1] || "");
+    const desc = clean((content.match(/<description>(.*?)<\/description>/) || [])[1] || "");
+    const date = clean((content.match(/<pubDate>(.*?)<\/pubDate>/) || [])[1] || "");
+
+    return { title, desc, date };
+  });
+}
+
+/* ================= SMN ================= */
+async function getSmnData() {
   try {
     const res = await fetch('https://ssl.smn.gob.ar/feeds/CAP/avisocortoplazo/rss_acpCAP.xml', {
       next: { revalidate: 60 }
     });
     const xml = await res.text();
 
-    const descMatch = xml.match(/<description>(.*?)<\/description>/);
-    if (descMatch) {
-      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
-    }
+    const items = parseItems(xml);
 
-    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
-    if (dateMatch) date = dateMatch[1];
+    const isAlert = items.length > 0 && !items[0].desc.toLowerCase().includes("no se han emitido");
 
-    isAlertActive = !description.toLowerCase().includes("no se han emitido");
-  } catch (e) {
-    console.error("SMN error:", e);
+    return { items, isAlert };
+  } catch {
+    return { items: [], isAlert: false };
   }
-
-  return { isAlertActive, description, date };
 }
 
 /* ================= INPRES ================= */
 async function getInpresData() {
-  let description = "Sin sismos sentidos.";
-  let date = "S/D";
-  let isEvent = false;
-
   try {
     const res = await fetch('http://contenidos.inpres.gob.ar/formatos/sentidos.xml', {
       next: { revalidate: 120 }
     });
     const xml = await res.text();
 
-    const descMatch = xml.match(/<description>(.*?)<\/description>/);
-    if (descMatch) {
-      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
-      isEvent = true;
-    }
+    const items = parseItems(xml);
 
-    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
-    if (dateMatch) date = dateMatch[1];
-
-  } catch (e) {
-    console.error("INPRES error:", e);
+    return { items, isAlert: items.length > 0 };
+  } catch {
+    return { items: [], isAlert: false };
   }
-
-  return { isEvent, description, date };
 }
 
-/* ================= SHN XML ================= */
+/* ================= SHN ================= */
 async function getShnData(url) {
-  let description = "Sin avisos vigentes.";
-  let date = "S/D";
-  let isAlert = false;
-
   try {
     const res = await fetch(url, {
       next: { revalidate: 120 }
     });
     const xml = await res.text();
 
-    const descMatch = xml.match(/<description>(.*?)<\/description>/);
-    if (descMatch) {
-      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
-    }
+    const items = parseItems(xml);
 
-    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
-    if (dateMatch) date = dateMatch[1];
+    const isAlert = items.length > 0 && !items[0].desc.toLowerCase().includes("sin aviso");
 
-    isAlert = !description.toLowerCase().includes("sin aviso");
-
-  } catch (e) {
-    console.error("SHN error:", e);
+    return { items, isAlert };
+  } catch {
+    return { items: [], isAlert: false };
   }
-
-  return { description, date, isAlert };
 }
 
-export default async function PanelAlertasGenerales() {
+/* ================= COMPONENTE ================= */
+function Panel({ title, data }) {
+  const alert = data.isAlert;
 
-  /* ===== PARALELIZACIÓN ===== */
+  return (
+    <div className={`p-6 rounded-xl border-l-8 ${alert ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
+      <h3 className="font-bold mb-4">{title}</h3>
+
+      {data.items.length === 0 && (
+        <p className="text-sm text-gray-600">Sin información disponible.</p>
+      )}
+
+      <div className="space-y-3">
+        {data.items.slice(0, 3).map((item, i) => (
+          <div key={i} className="bg-white p-3 rounded border text-sm">
+            <p className="font-semibold">{item.title}</p>
+            <p className="text-xs text-gray-500">{item.date}</p>
+            <p className="mt-1">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ================= PAGE ================= */
+export default async function Page() {
+
   const [smn, inpres, shnRP, shnCosta] = await Promise.all([
-    getSmnAcpData(),
+    getSmnData(),
     getInpresData(),
     getShnData('http://www.hidro.gob.ar/RSS/AACrioplarss.asp'),
     getShnData('http://www.hidro.gob.ar/RSS/AACcostarss.asp')
@@ -100,38 +115,17 @@ export default async function PanelAlertasGenerales() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4">
 
-      {/* HEADER */}
       <div className="border-b pb-4">
         <h2 className="text-3xl font-bold text-gray-800">Panel de Alertas</h2>
       </div>
 
-      {/* SMN */}
-      <div className={`p-4 rounded border-l-4 ${smn.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold">SMN - Avisos de Corto Plazo</h3>
-        <p className="text-xs">{smn.date}</p>
-        <p className="text-sm">{smn.description}</p>
-      </div>
+      <Panel title="SMN - Avisos de Corto Plazo" data={smn} />
 
-      {/* INPRES */}
-      <div className={`p-4 rounded border-l-4 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold">INPRES - Sismos Sentidos</h3>
-        <p className="text-xs">{inpres.date}</p>
-        <p className="text-sm">{inpres.description}</p>
-      </div>
+      <Panel title="INPRES - Sismos Sentidos" data={inpres} />
 
-      {/* SHN RP */}
-      <div className={`p-4 rounded border-l-4 ${shnRP.isAlert ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold">Río de la Plata</h3>
-        <p className="text-xs">{shnRP.date}</p>
-        <p className="text-sm">{shnRP.description}</p>
-      </div>
+      <Panel title="Río de la Plata - SHN" data={shnRP} />
 
-      {/* SHN COSTA */}
-      <div className={`p-4 rounded border-l-4 ${shnCosta.isAlert ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold">Costa Bonaerense</h3>
-        <p className="text-xs">{shnCosta.date}</p>
-        <p className="text-sm">{shnCosta.description}</p>
-      </div>
+      <Panel title="Costa Bonaerense - SHN" data={shnCosta} />
 
     </div>
   );
