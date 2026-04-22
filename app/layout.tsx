@@ -44,16 +44,18 @@ export default function RootLayout({
           <nav className="mb-6 border-b border-gray-200 pb-2">
             <ul className="flex gap-6 text-sm font-medium">
               <li>
-                <a href="/" className="text-gray-600 hover:text-[#ee3224]">Inicio</a>
+                <a href="/" className="flex items-center gap-1.5 text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">
+  <img src="/net.png" alt="" className="w-5 h-5 object-contain"/> Inicio
+</a>
               </li>
               <li>
-                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224]">Monitoreo</a>
+                <a href="/monitoreo-guardia" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Monitoreo</a>
               </li>
               <li>
-                <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224]">Alertas</a>
+                <a href="/monitoreo" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Alertas</a>
               </li>
                 <li>
-                <a href="/guias" className="text-gray-600 hover:text-[#ee3224]">Guías y Procesos</a>
+                <a href="/guias" className="text-gray-600 hover:text-[#ee3224] text-xs font-bold uppercase">Guías y Procesos</a>
               </li>
             </ul>
           </nav>
