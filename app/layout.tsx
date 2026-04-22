@@ -28,7 +28,7 @@ export default function RootLayout({
             <img 
               src="/enmo.jpg"
               alt="Equipo"
-              className="h-12 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224]">
