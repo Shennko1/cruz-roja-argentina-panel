@@ -212,7 +212,7 @@ export default function HidrometeorologiaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <a 
-                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)when%3A1h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
@@ -221,7 +221,7 @@ export default function HidrometeorologiaPage() {
                 </a>
 
                 <a 
-                  href="https://news.google.com/search?q=(inundación%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)when%3A1h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(inundación%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
@@ -230,7 +230,7 @@ export default function HidrometeorologiaPage() {
                 </a>
 
                 <a 
-                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)when%3A1h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
