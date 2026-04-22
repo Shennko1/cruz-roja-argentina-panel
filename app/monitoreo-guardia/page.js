@@ -121,8 +121,7 @@ export default function MonitoreoGuardiasPage() {
             </div>
           </div>
           
-            </ul>
-          </div>
+  
 
         </div>
       </div>
