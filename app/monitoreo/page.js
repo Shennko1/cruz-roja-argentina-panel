@@ -16,16 +16,13 @@ async function getSmnAcpData() {
 
     const descMatch = xml.match(/<description>(.*?)<\/description>/);
     if (descMatch) {
-      description = descMatch[1]
-        .replace(/<!\[CDATA\[/g, "")
-        .replace(/]]>/g, "")
-        .trim();
+      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
     }
 
     const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
     if (dateMatch) date = dateMatch[1];
 
-    isAlertActive = !description.includes("No se han emitido");
+    isAlertActive = !description.toLowerCase().includes("no se han emitido");
   } catch (e) {
     console.error("SMN error:", e);
   }
@@ -47,10 +44,7 @@ async function getInpresData() {
 
     const descMatch = xml.match(/<description>(.*?)<\/description>/);
     if (descMatch) {
-      description = descMatch[1]
-        .replace(/<!\[CDATA\[/g, "")
-        .replace(/]]>/g, "")
-        .trim();
+      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
       isEvent = true;
     }
 
@@ -64,39 +58,44 @@ async function getInpresData() {
   return { isEvent, description, date };
 }
 
-/* ================= CAP (scraping HTML) ================= */
-async function getCapData(url) {
-  let description = "Sin datos.";
+/* ================= SHN XML ================= */
+async function getShnData(url) {
+  let description = "Sin avisos vigentes.";
+  let date = "S/D";
   let isAlert = false;
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 300 }
+      next: { revalidate: 120 }
     });
-    const html = await res.text();
+    const xml = await res.text();
 
-    const text = html
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const descMatch = xml.match(/<description>(.*?)<\/description>/);
+    if (descMatch) {
+      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
+    }
 
-    description = text.slice(0, 500);
-    isAlert = !text.toLowerCase().includes("sin aviso");
+    const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
+    if (dateMatch) date = dateMatch[1];
+
+    isAlert = !description.toLowerCase().includes("sin aviso");
 
   } catch (e) {
-    console.error("CAP error:", e);
+    console.error("SHN error:", e);
   }
 
-  return { description, isAlert };
+  return { description, date, isAlert };
 }
 
 export default async function PanelAlertasGenerales() {
-  const smn = await getSmnAcpData();
-  const inpres = await getInpresData();
-  const capRP = await getCapData('http://www.hidro.gob.ar/cap/CapRP.asp');
-  const capCosta = await getCapData('http://www.hidro.gob.ar/cap/CapCosta.asp');
+
+  /* ===== PARALELIZACIÓN ===== */
+  const [smn, inpres, shnRP, shnCosta] = await Promise.all([
+    getSmnAcpData(),
+    getInpresData(),
+    getShnData('http://www.hidro.gob.ar/RSS/AACrioplarss.asp'),
+    getShnData('http://www.hidro.gob.ar/RSS/AACcostarss.asp')
+  ]);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4">
@@ -114,22 +113,24 @@ export default async function PanelAlertasGenerales() {
       </div>
 
       {/* INPRES */}
-      <div className={`p-4 rounded border-l-4 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-gray-50 border-gray-300'}`}>
+      <div className={`p-4 rounded border-l-4 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-green-50 border-green-500'}`}>
         <h3 className="font-bold">INPRES - Sismos Sentidos</h3>
         <p className="text-xs">{inpres.date}</p>
         <p className="text-sm">{inpres.description}</p>
       </div>
 
-      {/* CAP Río de la Plata */}
-      <div className={`p-4 rounded border-l-4 ${capRP.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold">Río de la Plata - Alertas</h3>
-        <p className="text-sm">{capRP.description}</p>
+      {/* SHN RP */}
+      <div className={`p-4 rounded border-l-4 ${shnRP.isAlert ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
+        <h3 className="font-bold">Río de la Plata</h3>
+        <p className="text-xs">{shnRP.date}</p>
+        <p className="text-sm">{shnRP.description}</p>
       </div>
 
-      {/* CAP Costa */}
-      <div className={`p-4 rounded border-l-4 ${capCosta.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold">Costa Bonaerense - Alertas</h3>
-        <p className="text-sm">{capCosta.description}</p>
+      {/* SHN COSTA */}
+      <div className={`p-4 rounded border-l-4 ${shnCosta.isAlert ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
+        <h3 className="font-bold">Costa Bonaerense</h3>
+        <p className="text-xs">{shnCosta.date}</p>
+        <p className="text-sm">{shnCosta.description}</p>
       </div>
 
     </div>
