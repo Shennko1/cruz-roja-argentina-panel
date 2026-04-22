@@ -16,14 +16,19 @@ async function getSmnAcpData() {
 
     const descMatch = xml.match(/<description>(.*?)<\/description>/);
     if (descMatch) {
-      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
+      description = descMatch[1]
+        .replace(/<!\[CDATA\[/g, "")
+        .replace(/]]>/g, "")
+        .trim();
     }
 
     const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
     if (dateMatch) date = dateMatch[1];
 
     isAlertActive = !description.includes("No se han emitido");
-  } catch {}
+  } catch (e) {
+    console.error("SMN error:", e);
+  }
 
   return { isAlertActive, description, date };
 }
@@ -42,20 +47,25 @@ async function getInpresData() {
 
     const descMatch = xml.match(/<description>(.*?)<\/description>/);
     if (descMatch) {
-      description = descMatch[1].replace(/<!\[CDATA\[/g, "").replace(/]]>/g, "").trim();
+      description = descMatch[1]
+        .replace(/<!\[CDATA\[/g, "")
+        .replace(/]]>/g, "")
+        .trim();
       isEvent = true;
     }
 
     const dateMatch = xml.match(/<pubDate>(.*?)<\/pubDate>/);
     if (dateMatch) date = dateMatch[1];
 
-  } catch {}
+  } catch (e) {
+    console.error("INPRES error:", e);
+  }
 
   return { isEvent, description, date };
 }
 
 /* ================= CAP (scraping HTML) ================= */
-async function getCapData(url: string) {
+async function getCapData(url) {
   let description = "Sin datos.";
   let isAlert = false;
 
@@ -65,7 +75,6 @@ async function getCapData(url: string) {
     });
     const html = await res.text();
 
-    // muy básico: sacar texto del body
     const text = html
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
@@ -73,10 +82,12 @@ async function getCapData(url: string) {
       .replace(/\s+/g, ' ')
       .trim();
 
-    description = text.slice(0, 500); // recorte
+    description = text.slice(0, 500);
     isAlert = !text.toLowerCase().includes("sin aviso");
 
-  } catch {}
+  } catch (e) {
+    console.error("CAP error:", e);
+  }
 
   return { description, isAlert };
 }
@@ -97,27 +108,27 @@ export default async function PanelAlertasGenerales() {
 
       {/* SMN */}
       <div className={`p-4 rounded border-l-4 ${smn.isAlertActive ? 'bg-red-50 border-red-600' : 'bg-green-50 border-green-500'}`}>
-        <h3 className="font-bold">SMN</h3>
+        <h3 className="font-bold">SMN - Avisos de Corto Plazo</h3>
         <p className="text-xs">{smn.date}</p>
         <p className="text-sm">{smn.description}</p>
       </div>
 
       {/* INPRES */}
       <div className={`p-4 rounded border-l-4 ${inpres.isEvent ? 'bg-orange-50 border-orange-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold">INPRES</h3>
+        <h3 className="font-bold">INPRES - Sismos Sentidos</h3>
         <p className="text-xs">{inpres.date}</p>
         <p className="text-sm">{inpres.description}</p>
       </div>
 
-      {/* CAP RP */}
+      {/* CAP Río de la Plata */}
       <div className={`p-4 rounded border-l-4 ${capRP.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold">Río de la Plata</h3>
+        <h3 className="font-bold">Río de la Plata - Alertas</h3>
         <p className="text-sm">{capRP.description}</p>
       </div>
 
-      {/* CAP COSTA */}
+      {/* CAP Costa */}
       <div className={`p-4 rounded border-l-4 ${capCosta.isAlert ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'}`}>
-        <h3 className="font-bold">Costa Bonaerense</h3>
+        <h3 className="font-bold">Costa Bonaerense - Alertas</h3>
         <p className="text-sm">{capCosta.description}</p>
       </div>
 
