@@ -18,13 +18,13 @@ export default function MonitoreoGuardiasPage() {
         <h3 className="text-lg font-bold text-gray-800">Uso de la página</h3>
 
         <p className="text-sm text-gray-700">
-          Esta sección centraliza accesos y herramientas necesarias para el monitoreo. Permite consultar eventos activos, reportar nuevos eventos y registrar la actividad de guardia.
+          Esta sección centraliza accesos y herramientas necesarias para el monitoreo. Permite consultar eventos activos, reportar nuevos eventos y registrar la actividad de guardia. En la sección de arriba, puede realizarse un monitoreo de posibles eventos utilizando diversas aplicaciones a disposición, así como revisar rapidamente noticias o actualizaciones en feeds automático de Facebook de cuentas que reportan información oficial o secundaria.
         </p>
 
         <ul className="text-sm text-gray-700 space-y-2">
-          <li>• La Matriz de Seguimiento permite visualizar eventos activos y su evolución.</li>
-          <li>• El reporte de eventos se utiliza para cargar información relevante que requiera monitoreo.</li>
-          <li>• El registro de guardia permite documentar la actividad realizada durante el turno.</li>
+          <li>• La Matriz de Seguimiento permite visualizar eventos que estan o estuvieron activos.</li>
+          <li>• El reporte de eventos se utiliza para cargar noticias de eventos que quizá requieran monitoreo o seguimiento.</li>
+          <li>• El registro de guardia sirve para registrar la actividad realizada durante el turno (En desarollo).</li>
         </ul>
       </div>
 
@@ -56,7 +56,7 @@ export default function MonitoreoGuardiasPage() {
           </div>
           <div>
             <h3 className="font-bold text-gray-800 text-sm">Reportar evento</h3>
-            <p className="text-xs text-gray-500">Carga de eventos para monitoreo</p>
+            <p className="text-xs text-gray-500">Carga de eventos relevantes</p>
           </div>
         </a>
 
@@ -82,21 +82,10 @@ export default function MonitoreoGuardiasPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* Inicio de turno */}
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Inicio de turno</h4>
-            <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Revisar calendario de seguimientos activos.</li>
-              <li>• Conectarse a canales operativos (comunicación y plataformas).</li>
-              <li>• Verificar el estado actual en la Matriz de Seguimiento.</li>
-              <li>• Revisar últimos informes de eventos activos.</li>
-              <li>• Notificar inicio de guardia.</li>
-            </ul>
-          </div>
 
           {/* Durante la guardia */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Durante la guardia</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Monitoreo</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Monitorear medios, redes oficiales y alertas cada 20-30 minutos.</li>
               <li>• Mantener la información actualizada evitando duplicaciones.</li>
@@ -108,7 +97,7 @@ export default function MonitoreoGuardiasPage() {
 
           {/* Detección de evento */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Detección de evento</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Detección de eventos</h4>
             <ul className="space-y-3 text-sm text-gray-700">
               <li>• Validar información en fuentes oficiales y confiables.</li>
               <li>• Registrar tipo de evento, ubicación, fecha, hora e impactos preliminares.</li>
@@ -131,15 +120,7 @@ export default function MonitoreoGuardiasPage() {
               <p>Fuente: [organismo o enlace verificado]</p>
             </div>
           </div>
-
-          {/* Cierre de turno */}
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Cierre de guardia</h4>
-            <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Verificar que toda la información esté actualizada.</li>
-              <li>• Dejar registro de eventos en curso y estado general.</li>
-              <li>• Comunicar el pase de guardia.</li>
-              <li>• Cerrar sesión en herramientas operativas.</li>
+          
             </ul>
           </div>
 
