@@ -4,16 +4,31 @@ import Link from 'next/link';
 export default function MonitoreoGuardiasPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto p-4 font-sans">
-      
+
       {/* Encabezado */}
       <div className="border-b border-gray-200 pb-4">
         <h2 className="text-3xl font-bold text-gray-800">Monitoreo y Guardias</h2>
         <p className="text-gray-600 text-sm mt-1">
-          ACCESOS Y VISORES.
+          Accesos y herramientas para el monitoreo operativo.
         </p>
       </div>
 
-         {/* SECCIÓN 1: Enlaces y Dashboards Operativos */}
+      {/* Uso de la página */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h3 className="text-lg font-bold text-gray-800">Uso de la página</h3>
+
+        <p className="text-sm text-gray-700">
+          Esta sección centraliza accesos y herramientas necesarias para el monitoreo. Permite consultar eventos activos, reportar nuevos eventos y registrar la actividad de guardia.
+        </p>
+
+        <ul className="text-sm text-gray-700 space-y-2">
+          <li>• La Matriz de Seguimiento permite visualizar eventos activos y su evolución.</li>
+          <li>• El reporte de eventos se utiliza para cargar información relevante que requiera monitoreo.</li>
+          <li>• El registro de guardia permite documentar la actividad realizada durante el turno.</li>
+        </ul>
+      </div>
+
+      {/* Enlaces operativos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <a 
           href="https://drive.google.com/drive/u/1/folders/1FqtyrYTwX_xIRbRSAFSGVl_zwi_gP_8h" 
@@ -25,8 +40,8 @@ export default function MonitoreoGuardiasPage() {
             📊
           </div>
           <div>
-            <h3 className="font-bold text-gray-800 text-sm">Matriz de Seguimiento (MS)</h3>
-            <p className="text-xs text-gray-500">Eventos abiertos y actualizaciones</p>
+            <h3 className="font-bold text-gray-800 text-sm">Matriz de Seguimiento</h3>
+            <p className="text-xs text-gray-500">Eventos activos y actualizaciones</p>
           </div>
         </a>
 
@@ -40,77 +55,97 @@ export default function MonitoreoGuardiasPage() {
             🚨
           </div>
           <div>
-            <h3 className="font-bold text-gray-800 text-sm">Reportar un evento</h3>
-            <p className="text-xs text-gray-500">Para eventos que requieran monitoreo</p>
+            <h3 className="font-bold text-gray-800 text-sm">Reportar evento</h3>
+            <p className="text-xs text-gray-500">Carga de eventos para monitoreo</p>
           </div>
         </a>
 
         <a 
-          href="#" 
+          href="#"
           className="flex items-center p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow hover:border-emerald-300"
         >
           <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl mr-4">
             📝
           </div>
           <div>
-            <h3 className="font-bold text-gray-800 text-sm">Registro de Guardia</h3>
-            <p className="text-xs text-gray-500">Formulario de monitoreo y Check</p>
+            <h3 className="font-bold text-gray-800 text-sm">Registro de guardia</h3>
+            <p className="text-xs text-gray-500">Seguimiento de actividad del turno</p>
           </div>
         </a>
       </div>
-  
-      {/* SECCIÓN 3: Protocolo Operativo */}
+
+      {/* Guía operativa */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span className="text-blue-600">📋</span> Guía de Buenas Prácticas de la Guardia
+        <h3 className="text-lg font-bold text-gray-800 mb-6">
+          Guía de monitoreo
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
+
+          {/* Inicio de turno */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">1. Al arrancar el turno</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Inicio de turno</h4>
             <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Revisá el calendario para ver si hay seguimientos activos.</li>
-              <li>• Conectate a los canales: WhatsApp, Monday, Sitio ENMO y correo.</li>
-              <li>• Pegale una mirada a la Matriz de Seguimiento (MS) para ver qué quedó abierto.</li>
-              <li>• Si retomás un evento, leé el último Informe de Situación (IDS).</li>
-              <li>• Avisá por el Chat ENMO que entrás a la guardia y quién te acompaña.</li>
+              <li>• Revisar calendario de seguimientos activos.</li>
+              <li>• Conectarse a canales operativos (comunicación y plataformas).</li>
+              <li>• Verificar el estado actual en la Matriz de Seguimiento.</li>
+              <li>• Revisar últimos informes de eventos activos.</li>
+              <li>• Notificar inicio de guardia.</li>
             </ul>
           </div>
 
+          {/* Durante la guardia */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">2. Durante la guardia</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Durante la guardia</h4>
             <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Hacé un paneo de medios, redes y alertas oficiales cada 20 o 30 minutos.</li>
-              <li>• Mantené la MS y las carpetas al día (ojo con no duplicar información).</li>
-              <li>• Si surge algo importante, avisalo en el momento, no esperes al cierre.</li>
-              <li>• Cargá el formulario de monitoreos y anotate en el Check de guardias.</li>
+              <li>• Monitorear medios, redes oficiales y alertas cada 20-30 minutos.</li>
+              <li>• Mantener la información actualizada evitando duplicaciones.</li>
+              <li>• Informar novedades relevantes en el momento.</li>
+              <li>• Registrar todas las acciones realizadas.</li>
+              <li>• Completar el formulario de monitoreo.</li>
             </ul>
           </div>
 
+          {/* Detección de evento */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">3. Detección de una noticia/evento</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Detección de evento</h4>
             <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Validá siempre con fuentes oficiales (SMN, INPRES, Defensa Civil).</li>
-              <li>• Anotá lo básico: Qué pasó, Dónde, Cuándo, Impactos preliminares y la Fuente.</li>
-              <li>• Evaluá si la severidad da para activar un seguimiento.</li>
-              <li>• Pasalo por el Chat ENMO usando el formato estándar.</li>
+              <li>• Validar información en fuentes oficiales y confiables.</li>
+              <li>• Registrar tipo de evento, ubicación, fecha, hora e impactos preliminares.</li>
+              <li>• Identificar fuente de la información.</li>
+              <li>• Evaluar severidad y necesidad de seguimiento.</li>
+              <li>• Comunicar utilizando el formato estándar.</li>
             </ul>
           </div>
 
+          {/* Formato estándar */}
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">4. Pase y cierre de guardia</h4>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Formato de reporte</h4>
+            <div className="text-sm text-gray-700 space-y-1 font-mono">
+              <p>[EVENTO] – [LOCALIDAD/PROVINCIA]</p>
+              <p>Fecha y hora: [dd/mm/aa – hh:mm]</p>
+              <p>Ubicación: [Localidad – Provincia]</p>
+              <p>Magnitud/severidad: [dato relevante]</p>
+              <p>Descripción: [resumen del hecho]</p>
+              <p>Impactos preliminares: [daños, evacuados, cortes]</p>
+              <p>Fuente: [organismo o enlace verificado]</p>
+            </div>
+          </div>
+
+          {/* Cierre de turno */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">Cierre de guardia</h4>
             <ul className="space-y-3 text-sm text-gray-700">
-              <li>• Asegurate de que todo haya quedado en la carpeta y en la MS.</li>
-              <li>• Dejá el pase por escrito en el Chat ENMO (eventos en curso, alertas vigentes y recomendaciones).</li>
-              <li>• Si hay seguimientos muy críticos, dejalo bien aclarado en el chat.</li>
-              <li>• Cerrá sesión en las herramientas internas (MS, Drive, etc.).</li>
+              <li>• Verificar que toda la información esté actualizada.</li>
+              <li>• Dejar registro de eventos en curso y estado general.</li>
+              <li>• Comunicar el pase de guardia.</li>
+              <li>• Cerrar sesión en herramientas operativas.</li>
             </ul>
           </div>
 
         </div>
       </div>
-      
+
     </div>
   );
 }
