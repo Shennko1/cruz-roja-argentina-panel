@@ -35,6 +35,9 @@ export default function HidrometeorologiaPage() {
           <div className="lg:col-span-1 bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col justify-between shadow-sm">
             <div>
               <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">Guía rápida</h4>
+              <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
+                Visualiza el desplazamiento de frentes de tormenta y la intensidad de las precipitaciones sobre el territorio.
+              </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
@@ -46,7 +49,7 @@ export default function HidrometeorologiaPage() {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Previsión:</strong> Usar la barra inferior para ver evolución.</span>
+                  <span><strong>Previsión:</strong> Usar la barra inferior para ver la evolución.</span>
                 </li>
               </ul>
             </div>
@@ -94,28 +97,30 @@ export default function HidrometeorologiaPage() {
           <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
-              <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 text-xl">🌊</div>
-              <h4 className="text-sm font-bold text-gray-700">Google FloodHub</h4>
-              <p className="text-[11px] text-gray-500 mt-1 mb-4">Uso: Identificación de áreas bajo alerta y proyecciones de riesgo.</p>
+              <h4 className="text-sm font-bold text-gray-700 mb-2">Google FloodHub</h4>
+              <p className="text-[12px] text-gray-600 mb-5 px-4 leading-relaxed">
+                Permite identificar áreas geográficas bajo alerta y visualizar las proyecciones de riesgo hídrico en el territorio.
+              </p>
               <a 
                 href="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0" 
                 target="_blank" 
                 rel="noreferrer"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors"
               >
                 Abrir Plataforma Oficial ↗
               </a>
             </div>
 
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
-              <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 text-xl">⚓</div>
-              <h4 className="text-sm font-bold text-gray-700">Niveles de Ríos (PNA)</h4>
-              <p className="text-[11px] text-gray-500 mt-1 mb-4">Uso: Consulta fáctica del estado hidrométrico en puertos.</p>
+              <h4 className="text-sm font-bold text-gray-700 mb-2">Niveles de Ríos (PNA)</h4>
+              <p className="text-[12px] text-gray-600 mb-5 px-4 leading-relaxed">
+                Facilita la consulta del estado hidrométrico actual y sus variaciones recientes en los distintos puertos del país.
+              </p>
               <a 
                 href="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php" 
                 target="_blank" 
                 rel="noreferrer"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors"
               >
                 Abrir Mapa Interactivo ↗
               </a>
@@ -191,37 +196,43 @@ export default function HidrometeorologiaPage() {
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h4 className="text-xs font-bold text-gray-700 mb-4 uppercase">Filtros Activos: Argentina | Últimas 24 horas</h4>
+              
+              <div className="mb-5 pb-4 border-b border-gray-200">
+                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Filtros Activos: Argentina</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  Busca y estructura la información en medios de prensa locales para relevar evidencia narrativa sobre incidentes climáticos y su impacto poblacional en el último día.
+                </p>
+              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Botón Query 1: Tormentas */}
                 <a 
-                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  <span>⚡</span> Tormentas y Lluvias
+                  Tormentas y Lluvias
                 </a>
 
                 {/* Botón Query 2: Inundaciones */}
                 <a 
-                  href="https://news.google.com/search?q=(inundacion%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(inundacion%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  <span>🌊</span> Inundaciones y Crecidas
+                  Inundaciones y Crecidas
                 </a>
 
                 {/* Botón Query 3: Impacto */}
                 <a 
-                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
                 >
-                  <span>🚨</span> Impacto y Evacuados
+                  Impacto y Evacuados
                 </a>
               </div>
 
