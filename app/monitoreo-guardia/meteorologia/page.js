@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 
 export default function HidrometeorologiaPage() {
-  // Estados para controlar qué sección está abierta o cerrada (por defecto arrancan cerradas para limpiar el dashboard)
   const [isRiesgoOpen, setIsRiesgoOpen] = useState(false);
   const [isRedesOpen, setIsRedesOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
@@ -76,7 +75,7 @@ export default function HidrometeorologiaPage() {
         </div>
       </div>
 
-      {/* RIESGO HÍDRICO (FloodHub / Niveles) - Desplegable */}
+      {/* RIESGO HÍDRICO (Launchers) - Desplegable */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button 
           onClick={() => setIsRiesgoOpen(!isRiesgoOpen)}
@@ -93,31 +92,35 @@ export default function HidrometeorologiaPage() {
         
         {isRiesgoOpen && (
           <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
-              <div className="p-3 border-b border-gray-200 bg-white">
-                <h4 className="text-xs font-bold text-gray-700">Google FloodHub</h4>
-                <p className="text-[11px] text-gray-500 mt-1">Uso: Identificación de áreas bajo alerta y proyecciones de riesgo de inundación.</p>
-              </div>
-              <iframe
-                src="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0"
-                className="w-full h-80 bg-gray-100"
-                frameBorder="0"
-                title="Google FloodHub"
-              ></iframe>
+            
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
+              <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 text-xl">🌊</div>
+              <h4 className="text-sm font-bold text-gray-700">Google FloodHub</h4>
+              <p className="text-[11px] text-gray-500 mt-1 mb-4">Uso: Identificación de áreas bajo alerta y proyecciones de riesgo.</p>
+              <a 
+                href="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0" 
+                target="_blank" 
+                rel="noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              >
+                Abrir Plataforma Oficial ↗
+              </a>
             </div>
 
-            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
-              <div className="p-3 border-b border-gray-200 bg-white">
-                <h4 className="text-xs font-bold text-gray-700">Niveles de Ríos (Prefectura Naval)</h4>
-                <p className="text-[11px] text-gray-500 mt-1">Uso: Consulta fáctica del estado hidrométrico actual y variaciones en puertos.</p>
-              </div>
-              <iframe
-                src="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php"
-                className="w-full h-80 bg-gray-100"
-                frameBorder="0"
-                title="Niveles de Ríos PNA"
-              ></iframe>
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center text-center shadow-sm h-48">
+              <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 text-xl">⚓</div>
+              <h4 className="text-sm font-bold text-gray-700">Niveles de Ríos (PNA)</h4>
+              <p className="text-[11px] text-gray-500 mt-1 mb-4">Uso: Consulta fáctica del estado hidrométrico en puertos.</p>
+              <a 
+                href="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php" 
+                target="_blank" 
+                rel="noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              >
+                Abrir Mapa Interactivo ↗
+              </a>
             </div>
+
           </div>
         )}
       </div>
@@ -170,7 +173,7 @@ export default function HidrometeorologiaPage() {
         )}
       </div>
 
-      {/* NOTICIAS (Google News) - Desplegable */}
+      {/* NOTICIAS (Google News Launchers) - Desplegable */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button 
           onClick={() => setIsNoticiasOpen(!isNoticiasOpen)}
@@ -178,7 +181,7 @@ export default function HidrometeorologiaPage() {
         >
           <div className="flex items-center gap-3">
             <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Noticias y Búsqueda</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Noticias y Búsqueda (Últimas 24h)</h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -187,8 +190,41 @@ export default function HidrometeorologiaPage() {
         
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-10 rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500">
-              [Integración de Google News con consultas de inundaciones/tormentas]
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h4 className="text-xs font-bold text-gray-700 mb-4 uppercase">Filtros Activos: Argentina | Últimas 24 horas</h4>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Botón Query 1: Tormentas */}
+                <a 
+                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>⚡</span> Tormentas y Lluvias
+                </a>
+
+                {/* Botón Query 2: Inundaciones */}
+                <a 
+                  href="https://news.google.com/search?q=(inundacion%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>🌊</span> Inundaciones y Crecidas
+                </a>
+
+                {/* Botón Query 3: Impacto */}
+                <a 
+                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>🚨</span> Impacto y Evacuados
+                </a>
+              </div>
+
             </div>
           </div>
         )}
