@@ -206,13 +206,13 @@ export default function HidrometeorologiaPage() {
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">¿Para qué usar estos botones?</h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Cada botón abre una pestaña nueva en Google News ya configurada para buscar solo en Argentina y solo noticias publicadas en las últimas 24 horas. Son un atajo. Usalos para rastrear rápido qué está pasando en los medios, confirmar si hay eventos, evacuados, o ver los daños de un incidente sin tener que escribir la búsqueda a mano.
+                  Cada botón abre una pestaña nueva en Google News, ya configurada para buscar palabras específicas como Tormentas, Inundaciones, Evacuados, etc. Con solo noticias publicadas en las últimas 24 horas. Son un atajo. Usalos para rastrear rápido qué está pasando en los medios, confirmar si hay eventos, evacuados, o ver los daños de un incidente sin tener que escribir la búsqueda a mano.
                 </p>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <a 
-                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
@@ -221,7 +221,7 @@ export default function HidrometeorologiaPage() {
                 </a>
 
                 <a 
-                  href="https://news.google.com/search?q=(inundacion%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(inundación%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
@@ -230,7 +230,7 @@ export default function HidrometeorologiaPage() {
                 </a>
 
                 <a 
-                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
+                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" 
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
