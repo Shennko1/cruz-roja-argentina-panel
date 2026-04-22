@@ -1,6 +1,12 @@
-import React from 'react';
+"use client";
+import React, { useState } from 'react';
 
 export default function HidrometeorologiaPage() {
+  // Estados para controlar qué sección está abierta o cerrada (por defecto arrancan cerradas para limpiar el dashboard)
+  const [isRiesgoOpen, setIsRiesgoOpen] = useState(false);
+  const [isRedesOpen, setIsRedesOpen] = useState(false);
+  const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
+
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       
@@ -19,15 +25,14 @@ export default function HidrometeorologiaPage() {
         Agregar información.
       </div>
 
-      {/* 1. RADAR METEOROLÓGICO (Windy) */}
+      {/* MAPA METEOROLÓGICO (Windy) - Siempre visible */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/storm.png" alt="Ícono Lluvia" className="w-7 h-7 object-contain" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">1. Mapa de lluvia en tiempo real</h3>
+          <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" />
+          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Mapa de lluvia en tiempo real</h3>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Guía de Uso Lateral */}
           <div className="lg:col-span-1 bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col justify-between shadow-sm">
             <div>
               <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">Guía rápida</h4>
@@ -58,7 +63,6 @@ export default function HidrometeorologiaPage() {
             </div>
           </div>
 
-          {/* Mapa Windy */}
           <div className="lg:col-span-3 rounded-xl overflow-hidden border border-gray-300 shadow-md bg-gray-100 h-[500px]">
             <iframe
               width="100%"
@@ -72,73 +76,122 @@ export default function HidrometeorologiaPage() {
         </div>
       </div>
 
-      {/* 2. RIESGO HÍDRICO (FloodHub / Niveles) */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/floods.png" alt="Ícono Riesgo Hídrico" className="w-7 h-7 object-contain" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">2. Riesgo Hídrico y Condiciones del Suelo</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-50 h-40 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-400">
-            [Módulo FloodHub - Pronóstico de Inundaciones]
+      {/* RIESGO HÍDRICO (FloodHub / Niveles) - Desplegable */}
+      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button 
+          onClick={() => setIsRiesgoOpen(!isRiesgoOpen)}
+          className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <img src="/floods.png" alt="Ícono Riesgo Hídrico" className="w-9 h-9 object-contain" />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Riesgo Hídrico y Condiciones del Suelo</h3>
           </div>
-          <div className="bg-gray-50 h-40 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-400">
-            [Niveles de Ríos y Humedad del Suelo]
-          </div>
-        </div>
-      </div>
-
-      {/* 3. REPORTES EN TIEMPO REAL (Feeds) */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/media.png" alt="Ícono Redes Sociales" className="w-7 h-7 object-contain" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">3. Reportes en Tiempo Real (Redes Sociales)</h3>
-        </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRiesgoOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {/* Feed SMN */}
-          <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
-            </iframe>
-          </div>
+        {isRiesgoOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
+              <div className="p-3 border-b border-gray-200 bg-white">
+                <h4 className="text-xs font-bold text-gray-700">Google FloodHub</h4>
+                <p className="text-[11px] text-gray-500 mt-1">Uso: Identificación de áreas bajo alerta y proyecciones de riesgo de inundación.</p>
+              </div>
+              <iframe
+                src="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0"
+                className="w-full h-80 bg-gray-100"
+                frameBorder="0"
+                title="Google FloodHub"
+              ></iframe>
+            </div>
 
-          {/* Feed Tiempo en Argentina */}
-          <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
-            </iframe>
+            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
+              <div className="p-3 border-b border-gray-200 bg-white">
+                <h4 className="text-xs font-bold text-gray-700">Niveles de Ríos (Prefectura Naval)</h4>
+                <p className="text-[11px] text-gray-500 mt-1">Uso: Consulta fáctica del estado hidrométrico actual y variaciones en puertos.</p>
+              </div>
+              <iframe
+                src="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php"
+                className="w-full h-80 bg-gray-100"
+                frameBorder="0"
+                title="Niveles de Ríos PNA"
+              ></iframe>
+            </div>
           </div>
-
-          {/* Feed METRA */}
-          <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
-            </iframe>
-          </div>
-
-          {/* Feed Pronóstico Extendido */}
-          <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
-            <iframe 
-              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
-              width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
-            </iframe>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* 4. NOTICIAS (Google News) */}
-      <div>
-        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/news.png" alt="Ícono Noticias" className="w-7 h-7 object-contain" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">4. Noticias y Búsqueda</h3>
-        </div>
-        <div className="bg-gray-50 p-10 rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500">
-          [Integración de Google News con consultas de inundaciones/tormentas]
-        </div>
+      {/* REPORTES EN TIEMPO REAL (Feeds) - Desplegable */}
+      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button 
+          onClick={() => setIsRedesOpen(!isRedesOpen)}
+          className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <img src="/media.png" alt="Ícono Redes Sociales" className="w-9 h-9 object-contain" />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Reportes en Tiempo Real (Redes Sociales)</h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRedesOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isRedesOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
+              </iframe>
+            </div>
+
+            <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
+              </iframe>
+            </div>
+
+            <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
+              </iframe>
+            </div>
+
+            <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm overflow-hidden h-[510px]">
+              <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
+                width="100%" height="500" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder="0" allowFullScreen={true}>
+              </iframe>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* NOTICIAS (Google News) - Desplegable */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button 
+          onClick={() => setIsNoticiasOpen(!isNoticiasOpen)}
+          className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Noticias y Búsqueda</h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isNoticiasOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="bg-gray-50 p-10 rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500">
+              [Integración de Google News con consultas de inundaciones/tormentas]
+            </div>
+          </div>
+        )}
       </div>
       
     </div>
