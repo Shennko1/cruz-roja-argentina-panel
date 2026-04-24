@@ -1,6 +1,68 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
+// COMPONENTE: Feed de Noticias (Llamada directa sin backend)
+function NoticiasFeed() {
+  const [noticias, setNoticias] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    // La URL de búsqueda en Google News (formato RSS) para las últimas 24h en Argentina
+    const googleNewsUrl = "https://news.google.com/rss/search?q=(inundacion%20OR%20tormenta%20OR%20evacuados)%20Argentina%20when:24h&hl=es-419&gl=AR&ceid=AR:es-419";
+    
+    // rss2json actúa como puente para evitar el bloqueo de seguridad (CORS) del navegador
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(googleNewsUrl)}`;
+
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items) {
+          // Nos quedamos solo con las últimas 5 noticias
+          setNoticias(data.items.slice(0, 5));
+        }
+        setCargando(false);
+      })
+      .catch((err) => {
+        console.error("Error al cargar noticias:", err);
+        setCargando(false);
+      });
+  }, []);
+
+  if (cargando) {
+    return (
+      <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+        Cargando feed...
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {noticias.length > 0 ? (
+        noticias.map((noticia, index) => (
+          <a
+            key={index}
+            href={noticia.link}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors flex flex-col gap-1 shadow-sm"
+          >
+            <h4 className="text-sm font-bold text-gray-800">{noticia.title}</h4>
+            <span className="text-[11px] text-gray-500 font-medium">
+              {new Date(noticia.pubDate).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+            </span>
+          </a>
+        ))
+      ) : (
+        <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          Agregar información.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// COMPONENTE PRINCIPAL: Página de Hidrometeorología
 export default function HidrometeorologiaPage() {
   const [isRiesgoOpen, setIsRiesgoOpen] = useState(false);
   const [isRedesOpen, setIsRedesOpen] = useState(false);
@@ -257,7 +319,7 @@ export default function HidrometeorologiaPage() {
         )}
       </div>
 
-      {/* NOTICIAS (Google News Launchers) - Desplegable */}
+      {/* NOTICIAS (RSS Fetch Integrado) - Desplegable */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button
           onClick={() => setIsNoticiasOpen(!isNoticiasOpen)}
@@ -270,7 +332,7 @@ export default function HidrometeorologiaPage() {
               className="w-9 h-9 object-contain"
             />
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Buscar en Noticias (Últimas 24h)
+              Feed de Noticias (Últimas 24h)
             </h3>
           </div>
           <svg
@@ -291,48 +353,7 @@ export default function HidrometeorologiaPage() {
         </button>
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-5 pb-4 border-b border-gray-200">
-                <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">
-                  ¿Para qué usar estos botones?
-                </h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Cada botón abre una pestaña nueva en Google News, ya
-                  configurada para buscar palabras específicas como Tormentas,
-                  Inundaciones, Evacuados, etc. Con solo noticias publicadas en
-                  las últimas 24 horas. Son un atajo. Usalos para rastrear
-                  rápido qué está pasando en los medios, confirmar si hay
-                  eventos, evacuados, o ver los daños de un incidente sin tener
-                  que escribir la búsqueda a mano.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <a
-                  href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
-                >
-                  Ver noticias de Tormentas
-                </a>
-                <a
-                  href="https://news.google.com/search?q=(inundación%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
-                >
-                  Ver noticias de Inundaciones
-                </a>
-                <a
-                  href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm"
-                >
-                  Ver reportes de Daños y Evacuados
-                </a>
-              </div>
-            </div>
+            <NoticiasFeed />
           </div>
         )}
       </div>
