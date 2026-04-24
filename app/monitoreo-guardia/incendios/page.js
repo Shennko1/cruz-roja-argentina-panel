@@ -130,12 +130,12 @@ export default function IncendiosPage() {
         Agregar información.
       </div>
 
-      {/* 1. MAPA DE HUMO Y VIENTO (Windy PM2.5) - Siempre visible */}
+      {/* 1. MAPA DE FOCOS ACTIVOS (PyroGuard) - Siempre visible */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/smoke.png" alt="Ícono Humo" className="w-9 h-9 object-contain" />
+          <img src="/fire.png" alt="Ícono Fuego" className="w-9 h-9 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-            Rastreo de Humo y Viento en tiempo real
+            Mapa Interactivo de Focos Activos
           </h3>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -145,16 +145,16 @@ export default function IncendiosPage() {
                 ¿Para qué sirve este mapa?
               </h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Muestra la concentración de partículas en el aire (humo) y la dirección del viento. Sirve para ver si una pluma tóxica se dirige hacia una ciudad o ruta, incluso si hay nubes tapando la visual del satélite.
+                Interfaz rápida para visualizar focos de calor recientes en el territorio. Ideal para que los voluntarios rastreen un reporte ciudadano en tiempo real.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
-                  <span className="text-orange-500 font-bold">•</span>
-                  <span><strong>Colores:</strong> Tonos naranjas/rojos marcan alta densidad de humo.</span>
+                  <span className="text-red-500 font-bold">•</span>
+                  <span><strong>Focos:</strong> Los puntos indican anomalías térmicas detectadas por satélite.</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-orange-500 font-bold">•</span>
-                  <span><strong>Partículas:</strong> Las líneas muestran hacia dónde está empujando el fuego en vivo.</span>
+                  <span className="text-red-500 font-bold">•</span>
+                  <span><strong>Agilidad:</strong> Permite acercarse a cualquier zona del país y cruzar coordenadas con reportes de humo.</span>
                 </li>
               </ul>
             </div>
@@ -163,22 +163,22 @@ export default function IncendiosPage() {
             <iframe 
               width="100%" 
               height="100%" 
-              src="https://embed.windy.com/embed2.html?lat=-38.416&lon=-63.617&zoom=4&level=surface&overlay=pm2p5&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" 
+              src="https://pyroguardapp.com/mapa" 
               frameBorder="0" 
-              title="Windy Smoke Radar" 
+              title="PyroGuard Focos" 
               allowFullScreen>
             </iframe>
           </div>
         </div>
       </div>
 
-      {/* 2. FOCOS ACTIVOS (Launchers) - Desplegable */}
+      {/* 2. RESPALDO Y RIESGO (Launchers) - Desplegable */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsFocosOpen(!isFocosOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
-            <img src="/fire.png" alt="Ícono Fuego" className="w-9 h-9 object-contain" />
+            <img src="/smoke.png" alt="Ícono Respaldo" className="w-9 h-9 object-contain" />
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Detección Satelital de Focos
+              Respaldo Satelital y Riesgo
             </h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isFocosOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,24 +188,27 @@ export default function IncendiosPage() {
         {isFocosOpen && (
           <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-3 gap-4">
             
+            {/* Launcher 1: CONICET (IANIGLA) */}
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <h4 className="text-sm font-bold text-gray-800 mb-2">PyroGuard (Mapa Ágil)</h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Interfaz rápida y visual de los focos de calor recientes.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Primera línea visual para que los voluntarios rastreen rápido un reporte ciudadano en el mapa.</p>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Focos CONICET (IANIGLA)</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Mapa nacional oficial desarrollado por investigadores locales.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Como fuente institucional de respaldo. Útil para confirmar anomalías con datos procesados localmente en Argentina.</p>
               </div>
-              <a href="https://pyroguardapp.com/mapa" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir PyroGuard ↗</a>
+              <a href="https://ianigla.net/focos/mapa_nacional.php" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa CONICET ↗</a>
             </div>
 
+            {/* Launcher 2: GFW (Respaldo NASA) */}
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
                 <h4 className="text-sm font-bold text-gray-800 mb-2">Global Forest Watch</h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Lectura directa de los satélites VIIRS/MODIS de la NASA montada sobre un mapa limpio.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Es el respaldo fáctico. Si PyroGuard falla o hay dudas técnicas sobre una coordenada, chequeá este mapa.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Si el mapa principal falla o hay dudas técnicas sobre una coordenada, este visor es el estándar global fáctico.</p>
               </div>
               <a href="https://www.globalforestwatch.org/map/?active_category=fires" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir GFW Focos ↗</a>
             </div>
 
+            {/* Launcher 3: SNMF */}
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
                 <h4 className="text-sm font-bold text-gray-800 mb-2">Riesgo de Incendios (SNMF)</h4>
