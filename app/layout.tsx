@@ -1,73 +1,37 @@
-import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
-import "./globals.css";
+import Link from 'next/link';
 
-// Inicializamos la fuente Montserrat
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  display: 'swap',
-});
-
-export const metadata: Metadata = {
-  title: "Equipo Nacional de Monitoreo",
-  description: "Panel de control y monitoreo de emergencias",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function GCRLayout({ children }) {
   return (
-    <html lang="es">
-      {/* Aplicamos montserrat.className para que afecte a toda la app */}
-      <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
-        <div className="p-8">
-          {/* Header Global */}
-          <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
-            <img 
-              src="/enmo.jpg"
-              alt="Equipo"
-              className="h-25 w-auto object-contain"
-            />
-            <div>
-              <h1 className="text-3xl font-bold text-[#ee3224]">
-                Equipo Nacional de Monitoreo
-              </h1>
-              <p className="text-gray-500 text-sm mt-1">
-                PRUEBA
-              </p>
-            </div>
-          </header>
+    <div className="min-h-screen bg-[#f4f4f4] font-sans">
+      
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-3">
+            <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">
+              Google Crisis Response
+            </h1>
+          </div>
 
-          {/* Menú */}
-          <nav className="mb-6 border-b border-gray-200 pb-2">
-            <ul className="flex gap-6 text-sm font-medium">
-              <li>
-                <a href="/" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-  <img src="/net.png" alt="" className="w-9 h-9 object-contain"/> Inicio</a>
-              </li>
-              <li>
-                <a href="/monitoreo-guardia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">  
-                  <img src="/mt.png" alt="" className="w-9 h-9 object-contain"/>Monitoreo</a>
-              </li>
-              <li>
-                <a href="/monitoreo" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap"> 
-                   <img src="/alert.png" alt="" className="w-9 h-9 object-contain"/> Alertas</a>
-              </li>
-                <li>
-                <a href="/guias" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-                   <img src="/guia.png" alt="" className="w-9 h-9 object-contain"/>Guías y Procesos</a>
-              </li>
-            </ul>
+          <nav className="flex items-center gap-4 overflow-x-auto no-scrollbar w-full lg:w-auto justify-center">
+            <span className="text-xs font-bold text-gray-400 uppercase">
+              [Agregar información]
+            </span>
           </nav>
 
-          {/* El contenido de cada página (page.tsx) se inyecta aquí */}
-          <main>
-            {children}
-          </main>
         </div>
-      </body>
-    </html>
+        
+        <div className="bg-gray-50 border-t border-gray-100 px-4 py-2">
+          <p className="max-w-7xl mx-auto text-xs text-gray-600">
+            Sección destinada a consolidar alertas y herramientas de respuesta ante emergencias en Argentina para facilitar la visualización de incidentes y coordinar la asistencia.
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-4">
+        {children}
+      </main>
+      
+    </div>
   );
 }
