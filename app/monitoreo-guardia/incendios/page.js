@@ -1,116 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-// COMPONENTE: Feed de Noticias con Pestañas e Imágenes (Categorías de Incendios)
-function NoticiasFuegoFeed({ categoria }) {
-  const [noticias, setNoticias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-
-  useEffect(() => {
-    setCargando(true);
-    setNoticias([]);
-
-    // Consultas estructuradas con los operadores lógicos y filtros regionales solicitados
-    const queries = {
-      forestales: '("incendio forestal" OR "incendios forestales") (córdoba OR "rio negro" OR neuquén OR "buenos aires" OR mendoza OR argentina) when:24h',
-      estructurales: '("incendio estructural" OR "incendios estructurales") (córdoba OR "rio negro" OR neuquén OR "buenos aires" OR mendoza OR argentina) when:24h',
-      impacto: '(bomberos OR evacuados OR "rutas cortadas") (córdoba OR "rio negro" OR neuquén OR "buenos aires" OR mendoza OR argentina) when:24h'
-    };
-
-    const googleNewsUrl = `https://news.google.com/rss/search?q=${queries[categoria]}&hl=es-419&gl=AR&ceid=AR:es-419`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(googleNewsUrl)}`;
-
-    fetch(proxyUrl)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.contents) {
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-          const items = xmlDoc.getElementsByTagName("item");
-          
-          const notasExtraidas = [];
-          
-          for (let i = 0; i < Math.min(items.length, 5); i++) {
-            const title = items[i].getElementsByTagName("title")[0]?.textContent || "Sin título";
-            const link = items[i].getElementsByTagName("link")[0]?.textContent || "#";
-            const pubDate = items[i].getElementsByTagName("pubDate")[0]?.textContent;
-            
-            let imageUrl = null;
-            const description = items[i].getElementsByTagName("description")[0]?.textContent;
-            if (description) {
-              const imgMatch = description.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch && imgMatch[1]) {
-                imageUrl = imgMatch[1];
-              }
-            }
-
-            notasExtraidas.push({ title, link, pubDate, imageUrl });
-          }
-          setNoticias(notasExtraidas);
-        }
-        setCargando(false);
-      })
-      .catch((err) => {
-        console.error("Error al cargar el RSS:", err);
-        setCargando(false);
-      });
-  }, [categoria]);
-
-  if (cargando) {
-    return (
-      <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-        Cargando feed de noticias...
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      {noticias.length > 0 ? (
-        noticias.map((noticia, index) => (
-          <a
-            key={index}
-            href={noticia.link}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-red-400 hover:bg-red-50 transition-colors flex items-center gap-4 shadow-sm"
-          >
-            {noticia.imageUrl ? (
-              <img 
-                src={noticia.imageUrl} 
-                alt="Miniatura" 
-                className="w-16 h-16 rounded object-cover bg-white border border-gray-200 shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded bg-gray-200 border border-gray-300 shrink-0 flex items-center justify-center">
-                <span className="text-gray-400 text-xs">📰</span>
-              </div>
-            )}
-            
-            <div className="flex flex-col gap-1">
-              <h4 className="text-sm font-bold text-gray-800 leading-snug line-clamp-2">{noticia.title}</h4>
-              <span className="text-[11px] text-gray-500 font-medium">
-                {new Date(noticia.pubDate).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
-              </span>
-            </div>
-          </a>
-        ))
-      ) : (
-        <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          Agregar información.
-        </div>
-      )}
-    </div>
-  );
-}
-
-// COMPONENTE PRINCIPAL: Página de Incendios
 export default function IncendiosPage() {
   const [isFocosOpen, setIsFocosOpen] = useState(false);
   const [isRedesOpen, setIsRedesOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
-  
-  const [categoriaNoticias, setCategoriaNoticias] = useState("forestales");
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
@@ -130,12 +24,12 @@ export default function IncendiosPage() {
         Agregar información.
       </div>
 
-      {/* 1. MAPA DE FOCOS ACTIVOS (PyroGuard) - Siempre visible */}
+      {/* 1. MAPA DE FOCOS ACTIVOS (CONICET) - Siempre visible */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
           <img src="/fire.png" alt="Ícono Fuego" className="w-9 h-9 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-            Mapa Interactivo de Focos Activos
+            Mapa de Focos Activos (CONICET)
           </h3>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -145,16 +39,16 @@ export default function IncendiosPage() {
                 ¿Para qué sirve este mapa?
               </h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Interfaz rápida para visualizar focos de calor recientes en el territorio. Ideal para que los voluntarios rastreen un reporte ciudadano en tiempo real.
+                Plataforma oficial desarrollada por investigadores del CONICET (IANIGLA). Permite a los voluntarios corroborar datos con información satelital procesada localmente en Argentina.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
                   <span className="text-red-500 font-bold">•</span>
-                  <span><strong>Focos:</strong> Los puntos indican anomalías térmicas detectadas por satélite.</span>
+                  <span><strong>Focos:</strong> Muestra anomalías térmicas recientes detectadas sobre el territorio nacional.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-red-500 font-bold">•</span>
-                  <span><strong>Agilidad:</strong> Permite acercarse a cualquier zona del país y cruzar coordenadas con reportes de humo.</span>
+                  <span><strong>Validación:</strong> Ideal para cruzar con reportes de humo o denuncias ciudadanas.</span>
                 </li>
               </ul>
             </div>
@@ -163,9 +57,9 @@ export default function IncendiosPage() {
             <iframe 
               width="100%" 
               height="100%" 
-              src="https://pyroguardapp.com/mapa" 
+              src="https://ianigla.net/focos/mapa_nacional.php" 
               frameBorder="0" 
-              title="PyroGuard Focos" 
+              title="Mapa Focos CONICET" 
               allowFullScreen>
             </iframe>
           </div>
@@ -188,14 +82,14 @@ export default function IncendiosPage() {
         {isFocosOpen && (
           <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-3 gap-4">
             
-            {/* Launcher 1: CONICET (IANIGLA) */}
+            {/* Launcher 1: PyroGuard */}
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <h4 className="text-sm font-bold text-gray-800 mb-2">Focos CONICET (IANIGLA)</h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Mapa nacional oficial desarrollado por investigadores locales.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Como fuente institucional de respaldo. Útil para confirmar anomalías con datos procesados localmente en Argentina.</p>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">PyroGuard (Mapa Ágil)</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Interfaz rápida y visual de los focos de calor recientes.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Como alternativa ágil si el mapa oficial de CONICET presenta demoras en la carga.</p>
               </div>
-              <a href="https://ianigla.net/focos/mapa_nacional.php" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa CONICET ↗</a>
+              <a href="https://pyroguardapp.com/mapa" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir PyroGuard ↗</a>
             </div>
 
             {/* Launcher 2: GFW (Respaldo NASA) */}
@@ -203,7 +97,7 @@ export default function IncendiosPage() {
               <div>
                 <h4 className="text-sm font-bold text-gray-800 mb-2">Global Forest Watch</h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Lectura directa de los satélites VIIRS/MODIS de la NASA montada sobre un mapa limpio.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Si el mapa principal falla o hay dudas técnicas sobre una coordenada, este visor es el estándar global fáctico.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Si hay dudas técnicas sobre una coordenada, este visor es el estándar global fáctico.</p>
               </div>
               <a href="https://www.globalforestwatch.org/map/?active_category=fires" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir GFW Focos ↗</a>
             </div>
@@ -240,17 +134,14 @@ export default function IncendiosPage() {
             <div className="mb-2">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* SPLIF Río Negro */}
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50 overflow-hidden h-[510px]">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fsplifrn&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
 
-                {/* Manejo del Fuego (Perfil Genérico) */}
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50 overflow-hidden h-[510px]">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100067032056115&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
 
-                {/* Manejo del Fuego Chubut */}
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50 overflow-hidden h-[510px]">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fmanejodelfuegochubut&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
@@ -261,13 +152,13 @@ export default function IncendiosPage() {
         )}
       </div>
 
-      {/* 4. NOTICIAS (Feed RSS Integrado con Pestañas) - Desplegable */}
+      {/* 4. NOTICIAS (Launchers Directos) - Desplegable */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
             <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" />
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Feed de Noticias (Últimas 24h)
+              Buscar en Noticias (Últimas 24h)
             </h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,38 +167,42 @@ export default function IncendiosPage() {
         </button>
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-             <div className="mb-5 pb-4 border-b border-gray-200">
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+              <div className="mb-5 pb-4 border-b border-gray-200">
                 <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">
                   Novedades en regiones clave
                 </h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed mb-4">
-                  Elegí la categoría para escanear rápido las últimas 5 notas publicadas en medios nacionales y regionales. Los resultados están filtrados para las provincias con mayor incidencia.
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  Cada botón abre Google News buscando reportes de las últimas 24 horas. Los resultados están filtrados estrictamente para Córdoba, Río Negro, Neuquén, Buenos Aires, Mendoza y Argentina en general. Útil para verificar rápido si los operativos y cortes de ruta fueron publicados.
                 </p>
-                
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    onClick={() => setCategoriaNoticias("forestales")}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors border ${categoriaNoticias === "forestales" ? "bg-red-50 border-red-400 text-red-700" : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    Incendios Forestales
-                  </button>
-                  <button 
-                    onClick={() => setCategoriaNoticias("estructurales")}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors border ${categoriaNoticias === "estructurales" ? "bg-red-50 border-red-400 text-red-700" : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    Incendios Estructurales
-                  </button>
-                  <button 
-                    onClick={() => setCategoriaNoticias("impacto")}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors border ${categoriaNoticias === "impacto" ? "bg-red-50 border-red-400 text-red-700" : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    Impacto y Operativos
-                  </button>
-                </div>
               </div>
-
-            <NoticiasFuegoFeed categoria={categoriaNoticias} />
-            
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <a 
+                  href='https://news.google.com/search?q=(%22incendio%20forestal%22%20OR%20%22incendios%20forestales%22)%20(c%C3%B3rdoba%20OR%20%22rio%20negro%22%20OR%20neuqu%C3%A9n%20OR%20%22buenos%20aires%22%20OR%20mendoza%20OR%20argentina)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419' 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="bg-white border border-gray-300 hover:border-red-400 hover:text-red-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center"
+                >
+                  Incendios Forestales
+                </a>
+                <a 
+                  href='https://news.google.com/search?q=(%22incendio%20estructural%22%20OR%20%22incendios%20estructurales%22)%20(c%C3%B3rdoba%20OR%20%22rio%20negro%22%20OR%20neuqu%C3%A9n%20OR%20%22buenos%20aires%22%20OR%20mendoza%20OR%20argentina)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419' 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="bg-white border border-gray-300 hover:border-red-400 hover:text-red-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center"
+                >
+                  Incendios Estructurales
+                </a>
+                <a 
+                  href='https://news.google.com/search?q=(bomberos%20OR%20evacuados%20OR%20%22rutas%20cortadas%22)%20(c%C3%B3rdoba%20OR%20%22rio%20negro%22%20OR%20neuqu%C3%A9n%20OR%20%22buenos%20aires%22%20OR%20mendoza%20OR%20argentina)%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419' 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="bg-white border border-gray-300 hover:border-red-400 hover:text-red-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center"
+                >
+                  Impacto y Operativos
+                </a>
+              </div>
+            </div>
           </div>
         )}
       </div>
