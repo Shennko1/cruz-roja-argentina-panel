@@ -1,29 +1,43 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-// COMPONENTE: Feed de Noticias (Llamada directa sin backend)
+// COMPONENTE: Feed de Noticias (Lectura XML nativa con Proxy público para evitar bloqueos)
 function NoticiasFeed() {
   const [noticias, setNoticias] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    // La URL de búsqueda en Google News (formato RSS) para las últimas 24h en Argentina
-    const googleNewsUrl = "https://news.google.com/rss/search?q=(inundacion%20OR%20tormenta%20OR%20evacuados)%20Argentina%20when:24h&hl=es-419&gl=AR&ceid=AR:es-419";
+    // URL de Google News exacta para tormentas, inundaciones y evacuados en Argentina (últimas 24h)
+    const googleNewsUrl = "https://news.google.com/rss/search?q=(inundaci%C3%B3n%20OR%20inundaciones%20OR%20crecida%20OR%20desborde%20OR%20tormenta%20OR%20evacuados)%20Argentina%20when:24h&hl=es-419&gl=AR&ceid=AR:es-419";
     
-    // rss2json actúa como puente para evitar el bloqueo de seguridad (CORS) del navegador
-    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(googleNewsUrl)}`;
+    // Proxy público para saltar el bloqueo de seguridad del navegador
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(googleNewsUrl)}`;
 
-    fetch(apiUrl)
+    fetch(proxyUrl)
       .then((res) => res.json())
       .then((data) => {
-        if (data.items) {
-          // Nos quedamos solo con las últimas 5 noticias
-          setNoticias(data.items.slice(0, 5));
+        if (data.contents) {
+          // Traducimos el XML crudo que nos devuelve Google
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+          const items = xmlDoc.getElementsByTagName("item");
+          
+          const notasExtraidas = [];
+          
+          // Armamos la lista solo con los primeros 5 resultados para no saturar la vista
+          for (let i = 0; i < Math.min(items.length, 5); i++) {
+            notasExtraidas.push({
+              title: items[i].getElementsByTagName("title")[0]?.textContent,
+              link: items[i].getElementsByTagName("link")[0]?.textContent,
+              pubDate: items[i].getElementsByTagName("pubDate")[0]?.textContent,
+            });
+          }
+          setNoticias(notasExtraidas);
         }
         setCargando(false);
       })
       .catch((err) => {
-        console.error("Error al cargar noticias:", err);
+        console.error("Error al cargar el RSS:", err);
         setCargando(false);
       });
   }, []);
@@ -31,7 +45,7 @@ function NoticiasFeed() {
   if (cargando) {
     return (
       <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-        Cargando feed...
+        Cargando feed de noticias...
       </div>
     );
   }
@@ -47,8 +61,8 @@ function NoticiasFeed() {
             rel="noreferrer"
             className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors flex flex-col gap-1 shadow-sm"
           >
-            <h4 className="text-sm font-bold text-gray-800">{noticia.title}</h4>
-            <span className="text-[11px] text-gray-500 font-medium">
+            <h4 className="text-sm font-bold text-gray-800 leading-snug">{noticia.title}</h4>
+            <span className="text-[11px] text-gray-500 font-medium mt-1">
               {new Date(noticia.pubDate).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
             </span>
           </a>
@@ -70,6 +84,7 @@ export default function HidrometeorologiaPage() {
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
+      
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
@@ -85,7 +100,7 @@ export default function HidrometeorologiaPage() {
         Agregar información.
       </div>
 
-      {/* MAPA METEOROLÓGICO (Windy) - Siempre visible */}
+      {/* 1. MAPA METEOROLÓGICO (Windy) - Siempre visible */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
           <img
@@ -149,7 +164,7 @@ export default function HidrometeorologiaPage() {
         </div>
       </div>
 
-      {/* RIESGO HÍDRICO (Launchers) - Desplegable */}
+      {/* 2. RIESGO HÍDRICO (Launchers) - Desplegable */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button
           onClick={() => setIsRiesgoOpen(!isRiesgoOpen)}
@@ -195,8 +210,8 @@ export default function HidrometeorologiaPage() {
                 <p className="text-[12px] text-gray-600 leading-relaxed">
                   <strong>Para qué usarlo:</strong> Al hacer clic, te lleva a la
                   plataforma para ver si hay pronósticos de desbordes en los
-                  próximos días, o si hay inundaciones repentinas (flash floods)
-                  y analizar qué áreas podrían verse afectadas.
+                  próximos días, o si hay inundaciones repentinas y analizar 
+                  qué áreas podrían verse afectadas.
                 </p>
               </div>
               <a
@@ -220,8 +235,8 @@ export default function HidrometeorologiaPage() {
                 </p>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
                   <strong>Para qué usarlo:</strong> Te sirve para ver la altura
-                  exacta del agua hoy y saber si el río está creciendo, bajando
-                  o estacionado.
+                  exacta del agua hoy y confirmar con datos oficiales si un río está 
+                  creciendo, bajando o estacionado.
                 </p>
               </div>
               <a
@@ -237,7 +252,7 @@ export default function HidrometeorologiaPage() {
         )}
       </div>
 
-      {/* REPORTES EN TIEMPO REAL (Feeds) - Desplegable */}
+      {/* 3. REPORTES EN TIEMPO REAL (Feeds) - Desplegable */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button
           onClick={() => setIsRedesOpen(!isRedesOpen)}
@@ -319,7 +334,7 @@ export default function HidrometeorologiaPage() {
         )}
       </div>
 
-      {/* NOTICIAS (RSS Fetch Integrado) - Desplegable */}
+      {/* 4. NOTICIAS (Feed RSS Integrado) - Desplegable */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button
           onClick={() => setIsNoticiasOpen(!isNoticiasOpen)}
@@ -353,6 +368,15 @@ export default function HidrometeorologiaPage() {
         </button>
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
+             <div className="mb-5 pb-4 border-b border-gray-200">
+                <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">
+                  Novedades recientes sobre eventos en Argentina
+                </h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  Lista automática con las últimas 5 noticias vinculadas a inundaciones, tormentas y evacuados. 
+                  Haz clic en los títulos para leer la fuente original. Usalo para obtener contexto fáctico rápido.
+                </p>
+              </div>
             <NoticiasFeed />
           </div>
         )}
