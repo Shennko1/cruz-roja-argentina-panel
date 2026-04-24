@@ -18,12 +18,19 @@ export default function HidrometeorologiaPage() {
           "https://news.google.com/rss/search?q=(inundación OR inundaciones OR crecida OR desborde) when:24h&hl=es-419&gl=AR&ceid=AR:es-419"
         );
 
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
-        const data = await res.json();
+        const res = await fetch(`https://api.allorigins.win/get?url=${rssUrl}`);
+        const dataRaw = await res.json();
 
-        if (data.items) {
-          setNews(data.items.slice(0, 10));
-        }
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(dataRaw.contents, "text/xml");
+
+        const items = [...xml.querySelectorAll("item")].map(item => ({
+          title: item.querySelector("title")?.textContent,
+          link: item.querySelector("link")?.textContent,
+          pubDate: item.querySelector("pubDate")?.textContent
+        }));
+
+        setNews(items.slice(0, 10));
 
       } catch (err) {
         console.error("Error fetching news:", err);
@@ -34,13 +41,13 @@ export default function HidrometeorologiaPage() {
 
     fetchNews();
     const interval = setInterval(fetchNews, 5 * 60 * 1000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       
+      {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
           Monitoreo: Hidrometeorología
@@ -58,13 +65,15 @@ export default function HidrometeorologiaPage() {
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
           <img src="/storm.png" className="w-9 h-9" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase">Mapa de lluvia en tiempo real</h3>
+          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+            Mapa de lluvia en tiempo real
+          </h3>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 bg-gray-50 p-4 rounded-xl border">
             <p className="text-[12px] text-gray-600">
-              Muestra dónde está lloviendo y cómo evoluciona la tormenta.
+              Muestra dónde está lloviendo ahora y cómo evolucionan las tormentas.
             </p>
           </div>
 
@@ -83,7 +92,7 @@ export default function HidrometeorologiaPage() {
         <button onClick={() => setIsRiesgoOpen(!isRiesgoOpen)} className="w-full p-4 bg-gray-50 flex justify-between">
           <span>Riesgo Hídrico</span>
         </button>
-        
+
         {isRiesgoOpen && (
           <div className="p-4">
             <a href="https://sites.research.google/floods/" target="_blank">FloodHub</a>
@@ -99,44 +108,68 @@ export default function HidrometeorologiaPage() {
 
         {isRedesOpen && (
           <div className="p-4">
-            <iframe src="https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/SMN.ar&tabs=timeline" width="100%" height="500"></iframe>
+            <iframe
+              src="https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/SMN.ar&tabs=timeline"
+              width="100%"
+              height="500"
+            ></iframe>
           </div>
         )}
       </div>
 
       {/* NOTICIAS */}
-      <div className="border rounded-xl overflow-hidden">
-        <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full p-4 bg-gray-50 flex justify-between">
+      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button 
+          onClick={() => setIsNoticiasOpen(!isNoticiasOpen)}
+          className="w-full flex justify-between items-center p-4 bg-gray-50"
+        >
           <span>Noticias (últimas 24h)</span>
         </button>
 
         {isNoticiasOpen && (
-          <div className="p-4">
+          <div className="p-4 border-t border-gray-200 bg-white">
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              <a href="https://news.google.com/search?q=tormenta when:24h&hl=es-419&gl=AR" target="_blank">Tormentas</a>
-              <a href="https://news.google.com/search?q=inundación when:24h&hl=es-419&gl=AR" target="_blank">Inundaciones</a>
-              <a href="https://news.google.com/search?q=evacuados when:24h&hl=es-419&gl=AR" target="_blank">Evacuados</a>
+              <a href="https://news.google.com/search?q=tormenta when:24h&hl=es-419&gl=AR" target="_blank">
+                Tormentas
+              </a>
+              <a href="https://news.google.com/search?q=inundación when:24h&hl=es-419&gl=AR" target="_blank">
+                Inundaciones
+              </a>
+              <a href="https://news.google.com/search?q=evacuados when:24h&hl=es-419&gl=AR" target="_blank">
+                Evacuados
+              </a>
             </div>
 
-            <h4 className="text-xs font-bold mb-3">
-              Feed en vivo (Inundaciones)
-            </h4>
+            {/* FEED EN VIVO */}
+            <div className="mt-6">
+              <h4 className="text-xs font-bold text-gray-800 mb-3 uppercase">
+                Feed en vivo (Inundaciones)
+              </h4>
 
-            {loadingNews ? (
-              <p className="text-xs text-gray-500">Cargando...</p>
-            ) : (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                {news.map((item, idx) => (
-                  <a key={idx} href={item.link} target="_blank" className="block p-3 border rounded">
-                    <p className="text-xs font-semibold">{item.title}</p>
-                    <p className="text-[11px] text-gray-500">
-                      {new Date(item.pubDate).toLocaleString()}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            )}
+              {loadingNews ? (
+                <p className="text-xs text-gray-500">Cargando noticias...</p>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {news.map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400"
+                    >
+                      <p className="text-xs font-semibold text-gray-800">
+                        {item.title}
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {new Date(item.pubDate).toLocaleString()}
+                      </p>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
 
           </div>
         )}
