@@ -15,114 +15,135 @@ export default function MapaAlertasSMN() {
         #map { width: 100%; height: 100vh; z-index: 1; }
         .loading { 
           position: absolute; 
-          top: 50%; left: 50%; 
-          transform: translate(-50%, -50%); 
+          top: 20px; left: 50%; 
+          transform: translateX(-50%); 
           z-index: 1000; 
-          background: white; 
-          padding: 12px 24px; 
-          border-radius: 8px; 
+          background: rgba(255, 255, 255, 0.95); 
+          padding: 10px 20px; 
+          border-radius: 30px; 
           font-weight: bold; 
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-          font-size: 14px; 
-          color: #334155;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+          font-size: 12px; 
+          color: #1e293b;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          border: 1px solid #e2e8f0;
+          transition: all 0.3s ease;
         }
       </style>
     </head>
     <body>
-      <div id="loading" class="loading">Sincronizando feed SMN...</div>
+      <div id="loading" class="loading">Iniciando radar...</div>
       <div id="map"></div>
       
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          // 1. Iniciamos el mapa Leaflet
           var map = L.map('map').setView([-38.4161, -63.6167], 5);
           L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
-          // Agrupador para poder borrar alertas viejas al actualizar
           var layerGroup = L.layerGroup().addTo(map);
 
-          // 2. Función principal de lectura y dibujo
           async function cargarAlertas() {
+            const statusDiv = document.getElementById('loading');
+            
             try {
-              document.getElementById('loading').style.display = 'block';
-              layerGroup.clearLayers(); // Limpiamos el mapa antes de cargar las nuevas
+              statusDiv.style.display = 'block';
+              statusDiv.innerText = "Conectando al índice del SMN...";
+              console.log("Iniciando escaneo del índice...");
+              layerGroup.clearLayers();
 
-              const proxyUrl = 'https://api.allorigins.win/raw?url=';
-              const rssUrl = encodeURIComponent('https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml');
+              const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+              const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml';
               
-              // Descargamos el índice principal
-              const rssRes = await fetch(proxyUrl + rssUrl);
+              const rssRes = await fetch(proxyUrl + targetUrl);
               const rssText = await rssRes.text();
-              
-              // Usamos DOMParser para leer el XML de forma segura
+
               const parser = new DOMParser();
-              const rssDoc = parser.parseFromString(rssText, "text/xml");
+              const rssDoc = parser.parseFromString(rssText, "application/xml");
               
-              // Extraemos todos los links secundarios
-              const items = rssDoc.querySelectorAll("item link");
-              const links = Array.from(items).map(node => node.textContent);
+              const linkNodes = rssDoc.getElementsByTagName("link");
+              const links = [];
+              
+              for (let i = 0; i < linkNodes.length; i++) {
+                const url = linkNodes[i].textContent;
+                // Filtramos solo los links que sean archivos XML individuales
+                if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
+                  links.push(url);
+                }
+              }
 
-              // Recorremos cada link para extraer la alerta
+              console.log("Links secundarios encontrados:", links.length);
+
+              if (links.length === 0) {
+                statusDiv.innerText = "Territorio despejado (Sin Alertas)";
+                console.log("No hay alertas activas en este momento.");
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+                return;
+              }
+
+              statusDiv.innerText = "Procesando " + links.length + " alertas...";
+
+              // Entramos al segundo nivel: los links individuales
               for (const link of links) {
-                if (!link.endsWith('.xml')) continue; 
+                try {
+                  console.log("Leyendo archivo secundario:", link);
+                  const capRes = await fetch(proxyUrl + link);
+                  const capText = await capRes.text();
+                  const capDoc = parser.parseFromString(capText, "application/xml");
 
-                const capRes = await fetch(proxyUrl + encodeURIComponent(link));
-                const capText = await capRes.text();
-                const capDoc = parser.parseFromString(capText, "text/xml");
-
-                const severityNode = capDoc.querySelector("severity");
-                const severity = severityNode ? severityNode.textContent : 'Unknown';
-                
-                const headlineNode = capDoc.querySelector("headline");
-                const headline = headlineNode ? headlineNode.textContent : 'Alerta Meteorológica';
-
-                const polygonNodes = capDoc.querySelectorAll("polygon");
-                
-                polygonNodes.forEach(polyNode => {
-                  const polyString = polyNode.textContent;
-                  if (!polyString) return;
-
-                  // Traducimos las coordenadas del SMN a Leaflet
-                  const coords = polyString.trim().split(' ').map(par => {
-                    const partes = par.split(',');
-                    return [parseFloat(partes[0]), parseFloat(partes[1])];
-                  });
-
-                  // Definimos el semáforo de colores
-                  let color = '#eab308'; // Amarillo por defecto
-                  if (severity === 'Severe') color = '#f97316'; // Naranja
-                  if (severity === 'Extreme') color = '#ef4444'; // Rojo
-
-                  // Trazamos el polígono
-                  var polygon = L.polygon(coords, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.4,
-                    weight: 2
-                  });
+                  const severityNodes = capDoc.getElementsByTagName("severity");
+                  const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
                   
-                  polygon.bindPopup("<div style='font-family:sans-serif;'><b>" + headline + "</b><br/><span style='color:#64748b;font-size:12px;'>Nivel: " + severity + "</span></div>");
-                  layerGroup.addLayer(polygon);
-                });
+                  const headlineNodes = capDoc.getElementsByTagName("headline");
+                  const headline = headlineNodes.length > 0 ? headlineNodes[0].textContent : 'Alerta Meteorológica';
+
+                  const polygonNodes = capDoc.getElementsByTagName("polygon");
+                  
+                  for (let j = 0; j < polygonNodes.length; j++) {
+                    const polyString = polygonNodes[j].textContent;
+                    if (!polyString) continue;
+
+                    // Convertimos la lista de coordenadas al formato del mapa
+                    const coords = polyString.trim().split(' ').map(par => {
+                      const partes = par.split(',');
+                      return [parseFloat(partes[0]), parseFloat(partes[1])];
+                    });
+
+                    let color = '#eab308'; // Amarillo
+                    if (severity === 'Severe') color = '#f97316'; // Naranja
+                    if (severity === 'Extreme') color = '#ef4444'; // Rojo
+
+                    var polygon = L.polygon(coords, {
+                      color: color,
+                      fillColor: color,
+                      fillOpacity: 0.4,
+                      weight: 2
+                    });
+                    
+                    polygon.bindPopup("<div style='font-family:sans-serif;'><b>" + headline + "</b><br/><span style='color:#64748b;font-size:12px;'>Gravedad: " + severity + "</span></div>");
+                    layerGroup.addLayer(polygon);
+                  }
+                } catch (e) {
+                  console.warn("Fallo al procesar el enlace secundario:", link);
+                }
               }
               
-              document.getElementById('loading').style.display = 'none';
+              statusDiv.innerText = "Actualizado con éxito";
+              console.log("Escaneo completado.");
+              setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
 
             } catch (error) {
-              console.error("Error cargando CAP:", error);
-              document.getElementById('loading').innerText = "Error de conexión con el SMN.";
+              console.error("Error en el ciclo principal:", error);
+              statusDiv.innerText = "Reintentando conexión...";
             }
           }
 
-          // Ejecutamos al abrir la página
           cargarAlertas();
           
-          // Actualización automática cada 15 minutos (900000 ms)
-          setInterval(cargarAlertas, 900000);
+          // Actualiza solo, ideal para las horas pasivas
+          setInterval(cargarAlertas, 900000); 
         });
       </script>
     </body>
