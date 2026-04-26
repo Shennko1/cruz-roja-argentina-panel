@@ -51,12 +51,9 @@ export default function MapaAlertasSMN() {
             try {
               statusDiv.style.display = 'block';
               statusDiv.innerText = "Conectando al índice del SMN...";
-              console.log("Iniciando escaneo del índice...");
               layerGroup.clearLayers();
 
               const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
-              
-              // 1. Destructor de caché: obligamos a traer datos nuevos
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
@@ -69,6 +66,7 @@ export default function MapaAlertasSMN() {
               const linkNodes = rssDoc.getElementsByTagName("link");
               const links = [];
               
+              // 1. Recopilamos todos los links
               for (let i = 0; i < linkNodes.length; i++) {
                 const url = linkNodes[i].textContent;
                 if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
@@ -76,37 +74,34 @@ export default function MapaAlertasSMN() {
                 }
               }
 
-              console.log("Total de links brutos encontrados:", links.length);
+              // 2. Filtro Anti-Duplicados: Eliminamos URLs idénticas en el índice
+              const linksUnicos = [...new Set(links)];
 
-              if (links.length === 0) {
+              if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 return;
               }
 
-              statusDiv.innerText = "Filtrando " + links.length + " alertas...";
-              let alertasActivas = 0;
+              statusDiv.innerText = "Analizando " + linksUnicos.length + " reportes...";
+              
+              let alertasDibujadas = 0;
+              // 3. Memoria Fotográfica: Guarda los polígonos ya dibujados
+              const poligonosYaDibujados = new Set();
 
-              for (const link of links) {
+              for (const link of linksUnicos) {
                 try {
-                  // Destructor de caché para los links individuales
                   const capRes = await fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp));
                   const capText = await capRes.text();
                   const capDoc = parser.parseFromString(capText, "application/xml");
 
-                  // 2. Filtro de caducidad
+                  // Filtro de Caducidad (Descartamos alertas vencidas)
                   const expiresNodes = capDoc.getElementsByTagName("expires");
                   if (expiresNodes.length > 0) {
                     const fechaExpiracion = new Date(expiresNodes[0].textContent);
                     const ahora = new Date();
-                    
-                    // Si la alerta ya venció, saltamos a la siguiente sin dibujarla
-                    if (fechaExpiracion < ahora) {
-                      continue; 
-                    }
+                    if (fechaExpiracion < ahora) continue; 
                   }
-
-                  alertasActivas++; // Contabilizamos solo las que pasaron el filtro
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
@@ -117,10 +112,14 @@ export default function MapaAlertasSMN() {
                   const polygonNodes = capDoc.getElementsByTagName("polygon");
                   
                   for (let j = 0; j < polygonNodes.length; j++) {
-                    const polyString = polygonNodes[j].textContent;
+                    const polyString = polygonNodes[j].textContent.trim();
                     if (!polyString) continue;
 
-                    const coords = polyString.trim().split(' ').map(par => {
+                    // 4. EL FILTRO MAGICO: Si ya dibujamos estas coordenadas exactas, las salteamos
+                    if (poligonosYaDibujados.has(polyString)) continue;
+                    poligonosYaDibujados.add(polyString);
+
+                    const coords = polyString.split(' ').map(par => {
                       const partes = par.split(',');
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
@@ -132,24 +131,24 @@ export default function MapaAlertasSMN() {
                     var polygon = L.polygon(coords, {
                       color: color,
                       fillColor: color,
-                      fillOpacity: 0.4,
+                      fillOpacity: 0.4, // Ahora siempre será translúcido
                       weight: 2
                     });
                     
                     polygon.bindPopup("<div style='font-family:sans-serif;'><b>" + headline + "</b><br/><span style='color:#64748b;font-size:12px;'>Gravedad: " + severity + "</span></div>");
                     layerGroup.addLayer(polygon);
+                    
+                    alertasDibujadas++;
                   }
                 } catch (e) {
-                  console.warn("Fallo al procesar el enlace secundario:", link);
+                  // Error silencioso para no frenar el ciclo si falla un solo link
                 }
               }
               
-              statusDiv.innerText = "Actualizado: " + alertasActivas + " alertas vigentes";
-              console.log("Escaneo completado. Alertas vigentes dibujadas:", alertasActivas);
+              statusDiv.innerText = "Mapa limpio: " + alertasDibujadas + " zonas bajo alerta";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
 
             } catch (error) {
-              console.error("Error en el ciclo principal:", error);
               statusDiv.innerText = "Reintentando conexión...";
             }
           }
@@ -169,7 +168,7 @@ export default function MapaAlertasSMN() {
           Radar de Alertas Oficiales (SMN)
         </h2>
         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-          Lector automático de Protocolo CAP. El sistema filtra y mapea exclusivamente las alertas vigentes al momento actual, descartando el historial caducado.
+          Lector automático de Protocolo CAP. El sistema cuenta con filtros de caducidad y deduplicación de geometría para evitar saturación visual en zonas con múltiples avisos concurrentes.
         </p>
       </div>
 
