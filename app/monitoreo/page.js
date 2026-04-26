@@ -55,9 +55,12 @@ export default function MapaAlertasSMN() {
               layerGroup.clearLayers();
 
               const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
-              const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml';
               
-              const rssRes = await fetch(proxyUrl + targetUrl);
+              // 1. Destructor de caché: obligamos a traer datos nuevos
+              const timestamp = new Date().getTime();
+              const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
+              
+              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
               const rssText = await rssRes.text();
 
               const parser = new DOMParser();
@@ -68,30 +71,42 @@ export default function MapaAlertasSMN() {
               
               for (let i = 0; i < linkNodes.length; i++) {
                 const url = linkNodes[i].textContent;
-                // Filtramos solo los links que sean archivos XML individuales
                 if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
                   links.push(url);
                 }
               }
 
-              console.log("Links secundarios encontrados:", links.length);
+              console.log("Total de links brutos encontrados:", links.length);
 
               if (links.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
-                console.log("No hay alertas activas en este momento.");
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 return;
               }
 
-              statusDiv.innerText = "Procesando " + links.length + " alertas...";
+              statusDiv.innerText = "Filtrando " + links.length + " alertas...";
+              let alertasActivas = 0;
 
-              // Entramos al segundo nivel: los links individuales
               for (const link of links) {
                 try {
-                  console.log("Leyendo archivo secundario:", link);
-                  const capRes = await fetch(proxyUrl + link);
+                  // Destructor de caché para los links individuales
+                  const capRes = await fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp));
                   const capText = await capRes.text();
                   const capDoc = parser.parseFromString(capText, "application/xml");
+
+                  // 2. Filtro de caducidad
+                  const expiresNodes = capDoc.getElementsByTagName("expires");
+                  if (expiresNodes.length > 0) {
+                    const fechaExpiracion = new Date(expiresNodes[0].textContent);
+                    const ahora = new Date();
+                    
+                    // Si la alerta ya venció, saltamos a la siguiente sin dibujarla
+                    if (fechaExpiracion < ahora) {
+                      continue; 
+                    }
+                  }
+
+                  alertasActivas++; // Contabilizamos solo las que pasaron el filtro
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
@@ -105,7 +120,6 @@ export default function MapaAlertasSMN() {
                     const polyString = polygonNodes[j].textContent;
                     if (!polyString) continue;
 
-                    // Convertimos la lista de coordenadas al formato del mapa
                     const coords = polyString.trim().split(' ').map(par => {
                       const partes = par.split(',');
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
@@ -130,9 +144,9 @@ export default function MapaAlertasSMN() {
                 }
               }
               
-              statusDiv.innerText = "Actualizado con éxito";
-              console.log("Escaneo completado.");
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+              statusDiv.innerText = "Actualizado: " + alertasActivas + " alertas vigentes";
+              console.log("Escaneo completado. Alertas vigentes dibujadas:", alertasActivas);
+              setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
 
             } catch (error) {
               console.error("Error en el ciclo principal:", error);
@@ -141,8 +155,6 @@ export default function MapaAlertasSMN() {
           }
 
           cargarAlertas();
-          
-          // Actualiza solo, ideal para las horas pasivas
           setInterval(cargarAlertas, 900000); 
         });
       </script>
@@ -157,7 +169,7 @@ export default function MapaAlertasSMN() {
           Radar de Alertas Oficiales (SMN)
         </h2>
         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-          Lector automático de Protocolo CAP. El sistema rastrea el índice oficial y mapea los polígonos emitidos por el Servicio Meteorológico Nacional en tiempo real.
+          Lector automático de Protocolo CAP. El sistema filtra y mapea exclusivamente las alertas vigentes al momento actual, descartando el historial caducado.
         </p>
       </div>
 
