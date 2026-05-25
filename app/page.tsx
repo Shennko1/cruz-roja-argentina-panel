@@ -23,7 +23,6 @@ const reportesTerreno: ReporteTerreno[] = [
   { id: 5, fecha: "2026-01-30", nombre: "Tormentas en Cuyo y Patagonia", tipo: "Tormenta", ubicacion: "Cuyo y Patagonia, Argentina", afectadosText: "-", afectadosNum: 0, lat: -36.0, lng: -68.0, link: "https://drive.google.com/open?id=1AFLAv3z9Bu0WVKBCUj798PVClxCCC6ei&usp=drive_copy" },
   { id: 6, fecha: "2026-03-11", nombre: "Inundaciones en Tucumán", tipo: "Inundación", ubicacion: "Tucumán, Argentina", afectadosText: "~15.000", afectadosNum: 15000, lat: -26.80, lng: -65.21, link: "https://drive.google.com/open?id=1nIYO0WNQxa8feAhbgOehh3-YW7OGMxKa&usp=drive_copy" },
   { id: 7, fecha: "2026-04-01", nombre: "Tormentas en la región Centro", tipo: "Tormenta", ubicacion: "Centro, Argentina", afectadosText: "~250", afectadosNum: 250, lat: -32.0, lng: -62.0, link: "https://drive.google.com/open?id=1F8E3Tqh3bAMiq_BkF8LdxhITNZ3G5yL2&usp=drive_copy" },
-  { id: 8, fecha: "2026-05-25", nombre: "EVENTO PRUEBA", tipo: "PRUEBA", ubicacion: "Centro, Argentina", afectadosText: "~250", afectadosNum: 250, lat: -32.0, lng: -62.0, link: "https://drive.google.com/open?id=1F8E3Tqh3bAMiq_BkF8LdxhITNZ3G5yL2&usp=drive_copy" },
 ];
 
 export default function Dashboard() {
