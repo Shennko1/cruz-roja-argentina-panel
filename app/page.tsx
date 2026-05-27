@@ -48,9 +48,9 @@ export default function Dashboard() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
         // Mapa oficial de OpenStreetMap (nombres en español/idioma local)
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?lang=es', {
-           attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://www.cruzroja.org.ar/">Cruz Roja Argentina</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a>'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+}).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
         
