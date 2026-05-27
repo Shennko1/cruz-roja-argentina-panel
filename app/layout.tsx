@@ -15,29 +15,36 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
         <div className="max-w-7xl mx-auto p-8">
-          {/* Header con altura fija */}
+          
+          {/* Header estable: El logo ya no usa 'fill', lo que congela su renderizado lateral */}
           <header className="h-[100px] mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
-            <div className="relative w-[100px] h-[80px]">
-              <Image src="/enmo.jpg" alt="Logo" fill className="object-contain" priority sizes="100px" />
-            </div>
+            <Image 
+              src="/enmo.jpg" 
+              alt="Logo" 
+              width={200}    // Definimos un ancho base máximo
+              height={100}   // Definimos un alto base máximo
+              className="h-25 w-auto object-contain" // Fuerza la escala rígida original
+              priority 
+            />
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
               <p className="text-gray-500 text-sm mt-1 uppercase">Panel de Alerta y Monitoreo de Emergencias</p>
             </div>
           </header>
 
-          {/* Menú fino y ajustado */}
+          {/* Menú fino pero con los iconos restaurados al tamaño original (w-9 h-9) */}
           <nav className="mb-6 border-b border-gray-200">
             <ul className="flex gap-6">
               {[
                 { name: "Inicio", path: "/", icon: "/net.png" },
                 { name: "Monitoreo", path: "/monitoreo-guardia", icon: "/mt.png" },
                 { name: "Alertas", path: "/monitoreo", icon: "/alert.png" },
-                { name: "Guías", path: "/guias", icon: "/guia.png" }
+                { name: "Guías y Procesos", path: "/guias", icon: "/guia.png" }
               ].map((item) => (
                 <li key={item.path}>
-                  <a href={item.path} className="flex items-center gap-2 px-2 py-2 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-colors border-b-2 border-transparent hover:border-[#ee3224]">
-                    <Image src={item.icon} alt="" width={20} height={20} className="w-5 h-5 object-contain" />
+                  <a href={item.path} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-all border-b-2 border-transparent hover:border-[#ee3224] whitespace-nowrap">
+                    {/* Restaurados a 36x36px (w-9 h-9) para que mantengan su presencia original */}
+                    <Image src={item.icon} alt="" width={36} height={36} className="w-9 h-9 object-contain" />
                     {item.name}
                   </a>
                 </li>
