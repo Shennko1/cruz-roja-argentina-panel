@@ -70,13 +70,8 @@ export default function Dashboard() {
         var eventos = ${JSON.stringify(reportesTerreno)};
 
 eventos.forEach(function(evento) {
-   // 1. Lógica de color
+   // Gris para eventos sin accion en terreno, Rojo para el resto
    var colorMarker = (evento.nombre === "Incendios Forestales en Patagonia") ? '#808080' : '#ee3224';
-
-   // 2. Normalización del link (Extrae el ID sin importar el formato de la URL)
-   // Esto garantiza que siempre use el formato /open?id=... que SÍ funciona
-   var id = evento.link.split('id=')[1] || evento.link.split('/folders/')[1];
-   var linkNormalizado = "https://drive.google.com/open?id=" + id + "&usp=drive_copy";
 
    var marker = L.circleMarker([evento.lat, evento.lng], {
      color: colorMarker,
@@ -85,16 +80,12 @@ eventos.forEach(function(evento) {
      radius: 8
    }).addTo(map);
 
-   // 3. Tooltip (al pasar el mouse)
-   marker.bindTooltip(evento.nombre);
-
-   // 4. Popup (al hacer clic, usamos el linkNormalizado)
-   marker.bindPopup(
-     "<a href='" + linkNormalizado + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none; font-family:sans-serif;'>" + 
-     evento.nombre + 
-     "</a>"
-   );
-});      
+   // Tooltip: Solo el nombre al pasar el mouse.
+   marker.bindTooltip(evento.nombre, {
+     direction: 'top',
+     offset: [0, -8]
+   });
+});
 });
     </script>
   </body>
