@@ -17,12 +17,12 @@ interface ReporteTerreno {
 // ACÁ PUEDEN MODIFICARSE LOS EVENTOS, AGREGARSE, O SACARSE. Copiar el formato, cambiar los datos necesarios y sumar o restar +-1 en "id" dependiendo el orden
 const reportesTerreno: ReporteTerreno[] = [
   { id: 1, fecha: "2025-12-29", nombre: "Inundaciones en Corrientes", tipo: "Inundación", ubicacion: "Corrientes, Argentina", afectadosText: "~1.500", afectadosNum: 1500, lat: -28.65, lng: -59.04, link: "https://drive.google.com/open?id=1ynnE4ImxwgSoqw6hZwRRws1pcZrXSdLv&usp=drive_copy" },
-  { id: 2, fecha: "2026-01-07", nombre: "Incendios Forestales en Patagonia", tipo: "Incendio forestal", ubicacion: "Patagonia, Argentina", afectadosText: "~5.000", afectadosNum: 5000, lat: -42.0, lng: -71.5, link: "https://drive.google.com/open?id=1Mju0AhqmPyhD_q0IV4mvjk3rmInmgOzy&usp=drive_copy" },
-  { id: 3, fecha: "2026-01-18", nombre: "Remoción en masa en Comodoro Rivadavia", tipo: "Remoción en masa", ubicacion: "Chubut, Argentina", afectadosText: "-", afectadosNum: 0, lat: -45.86, lng: -67.49, link: "https://drive.google.com/open?id=1jKqBPCmJtUG8K3DCrksUqXimXz3KyNl6&usp=drive_copy" },
-  { id: 4, fecha: "2026-01-21", nombre: "Crecidas del Pilcomayo", tipo: "Inundación", ubicacion: "Norte de Argentina", afectadosText: "-", afectadosNum: 0, lat: -22.5, lng: -60.0, link: "https://drive.google.com/open?id=1_8-Md0odJnFP6E0OphvTKI9OvyRMXLqB&usp=drive_copy" },
-  { id: 5, fecha: "2026-01-30", nombre: "Tormentas en Cuyo y Patagonia", tipo: "Tormenta", ubicacion: "Cuyo y Patagonia, Argentina", afectadosText: "-", afectadosNum: 0, lat: -36.0, lng: -68.0, link: "https://drive.google.com/open?id=1AFLAv3z9Bu0WVKBCUj798PVClxCCC6ei&usp=drive_copy" },
-  { id: 6, fecha: "2026-03-11", nombre: "Inundaciones en Tucumán", tipo: "Inundación", ubicacion: "Tucumán, Argentina", afectadosText: "~15.000", afectadosNum: 15000, lat: -26.80, lng: -65.21, link: "https://drive.google.com/open?id=1nIYO0WNQxa8feAhbgOehh3-YW7OGMxKa&usp=drive_copy" },
-  { id: 7, fecha: "2026-04-01", nombre: "Tormentas en la región Centro", tipo: "Tormenta", ubicacion: "Centro, Argentina", afectadosText: "~250", afectadosNum: 250, lat: -32.0, lng: -62.0, link: "https://drive.google.com/open?id=1F8E3Tqh3bAMiq_BkF8LdxhITNZ3G5yL2&usp=drive_copy" },
+  { id: 2, fecha: "2026-01-07", nombre: "Incendios Forestales en Patagonia", tipo: "Incendio forestal", ubicacion: "Patagonia, Argentina", afectadosText: "~5.000", afectadosNum: 5000, lat: -42.0, lng: -71.5, link: "https://drive.google.com/drive/u/1/folders/1jKqBPCmJtUG8K3DCrksUqXimXz3KyNl6" },
+  { id: 3, fecha: "2026-01-18", nombre: "Remoción en masa en Comodoro Rivadavia", tipo: "Remoción en masa", ubicacion: "Chubut, Argentina", afectadosText: "-", afectadosNum: 0, lat: -45.86, lng: -67.49, link: "https://drive.google.com/drive/u/1/folders/1_8-Md0odJnFP6E0OphvTKI9OvyRMXLqB" },
+  { id: 4, fecha: "2026-01-21", nombre: "Crecidas del Pilcomayo", tipo: "Inundación", ubicacion: "Norte de Argentina", afectadosText: "-", afectadosNum: 0, lat: -22.47, lng: -62.44, link: "https://drive.google.com/drive/u/1/folders/1AFLAv3z9Bu0WVKBCUj798PVClxCCC6ei" },
+  { id: 5, fecha: "2026-01-30", nombre: "Tormentas en Cuyo y Patagonia", tipo: "Tormenta", ubicacion: "Cuyo y Patagonia, Argentina", afectadosText: "-", afectadosNum: 0, lat: -36.0, lng: -68.0, link: "https://drive.google.com/open?id=1nIYO0WNQxa8feAhbgOehh3-YW7OGMxKa&usp=drive_copy" },
+  { id: 6, fecha: "2026-03-11", nombre: "Inundaciones en Tucumán", tipo: "Inundación", ubicacion: "Tucumán, Argentina", afectadosText: "~15.000", afectadosNum: 15000, lat: -26.80, lng: -65.21, link: "https://drive.google.com/open?id=1F8E3Tqh3bAMiq_BkF8LdxhITNZ3G5yL2&usp=drive_copy" },
+  { id: 7, fecha: "2026-04-01", nombre: "Tormentas en la región Centro", tipo: "Tormenta", ubicacion: "Centro, Argentina", afectadosText: "~250", afectadosNum: 250, lat: -32.0, lng: -62.0, link: "https://drive.google.com/drive/u/1/folders/1Mju0AhqmPyhD_q0IV4mvjk3rmInmgOzy" },
 ];
 
 export default function Dashboard() {
@@ -48,8 +48,8 @@ export default function Dashboard() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
         // Mapa oficial de OpenStreetMap (nombres en español/idioma local)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: 'Cruz Roja Argentina - © OpenStreetMap contributors'
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?lang=es', {
+           attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://www.cruzroja.org.ar/">Cruz Roja Argentina</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a>'
         }).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
