@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224] leading-tight">Equipo Nacional de Monitoreo</h1>
-              <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest">Sistema Integrado</p>
+              <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest">Panel de Monitoreo</p>
             </div>
           </header>
 
