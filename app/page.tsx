@@ -47,9 +47,12 @@ export default function Dashboard() {
       document.addEventListener("DOMContentLoaded", function() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
-        // Mapa oficial de OpenStreetMap (nombres en español/idioma local)
-        L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{y}.png', {
-  attribution: '© Instituto Geográfico Nacional - Cruz Roja Argentina'
+        // Mapa oficial del IGN
+        L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
+  layers: 'mapabase_gris', // Esta capa es la oficial, gris y sobria
+  format: 'image/png',
+  transparent: true,
+  attribution: '© Instituto Geográfico Nacional'
 }).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
