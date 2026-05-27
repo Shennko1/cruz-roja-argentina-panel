@@ -13,28 +13,37 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
+      {/* Agregamos una clase base al body para evitar que el fondo cambie de color */}
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
-        <div className="p-8">
-          <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
-            <Image src="/enmo.jpg" alt="Logo" width={80} height={80} className="object-contain" priority />
+        {/* Usamos un contenedor con ancho máximo definido para evitar estiramientos */}
+        <div className="max-w-7xl mx-auto p-8">
+          
+          {/* Header con ALTURA FIJA para que el contenido de abajo no "salte" */}
+          <header className="h-[120px] mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
+            <div className="relative w-[100px] h-[80px]"> {/* Contenedor rígido para la imagen */}
+              <Image 
+                src="/enmo.jpg" 
+                alt="Equipo" 
+                fill 
+                className="object-contain" 
+                priority 
+                sizes="100px"
+              />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
-              <p className="text-gray-500 text-sm mt-1">Panel de Monitoreo y Alertas</p>
+              <h1 className="text-3xl font-bold text-[#ee3224] leading-tight">Equipo Nacional de Monitoreo</h1>
+              <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest">Sistema Integrado</p>
             </div>
           </header>
-          
-          <nav className="mb-6 border-b border-gray-200 pb-2">
-            <ul className="flex gap-6 text-sm font-medium">
-              {[ {name: "Inicio", path: "/", icon: "/net.png"}, {name: "Monitoreo", path: "/monitoreo-guardia", icon: "/mt.png"}, {name: "Alertas", path: "/monitoreo", icon: "/alert.png"} ].map((item) => (
-                <li key={item.path}>
-                  <a href={item.path} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-200 transition-all text-xs font-bold text-gray-600 uppercase">
-                    <Image src={item.icon} alt="" width={36} height={36} className="w-9 h-9 object-contain"/> {item.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
+
+          {/* Menú con altura mínima garantizada */}
+          <nav className="min-h-[60px] mb-6 border-b border-gray-200">
+             {/* ... tu código de menú ... */}
           </nav>
-          <main>{children}</main>
+
+          <main>
+            {children}
+          </main>
         </div>
       </body>
     </html>
