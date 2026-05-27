@@ -31,53 +31,46 @@ export default function Dashboard() {
 
   // Armamos el mapa inyectado para saltarnos los errores de react-leaflet
   const mapHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-      <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; }
-        #map { width: 100%; height: 100vh; }
-      </style>
-    </head>
-    <body>
-      <div id="map"></div>
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          var map = L.map('map').setView([-38.4161, -63.6167], 4);
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap'
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <style>
+      body { margin: 0; padding: 0; font-family: sans-serif; }
+      #map { width: 100%; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var map = L.map('map').setView([-38.4161, -63.6167], 4);
+        
+        // Mapa oficial de OpenStreetMap (nombres en español/idioma local)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: 'Cruz Roja Argentina - © OpenStreetMap contributors'
+        }).addTo(map);
+
+        var eventos = ${JSON.stringify(reportesTerreno)};
+        
+        eventos.forEach(function(evento) {
+          var marker = L.circleMarker([evento.lat, evento.lng], {
+            color: '#ee3224',
+            fillColor: '#ee3224',
+            fillOpacity: 0.7,
+            radius: 8,
+            weight: 1
           }).addTo(map);
 
-          var eventos = ${JSON.stringify(reportesTerreno)};
-          
-          eventos.forEach(function(evento) {
-            var marker = L.circleMarker([evento.lat, evento.lng], {
-              color: '#ee3224',
-              fillColor: '#ee3224',
-              fillOpacity: 0.7,
-              radius: 8,
-              weight: 1
-            }).addTo(map);
-
-            // Tooltip (Hover)
-            marker.bindTooltip("<b>" + evento.nombre + "</b><br><span style='color:#666;'>" + evento.tipo + "</span>");
-
-            // Popup (Click)
-            var popupContent = "<b><span style='color:#ee3224; font-size:14px;'>" + evento.nombre + "</span></b><br/>" +
-                               "<b>Fecha:</b> " + evento.fecha + "<br/>" +
-                               "<b>Ubicación:</b> " + evento.ubicacion + "<br/>" +
-                               "<b>Afectados:</b> " + evento.afectadosText + "<br/>" +
-                               "<a href='" + evento.link + "' target='_blank' style='display:inline-block; margin-top:8px; color:#2563eb; text-decoration:none; font-weight:bold;'>Abrir Carpeta</a>";
-            
-            marker.bindPopup(popupContent);
-          });
+          marker.bindTooltip("<b>" + evento.nombre + "</b>");
+          marker.bindPopup("<b>" + evento.nombre + "</b><br/>" + evento.ubicacion);
         });
-      </script>
-    </body>
-    </html>
-  `;
+      });
+    </script>
+  </body>
+  </html>
+`;
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] p-8 font-sans">
