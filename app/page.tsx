@@ -48,11 +48,8 @@ export default function Dashboard() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
         // Mapa oficial del IGN
-        L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
-  layers: 'mapabase_gris', // Esta capa es la oficial, gris y sobria
-  format: 'image/png',
-  transparent: true,
-  attribution: '© Instituto Geográfico Nacional'
+       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?lang=es', {
+  attribution: '© OpenStreetMap, © CARTO'
 }).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
