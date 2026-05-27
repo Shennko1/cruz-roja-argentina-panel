@@ -48,8 +48,10 @@ export default function Dashboard() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
         // Mapa oficial de OpenStreetMap (nombres en español/idioma local)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap contributors, Cruz Roja Argentina',
+  subdomains: 'abcd',
+  maxZoom: 19
 }).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
