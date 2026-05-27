@@ -98,7 +98,7 @@ eventos.forEach(function(evento) {
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
-          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Emergencias Activas</h2>
+          <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Emergencias Monitoreadas</h2>
           <p className="text-4xl font-bold text-gray-900 mt-2">{totalEmergencias}</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
