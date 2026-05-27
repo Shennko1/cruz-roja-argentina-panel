@@ -68,24 +68,28 @@ export default function Dashboard() {
 
         // Tus marcadores de eventos (inyectados desde React)
         var eventos = ${JSON.stringify(reportesTerreno)};
-        
-        eventos.forEach(function(evento) {
-           // Lógica: Gris solo para Incendios Forestales en Patagonia, resto en rojo
-           var colorMarker = (evento.nombre === "Incendios Forestales en Patagonia") ? '#808080' : '#ee3224';
 
-           var marker = L.circleMarker([evento.lat, evento.lng], {
-             color: colorMarker,
-             fillColor: colorMarker,
-             fillOpacity: 0.7,
-             radius: 8
-           }).addTo(map);
+eventos.forEach(function(evento) {
+   // Gris para el evento específico que no hubo actividad en terreno, resto en rojo
+   var colorMarker = (evento.nombre === "Incendios Forestales en Patagonia") ? '#808080' : '#ee3224';
 
-           // Tooltip: Solo el nombre al pasar el mouse
-           marker.bindTooltip(evento.nombre);
+   var marker = L.circleMarker([evento.lat, evento.lng], {
+     color: colorMarker,
+     fillColor: colorMarker,
+     fillOpacity: 0.7,
+     radius: 8
+   }).addTo(map);
 
-           // Popup: Link directo a la carpeta con el nombre del evento
-           marker.bindPopup("<a href='" + evento.link + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none;'>" + evento.nombre + "</a>");
-        });
+   // Tooltip: Solo muestra el nombre al pasar el mouse
+   marker.bindTooltip(evento.nombre);
+
+   // Popup: Link directo a la carpeta con el nombre del evento
+   marker.bindPopup(
+     "<a href='" + evento.link + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none; font-family:sans-serif;'>" + 
+     evento.nombre + 
+     "</a>"
+   );
+});
       });
     </script>
   </body>
