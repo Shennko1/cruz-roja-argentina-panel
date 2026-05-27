@@ -16,23 +16,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
         <div className="max-w-7xl mx-auto p-8">
           
-          {/* Header estable: El logo ya no usa 'fill', lo que congela su renderizado lateral */}
-          <header className="h-[100px] mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
+          {/* 1. HEADER OPTIMIZADO: Altura reducida a 85px y medidas del logo 100% estáticas */}
+          <header className="h-[85px] mb-6 pb-2 border-b-4 border-[#ee3224] flex items-center gap-4">
             <Image 
               src="/enmo.jpg" 
               alt="Logo" 
-              width={200}    // Definimos un ancho base máximo
-              height={100}   // Definimos un alto base máximo
-              className="h-25 w-auto object-contain" // Fuerza la escala rígida original
+              width={100}  // Ancho fijo exacto
+              height={70}  // Alto fijo exacto
+              className="w-[100px] h-[70px] object-contain" // Bloquea los costados por completo
               priority 
             />
             <div>
-              <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
-              <p className="text-gray-500 text-sm mt-1 uppercase">Panel de Alerta y Monitoreo de Emergencias</p>
+              <h1 className="text-3xl font-bold text-[#ee3224] leading-none">Equipo Nacional de Monitoreo</h1>
+              <p className="text-gray-500 text-sm mt-1 uppercase tracking-wider">Panel de Alerta y Monitoreo de Emergencias</p>
             </div>
           </header>
 
-          {/* Menú fino pero con los iconos restaurados al tamaño original (w-9 h-9) */}
+          {/* 2. MENÚ AJUSTADO: Se eliminó el espacio muerto superior e inferior */}
           <nav className="mb-6 border-b border-gray-200">
             <ul className="flex gap-6">
               {[
@@ -41,11 +41,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 { name: "Alertas", path: "/monitoreo", icon: "/alert.png" },
                 { name: "Guías y Procesos", path: "/guias", icon: "/guia.png" }
               ].map((item) => (
-                <li key={item.path}>
-                  <a href={item.path} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-all border-b-2 border-transparent hover:border-[#ee3224] whitespace-nowrap">
-                    {/* Restaurados a 36x36px (w-9 h-9) para que mantengan su presencia original */}
-                    <Image src={item.icon} alt="" width={36} height={36} className="w-9 h-9 object-contain" />
-                    {item.name}
+                <li key={item.path} className="flex">
+                  <a 
+                    href={item.path} 
+                    className="flex items-center gap-2 pt-1 pb-2 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-colors border-b-2 border-transparent hover:border-[#ee3224] whitespace-nowrap"
+                  >
+                    {/* Icono al tamaño original (w-9 h-9) pero contenido estrictamente */}
+                    <Image 
+                      src={item.icon} 
+                      alt="" 
+                      width={36} 
+                      height={36} 
+                      className="w-9 h-9 object-contain block" 
+                    />
+                    {/* El texto ahora se alinea perfectamente al centro del icono */}
+                    <span className="leading-none pt-0.5">{item.name}</span>
                   </a>
                 </li>
               ))}
