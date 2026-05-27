@@ -29,43 +29,50 @@ export default function Dashboard() {
   const totalEmergencias = reportesTerreno.length;
   const totalAfectados = reportesTerreno.reduce((acc, curr) => acc + curr.afectadosNum, 0);
 
-  // Armamos el mapa inyectado para saltarnos los errores de react-leaflet
+  // Armamos el mapa 
   const mapHtml = `
   <!DOCTYPE html>
   <html>
   <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.0.min.js"></script>
     <style>
-      body { margin: 0; padding: 0; font-family: sans-serif; }
-      #map { width: 100%; height: 100vh; }
+      body { margin: 0; padding: 0; }
+      #map { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; }
     </style>
   </head>
   <body>
     <div id="map"></div>
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        var map = L.map('map').setView([-38.4161, -63.6167], 4);
-        
-        // Mapa oficial del IGN
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-  maxZoom: 16
-}).addTo(map);
+    <script type="text/javascript">
+      $(function () {
+        var map = L.map('map', {
+          center: [-38.4161, -63.6167],
+          zoom: 4
+        });
 
+        // Capa 1: Base gris del IGN
+        var argenmap_gris = new L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
+          minZoom: 1, maxZoom: 20
+        }).addTo(map);
+
+        // Capa 2: Provincias y Capitales (WMS)
+        var capa_provincias = new L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
+          layers: 'provincia,capa_capitales',
+          format: 'image/png',
+          transparent: true,
+          opacity: 0.8
+        }).addTo(map);
+
+        // Tus marcadores de eventos (inyectados desde React)
         var eventos = ${JSON.stringify(reportesTerreno)};
-        
         eventos.forEach(function(evento) {
-          var marker = L.circleMarker([evento.lat, evento.lng], {
-            color: '#ee3224',
-            fillColor: '#ee3224',
-            fillOpacity: 0.7,
-            radius: 8,
-            weight: 1
-          }).addTo(map);
-
-          marker.bindTooltip("<b>" + evento.nombre + "</b>");
-          marker.bindPopup("<b>" + evento.nombre + "</b><br/>" + evento.ubicacion);
+           L.circleMarker([evento.lat, evento.lng], {
+             color: '#ee3224',
+             fillColor: '#ee3224',
+             fillOpacity: 0.7,
+             radius: 8
+           }).addTo(map).bindPopup(evento.nombre);
         });
       });
     </script>
