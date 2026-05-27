@@ -55,7 +55,7 @@ export default function Dashboard() {
        var argenmap_gris = new L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
           minZoom: 1, 
           maxZoom: 20,
-          attribution: 'Mapa: <a href="https://www.ign.gob.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Instituto Geográfico Nacional</a> | Monitoreo: <a href="https://cruzroja.org.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Cruz Roja Argentina</a>'
+          attribution: '<a href="https://www.ign.gob.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Instituto Geográfico Nacional</a> | <a href="https://cruzroja.org.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Cruz Roja Argentina</a>'
         }).addTo(map);
 
         // Capa 2: Provincias y Capitales (WMS)
@@ -70,8 +70,13 @@ export default function Dashboard() {
         var eventos = ${JSON.stringify(reportesTerreno)};
 
 eventos.forEach(function(evento) {
-   // Gris para el evento específico que no hubo actividad en terreno, resto en rojo
+   // 1. Lógica de color
    var colorMarker = (evento.nombre === "Incendios Forestales en Patagonia") ? '#808080' : '#ee3224';
+
+   // 2. Normalización del link (Extrae el ID sin importar el formato de la URL)
+   // Esto garantiza que siempre use el formato /open?id=... que SÍ funciona
+   var id = evento.link.split('id=')[1] || evento.link.split('/folders/')[1];
+   var linkNormalizado = "https://drive.google.com/open?id=" + id + "&usp=drive_copy";
 
    var marker = L.circleMarker([evento.lat, evento.lng], {
      color: colorMarker,
@@ -80,17 +85,17 @@ eventos.forEach(function(evento) {
      radius: 8
    }).addTo(map);
 
-   // Tooltip: Solo muestra el nombre al pasar el mouse
+   // 3. Tooltip (al pasar el mouse)
    marker.bindTooltip(evento.nombre);
 
-   // Popup: Link directo a la carpeta con el nombre del evento
+   // 4. Popup (al hacer clic, usamos el linkNormalizado)
    marker.bindPopup(
-     "<a href='" + evento.link + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none; font-family:sans-serif;'>" + 
+     "<a href='" + linkNormalizado + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none; font-family:sans-serif;'>" + 
      evento.nombre + 
      "</a>"
    );
+});      
 });
-      });
     </script>
   </body>
   </html>
