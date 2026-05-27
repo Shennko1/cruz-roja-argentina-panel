@@ -48,8 +48,9 @@ export default function Dashboard() {
         var map = L.map('map').setView([-38.4161, -63.6167], 4);
         
         // Mapa oficial del IGN
-       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?lang=es', {
-  attribution: '© OpenStreetMap, © CARTO'
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+  maxZoom: 16
 }).addTo(map);
 
         var eventos = ${JSON.stringify(reportesTerreno)};
