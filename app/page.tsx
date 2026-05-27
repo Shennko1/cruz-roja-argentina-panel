@@ -52,8 +52,10 @@ export default function Dashboard() {
         });
 
         // Capa 1: Base gris del IGN
-        var argenmap_gris = new L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
-          minZoom: 1, maxZoom: 20
+       var argenmap_gris = new L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
+          minZoom: 1, 
+          maxZoom: 20,
+          attribution: 'Mapa: <a href="https://www.ign.gob.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Instituto Geográfico Nacional</a> | Monitoreo: <a href="https://cruzroja.org.ar/" target="_blank" rel="noopener noreferrer" style="color: #ee3224; font-weight: bold;">Cruz Roja Argentina</a>'
         }).addTo(map);
 
         // Capa 2: Provincias y Capitales (WMS)
@@ -66,13 +68,23 @@ export default function Dashboard() {
 
         // Tus marcadores de eventos (inyectados desde React)
         var eventos = ${JSON.stringify(reportesTerreno)};
+        
         eventos.forEach(function(evento) {
-           L.circleMarker([evento.lat, evento.lng], {
-             color: '#ee3224',
-             fillColor: '#ee3224',
+           // Lógica: Gris solo para Incendios Forestales en Patagonia, resto en rojo
+           var colorMarker = (evento.nombre === "Incendios Forestales en Patagonia") ? '#808080' : '#ee3224';
+
+           var marker = L.circleMarker([evento.lat, evento.lng], {
+             color: colorMarker,
+             fillColor: colorMarker,
              fillOpacity: 0.7,
              radius: 8
-           }).addTo(map).bindPopup(evento.nombre);
+           }).addTo(map);
+
+           // Tooltip: Solo el nombre al pasar el mouse
+           marker.bindTooltip(evento.nombre);
+
+           // Popup: Link directo a la carpeta con el nombre del evento
+           marker.bindPopup("<a href='" + evento.link + "' target='_blank' style='font-weight:bold; color:#2563eb; text-decoration:none;'>" + evento.nombre + "</a>");
         });
       });
     </script>
