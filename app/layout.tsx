@@ -1,71 +1,40 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
-// Inicializamos la fuente Montserrat
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  display: 'swap',
-});
+const montserrat = Montserrat({ subsets: ["latin"], display: 'swap' });
 
 export const metadata: Metadata = {
   title: "Equipo Nacional de Monitoreo",
-  description: "Panel de control y monitoreo de emergencias",
+  description: "Panel de monitoreo de emergencias",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      {/* Aplicamos montserrat.className para que afecte a toda la app */}
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
         <div className="p-8">
-          {/* Header Global */}
           <header className="mb-8 pb-4 border-b-4 border-[#ee3224] flex items-center gap-4">
-            <img 
-              src="/enmo.jpg"
-              alt="Equipo"
-              className="h-25 w-auto object-contain"
-            />
+            <Image src="/enmo.jpg" alt="Logo" width={80} height={80} className="object-contain" priority />
             <div>
-              <h1 className="text-3xl font-bold text-[#ee3224]">
-                Equipo Nacional de Monitoreo
-              </h1>
-              <p className="text-gray-500 text-sm mt-1">
-                PRUEBA
-              </p>
+              <h1 className="text-3xl font-bold text-[#ee3224]">Equipo Nacional de Monitoreo</h1>
+              <p className="text-gray-500 text-sm mt-1">Panel de Monitoreo y Alertas</p>
             </div>
           </header>
-
-          {/* Menú */}
+          
           <nav className="mb-6 border-b border-gray-200 pb-2">
             <ul className="flex gap-6 text-sm font-medium">
-              <li>
-                <a href="/" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-  <img src="/net.png" alt="" className="w-9 h-9 object-contain"/> Inicio</a>
-              </li>
-              <li>
-                <a href="/monitoreo-guardia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">  
-                  <img src="/mt.png" alt="" className="w-9 h-9 object-contain"/>Monitoreo</a>
-              </li>
-              <li>
-                <a href="/monitoreo" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap"> 
-                   <img src="/alert.png" alt="" className="w-9 h-9 object-contain"/> Alertas</a>
-              </li>
-                <li>
-                <a href="/guias" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-                   <img src="/guia.png" alt="" className="w-9 h-9 object-contain"/>Guías y Procesos</a>
-              </li>
+              {[ {name: "Inicio", path: "/", icon: "/net.png"}, {name: "Monitoreo", path: "/monitoreo-guardia", icon: "/mt.png"}, {name: "Alertas", path: "/monitoreo", icon: "/alert.png"} ].map((item) => (
+                <li key={item.path}>
+                  <a href={item.path} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-200 transition-all text-xs font-bold text-gray-600 uppercase">
+                    <Image src={item.icon} alt="" width={36} height={36} className="w-9 h-9 object-contain"/> {item.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </nav>
-
-          {/* El contenido de cada página (page.tsx) se inyecta aquí */}
-          <main>
-            {children}
-          </main>
+          <main>{children}</main>
         </div>
       </body>
     </html>
