@@ -8,7 +8,26 @@ export default function MapaAlertasSMN() {
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data && event.data.type === 'CAP_DATA_READY') {
-        setAlertasTabla(event.data.payload);
+        const payload = event.data.payload;
+        
+        const agrupado = {};
+        
+        payload.forEach(alerta => {
+          alerta.provincias.forEach(prov => {
+            if (!agrupado[prov]) agrupado[prov] = {};
+            const llaveUnica = `${alerta.nivel}-${alerta.evento}`;
+            if (!agrupado[prov][llaveUnica]) {
+              agrupado[prov][llaveUnica] = { ...alerta };
+            }
+          });
+        });
+
+        const tablaFinal = Object.keys(agrupado).sort().map(prov => ({
+          provincia: prov,
+          alertas: Object.values(agrupado[prov])
+        }));
+
+        setAlertasTabla(tablaFinal);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -38,23 +57,23 @@ export default function MapaAlertasSMN() {
       
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          var map = L.map('map', { center: [-38.4161, -63.6167], zoom: 5 });
-
-          // Capa Base IGN
-          new L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
-            minZoom: 1, maxZoom: 20,
-            attribution: 'IGN | Cruz Roja Argentina'
+          var map = L.map('map').setView([-38.4161, -63.6167], 5);
+          
+          // Mapa base gris del IGN
+          L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
+            attribution: 'IGN'
           }).addTo(map);
 
-          // Capa Provincias y Capitales IGN
-          new L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
+          // Capas de Provincias y Capitales del IGN
+          L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
             layers: 'provincia,capa_capitales',
             format: 'image/png',
             transparent: true,
-            opacity: 0.6
+            opacity: 0.7
           }).addTo(map);
 
           var layerGroup = L.layerGroup().addTo(map);
+
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] }, { n: "CABA", c: ["caba", "ciudad autónoma de buenos aires", "capital federal"] },
             { n: "Catamarca", c: ["catamarca"] }, { n: "Chaco", c: ["chaco"] }, { n: "Chubut", c: ["chubut"] },
@@ -68,10 +87,10 @@ export default function MapaAlertasSMN() {
             { n: "Tierra del Fuego", c: ["tierra del fuego", "antártida"] }, { n: "Tucumán", c: ["tucumán", "tucuman"] }
           ];
 
-          function formatearFecha(iso) { 
-            if(!iso) return 'N/A';
-            const d = new Date(iso);
-            return \`\${String(d.getDate()).padStart(2,'0')}/\${String(d.getMonth()+1).padStart(2,'0')} \${String(d.getHours()).padStart(2,'0')}:\${String(d.getMinutes()).padStart(2,'0')}\`;
+          function formatearFecha(isoString) {
+            if (!isoString) return 'N/A';
+            const d = new Date(isoString);
+            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
           }
 
           async function cargarAlertas() {
@@ -79,30 +98,73 @@ export default function MapaAlertasSMN() {
             try {
               statusDiv.style.display = 'block';
               layerGroup.clearLayers();
-              const proxy = 'https://api.codetabs.com/v1/proxy?quest=';
-              const rss = await fetch(proxy + encodeURIComponent('https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + new Date().getTime()));
-              const xml = new DOMParser().parseFromString(await rss.text(), "application/xml");
-              const links = [...new Set(Array.from(xml.getElementsByTagName("link")).map(l => l.textContent).filter(u => u.includes('.xml') && !u.includes('rss_alertaCAP')))];
+              const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+              const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + new Date().getTime();
+              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+              const rssText = await rssRes.text();
+              const parser = new DOMParser();
+              const rssDoc = parser.parseFromString(rssText, "application/xml");
+              const linkNodes = rssDoc.getElementsByTagName("link");
+              const links = Array.from(linkNodes).map(l => l.textContent).filter(u => u.includes('.xml') && !u.includes('rss_alertaCAP'));
+              const linksUnicos = [...new Set(links)];
 
-              const datos = [];
-              for(const link of links) {
-                const res = await fetch(proxy + encodeURIComponent(link));
-                const cap = new DOMParser().parseFromString(await res.text(), "application/xml");
-                const event = cap.getElementsByTagName("event")[0]?.textContent || "Alerta";
-                const sev = cap.getElementsByTagName("severity")[0]?.textContent || "Minor";
-                let color = sev === 'Extreme' ? '#ef4444' : sev === 'Severe' ? '#f97316' : '#eab308';
-                
-                Array.from(cap.getElementsByTagName("polygon")).forEach(p => {
-                  const coords = p.textContent.trim().split(' ').map(par => par.split(',').map(Number).reverse());
-                  L.polygon(coords, {color, fillColor: color, fillOpacity: 0.4}).addTo(layerGroup).bindPopup(event);
-                });
-                datos.push({ id: link, evento: event, nivel: sev, color, provincias: ["Nacional"] });
+              if (linksUnicos.length === 0) {
+                statusDiv.innerText = "Sin Alertas";
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+                window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
+                return;
               }
-              window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datos }, '*');
+
+              const fetchPromises = linksUnicos.map(link => fetch(proxyUrl + encodeURIComponent(link)).then(r => r.text()).then(t => ({link, text: t})));
+              const capsDescargados = await Promise.all(fetchPromises);
+              
+              let alertasDibujadas = 0;
+              const poligonosYaDibujados = new Set();
+              const datosParaTabla = [];
+              const linksListados = new Set();
+
+              for (const capData of capsDescargados) {
+                if (!capData) continue;
+                try {
+                  const capDoc = parser.parseFromString(capData.text, "application/xml");
+                  const link = capData.link;
+                  const dateEndStr = capDoc.getElementsByTagName("expires")[0]?.textContent;
+                  if (dateEndStr && new Date(dateEndStr) < new Date()) continue;
+
+                  const severity = capDoc.getElementsByTagName("severity")[0]?.textContent || 'Minor';
+                  const eventoTexto = capDoc.getElementsByTagName("event")[0]?.textContent || 'Alerta';
+                  const areaDesc = capDoc.getElementsByTagName("areaDesc")[0]?.textContent || '';
+                  
+                  let color = '#eab308'; let nivel = 'Alerta Amarilla';
+                  if (severity === 'Extreme') { color = '#ef4444'; nivel = 'Alerta Roja'; }
+                  else if (severity === 'Severe') { color = '#f97316'; nivel = 'Alerta Naranja'; }
+                  
+                  let provsEncontradas = [];
+                  provsDic.forEach(p => { if (p.c.some(c => (eventoTexto + areaDesc).toLowerCase().includes(c))) provsEncontradas.push(p.n); });
+                  if (provsEncontradas.length === 0) provsEncontradas.push("Varias / Área Nacional");
+
+                  if (!linksListados.has(link)) {
+                    linksListados.add(link);
+                    datosParaTabla.push({ id: link, evento: eventoTexto, nivel, color, provincias: provsEncontradas, inicio: formatearFecha(capDoc.getElementsByTagName("onset")[0]?.textContent), fin: formatearFecha(dateEndStr) });
+                  }
+
+                  Array.from(capDoc.getElementsByTagName("polygon")).forEach(p => {
+                    const poly = p.textContent.trim();
+                    if (!poligonosYaDibujados.has(poly)) {
+                      poligonosYaDibujados.add(poly);
+                      const coords = poly.split(' ').map(par => par.split(',').map(Number).reverse());
+                      L.polygon(coords, {color, fillColor: color, fillOpacity: 0.4}).addTo(layerGroup).bindPopup(eventoTexto);
+                      alertasDibujadas++;
+                    }
+                  });
+                } catch(e) {}
+              }
+              window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
               statusDiv.style.display = 'none';
-            } catch(e) { statusDiv.innerText = "Error de conexión"; }
+            } catch(e) { statusDiv.innerText = "Error"; }
           }
           cargarAlertas();
+          setInterval(cargarAlertas, 900000);
         });
       </script>
     </body>
@@ -111,21 +173,29 @@ export default function MapaAlertasSMN() {
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
-      <h2 className="text-lg font-bold text-gray-800 uppercase mb-4">Panel Automático de Alertas (IGN + SMN)</h2>
-      <div className="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 relative mb-6">
-        <iframe srcDoc={mapHtml} className="w-full h-full border-0 absolute inset-0" title="Mapa IGN" sandbox="allow-scripts allow-same-origin" />
+      <div className="border-b border-gray-200 pb-2 mb-4">
+        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">Panel Automático de Alertas (SMN)</h2>
       </div>
-      <div className="border rounded-xl overflow-hidden">
-        <table className="w-full text-sm text-gray-600">
-          <thead className="bg-gray-50 uppercase text-xs">
-            <tr><th className="px-4 py-3">Nivel</th><th className="px-4 py-3">Fenómeno</th></tr>
+      <div className="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50 mb-6 z-0">
+        <iframe srcDoc={mapHtml} className="w-full h-full border-0 absolute inset-0" title="Mapa CAP SMN" sandbox="allow-scripts allow-same-origin" />
+      </div>
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <table className="w-full text-left text-sm text-gray-600">
+          <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+            <tr><th className="px-4 py-3">Nivel</th><th className="px-4 py-3">Fenómeno</th><th className="px-4 py-3">Vigencia</th></tr>
           </thead>
-          <tbody>
-            {alertasTabla.map((a, i) => (
-              <tr key={i} className="border-t">
-                <td className="px-4 py-2 font-bold" style={{color: a.color}}>{a.nivel}</td>
-                <td className="px-4 py-2">{a.evento}</td>
-              </tr>
+          <tbody className="divide-y divide-gray-100">
+            {alertasTabla.map((grupo) => (
+              <React.Fragment key={grupo.provincia}>
+                <tr className="bg-gray-100/60"><td colSpan="3" className="px-4 py-2 text-xs font-bold uppercase tracking-wider">📍 {grupo.provincia}</td></tr>
+                {grupo.alertas.map((a, i) => (
+                  <tr key={i}>
+                    <td className="px-4 py-3"><span className="px-2 py-1 rounded text-white text-xs font-bold" style={{ backgroundColor: a.color }}>{a.nivel}</span></td>
+                    <td className="px-4 py-3 font-medium">{a.evento}</td>
+                    <td className="px-4 py-3 text-xs">{a.inicio} - {a.fin}</td>
+                  </tr>
+                ))}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
