@@ -3,14 +3,31 @@
 import React, { useEffect, useState } from 'react';
 
 export default function MapaAlertasSMN() {
-  // En JS no usamos <AlertaResumen[]>
   const [alertasTabla, setAlertasTabla] = useState([]);
 
   useEffect(() => {
-    // Quitamos el tipo ": MessageEvent"
     const handleMessage = (event) => {
       if (event.data && event.data.type === 'CAP_DATA_READY') {
-        setAlertasTabla(event.data.payload);
+        const payload = event.data.payload;
+        
+        const agrupado = {};
+        
+        payload.forEach(alerta => {
+          alerta.provincias.forEach(prov => {
+            if (!agrupado[prov]) agrupado[prov] = {};
+            const llaveUnica = `${alerta.nivel}-${alerta.evento}`;
+            if (!agrupado[prov][llaveUnica]) {
+              agrupado[prov][llaveUnica] = { ...alerta };
+            }
+          });
+        });
+
+        const tablaFinal = Object.keys(agrupado).sort().map(prov => ({
+          provincia: prov,
+          alertas: Object.values(agrupado[prov])
+        }));
+
+        setAlertasTabla(tablaFinal);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -57,6 +74,33 @@ export default function MapaAlertasSMN() {
           }).addTo(map);
 
           var layerGroup = L.layerGroup().addTo(map);
+
+          const provsDic = [
+            { n: "Buenos Aires", c: ["buenos aires"] },
+            { n: "CABA", c: ["caba", "ciudad autónoma de buenos aires", "capital federal"] },
+            { n: "Catamarca", c: ["catamarca"] },
+            { n: "Chaco", c: ["chaco"] },
+            { n: "Chubut", c: ["chubut"] },
+            { n: "Córdoba", c: ["córdoba", "cordoba"] },
+            { n: "Corrientes", c: ["corrientes"] },
+            { n: "Entre Ríos", c: ["entre ríos", "entre rios"] },
+            { n: "Formosa", c: ["formosa"] },
+            { n: "Jujuy", c: ["jujuy"] },
+            { n: "La Pampa", c: ["la pampa"] },
+            { n: "La Rioja", c: ["la rioja"] },
+            { n: "Mendoza", c: ["mendoza"] },
+            { n: "Misiones", c: ["misiones"] },
+            { n: "Neuquén", c: ["neuquén", "neuquen"] },
+            { n: "Río Negro", c: ["río negro", "rio negro"] },
+            { n: "Salta", c: ["salta"] },
+            { n: "San Juan", c: ["san juan"] },
+            { n: "San Luis", c: ["san luis"] },
+            { n: "Santa Cruz", c: ["santa cruz"] },
+            { n: "Santa Fe", c: ["santa fe"] },
+            { n: "Santiago del Estero", c: ["santiago del estero"] },
+            { n: "Tierra del Fuego", c: ["tierra del fuego", "antártida"] },
+            { n: "Tucumán", c: ["tucumán", "tucuman"] }
+          ];
 
           function formatearFecha(isoString) {
             if (!isoString) return 'N/A';
@@ -105,18 +149,35 @@ export default function MapaAlertasSMN() {
                 return;
               }
 
-              statusDiv.innerText = "Analizando reportes...";
+              statusDiv.innerText = "Descargando reportes en paralelo...";
               
+              // -----------------------------------------------------
+              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
+              // -----------------------------------------------------
+              const fetchPromises = linksUnicos.map(link => 
+                fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
+                  .then(res => res.text())
+                  .then(text => ({ link, text }))
+                  .catch(err => null) // Si uno falla, no rompe el resto
+              );
+
+              // Esperamos a que TODOS se descarguen al mismo tiempo
+              const capsDescargados = await Promise.all(fetchPromises);
+
+              statusDiv.innerText = "Procesando e indexando mapas...";
+
               let alertasDibujadas = 0;
               const poligonosYaDibujados = new Set();
               const datosParaTabla = [];
               const linksListados = new Set();
 
-              for (const link of linksUnicos) {
+              // Ahora iteramos sobre los archivos que ya están en memoria
+              for (const capData of capsDescargados) {
+                if (!capData) continue;
+
                 try {
-                  const capRes = await fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp));
-                  const capText = await capRes.text();
-                  const capDoc = parser.parseFromString(capText, "application/xml");
+                  const capDoc = parser.parseFromString(capData.text, "application/xml");
+                  const link = capData.link;
 
                   const expiresNodes = capDoc.getElementsByTagName("expires");
                   const dateEndStr = expiresNodes.length > 0 ? expiresNodes[0].textContent : null;
@@ -138,11 +199,15 @@ export default function MapaAlertasSMN() {
                   
                   const eventNodes = capDoc.getElementsByTagName("event");
                   const headlineNodes = capDoc.getElementsByTagName("headline");
+                  const areaDescNodes = capDoc.getElementsByTagName("areaDesc");
+                  const descriptionNodes = capDoc.getElementsByTagName("description");
+                  
                   const eventoTexto = eventNodes.length > 0 ? eventNodes[0].textContent : (headlineNodes.length > 0 ? headlineNodes[0].textContent : 'Alerta Meteorológica');
+                  const descArea = areaDescNodes.length > 0 ? areaDescNodes[0].textContent : '';
+                  const descText = descriptionNodes.length > 0 ? descriptionNodes[0].textContent : '';
 
                   let color = '#eab308';
                   let nivel = 'Alerta Amarilla';
-                  
                   const evtLower = eventoTexto.toLowerCase();
 
                   if (severity === 'Extreme') { 
@@ -154,6 +219,22 @@ export default function MapaAlertasSMN() {
                     nivel = 'Advertencia (Informate)';
                   }
 
+                  const textoParaEscanear = (eventoTexto + " " + descArea + " " + descText).toLowerCase();
+                  let provsEncontradas = [];
+                  
+                  provsDic.forEach(prov => {
+                    if (prov.c.some(clave => textoParaEscanear.includes(clave))) {
+                      if (prov.n === "Buenos Aires" && textoParaEscanear.includes("ciudad autónoma") && !textoParaEscanear.replace("ciudad autónoma de buenos aires", "").includes("buenos aires")) {
+                        return;
+                      }
+                      provsEncontradas.push(prov.n);
+                    }
+                  });
+
+                  if (provsEncontradas.length === 0) {
+                    provsEncontradas.push("Varias / Área Nacional");
+                  }
+
                   if (!linksListados.has(link)) {
                     linksListados.add(link);
                     datosParaTabla.push({
@@ -162,7 +243,8 @@ export default function MapaAlertasSMN() {
                       nivel: nivel,
                       color: color,
                       inicio: inicioFormat,
-                      fin: finFormat
+                      fin: finFormat,
+                      provincias: provsEncontradas
                     });
                   }
 
@@ -270,37 +352,47 @@ export default function MapaAlertasSMN() {
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 font-semibold">Nivel</th>
-                <th className="px-4 py-3 font-semibold">Fenómeno</th>
-                <th className="px-4 py-3 font-semibold">Vigencia (Inicio - Fin)</th>
+                <th className="px-4 py-3 font-semibold w-1/4">Nivel</th>
+                <th className="px-4 py-3 font-semibold w-2/4">Fenómeno</th>
+                <th className="px-4 py-3 font-semibold w-1/4">Vigencia (Inicio - Fin)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {alertasTabla.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-4 py-6 text-center text-gray-500 text-sm">
+                  <td colSpan="3" className="px-4 py-6 text-center text-gray-500 text-sm">
                     Analizando reportes o sin novedades activas en el territorio.
                   </td>
                 </tr>
               ) : (
-                alertasTabla.map((alerta) => (
-                  <tr key={alerta.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <span 
-                        className="px-2.5 py-1 rounded-md text-white text-xs font-bold whitespace-nowrap" 
-                        style={{ backgroundColor: alerta.color }}
-                      >
-                        {alerta.nivel}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{alerta.evento}</td>
-                    <td className="px-4 py-3 text-xs">
-                      <div className="flex flex-col gap-0.5">
-                        <span><b className="text-gray-700">Desde:</b> {alerta.inicio} hs</span>
-                        <span><b className="text-gray-700">Hasta:</b> {alerta.fin} hs</span>
-                      </div>
-                    </td>
-                  </tr>
+                alertasTabla.map((grupo) => (
+                  <React.Fragment key={grupo.provincia}>
+                    <tr className="bg-gray-100/60 border-t-2 border-gray-200">
+                      <td colSpan="3" className="px-4 py-2.5 text-xs font-bold text-gray-800 uppercase tracking-wider">
+                        📍 {grupo.provincia}
+                      </td>
+                    </tr>
+                    
+                    {grupo.alertas.map((alerta, index) => (
+                      <tr key={`${grupo.provincia}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 pl-6">
+                          <span 
+                            className="px-2.5 py-1 rounded-md text-white text-xs font-bold whitespace-nowrap" 
+                            style={{ backgroundColor: alerta.color }}
+                          >
+                            {alerta.nivel}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{alerta.evento}</td>
+                        <td className="px-4 py-3 text-xs">
+                          <div className="flex flex-col gap-0.5">
+                            <span><b className="text-gray-700">Desde:</b> {alerta.inicio} hs</span>
+                            <span><b className="text-gray-700">Hasta:</b> {alerta.fin} hs</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
