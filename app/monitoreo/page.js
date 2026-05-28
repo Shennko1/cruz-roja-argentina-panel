@@ -69,7 +69,7 @@ export default function MapaAlertasSMN() {
       <script>
         document.addEventListener("DOMContentLoaded", function() {
           var map = L.map('map').setView([-38.4161, -63.6167], 5);
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
