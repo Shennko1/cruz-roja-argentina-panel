@@ -312,7 +312,7 @@ export default function MapaAlertasSMN() {
           Panel Automático de Alertas (SMN)
         </h2>
         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-          Monitor de alertas y advertencias con filtros de caducidad y deduplicación de geometría.
+          Alertas recibidas desde el CAP del Servicio Meteorológico Nacional.
         </p>
       </div>
 
