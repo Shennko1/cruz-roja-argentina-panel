@@ -1,9 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function MapaAlertasSMN() {
-  
+  // En JS no usamos <AlertaResumen[]>
+  const [alertasTabla, setAlertasTabla] = useState([]);
+
+  useEffect(() => {
+    // Quitamos el tipo ": MessageEvent"
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'CAP_DATA_READY') {
+        setAlertasTabla(event.data.payload);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const mapHtml = `
     <!DOCTYPE html>
     <html>
@@ -33,7 +46,7 @@ export default function MapaAlertasSMN() {
       </style>
     </head>
     <body>
-      <div id="loading" class="loading">Iniciando radar...</div>
+      <div id="loading" class="loading">Iniciando sistema...</div>
       <div id="map"></div>
       
       <script>
@@ -45,12 +58,22 @@ export default function MapaAlertasSMN() {
 
           var layerGroup = L.layerGroup().addTo(map);
 
+          function formatearFecha(isoString) {
+            if (!isoString) return 'N/A';
+            const d = new Date(isoString);
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const horas = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return dia + '/' + mes + ' ' + horas + ':' + min;
+          }
+
           async function cargarAlertas() {
             const statusDiv = document.getElementById('loading');
             
             try {
               statusDiv.style.display = 'block';
-              statusDiv.innerText = "Conectando al índice del SMN...";
+              statusDiv.innerText = "Conectando al índice...";
               layerGroup.clearLayers();
 
               const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
@@ -66,7 +89,6 @@ export default function MapaAlertasSMN() {
               const linkNodes = rssDoc.getElementsByTagName("link");
               const links = [];
               
-              // 1. Recopilamos todos los links
               for (let i = 0; i < linkNodes.length; i++) {
                 const url = linkNodes[i].textContent;
                 if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
@@ -74,20 +96,21 @@ export default function MapaAlertasSMN() {
                 }
               }
 
-              // 2. Filtro Anti-Duplicados: Eliminamos URLs idénticas en el índice
               const linksUnicos = [...new Set(links)];
 
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+                window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
                 return;
               }
 
-              statusDiv.innerText = "Analizando " + linksUnicos.length + " reportes...";
+              statusDiv.innerText = "Analizando reportes...";
               
               let alertasDibujadas = 0;
-              // 3. Memoria Fotográfica: Guarda los polígonos ya dibujados
               const poligonosYaDibujados = new Set();
+              const datosParaTabla = [];
+              const linksListados = new Set();
 
               for (const link of linksUnicos) {
                 try {
@@ -95,27 +118,59 @@ export default function MapaAlertasSMN() {
                   const capText = await capRes.text();
                   const capDoc = parser.parseFromString(capText, "application/xml");
 
-                  // Filtro de Caducidad (Descartamos alertas vencidas)
                   const expiresNodes = capDoc.getElementsByTagName("expires");
-                  if (expiresNodes.length > 0) {
-                    const fechaExpiracion = new Date(expiresNodes[0].textContent);
-                    const ahora = new Date();
-                    if (fechaExpiracion < ahora) continue; 
+                  const dateEndStr = expiresNodes.length > 0 ? expiresNodes[0].textContent : null;
+                  
+                  if (dateEndStr) {
+                    const fechaExpiracion = new Date(dateEndStr);
+                    if (fechaExpiracion < new Date()) continue; 
                   }
+
+                  const onsetNodes = capDoc.getElementsByTagName("onset");
+                  const effectiveNodes = capDoc.getElementsByTagName("effective");
+                  const dateStartStr = onsetNodes.length > 0 ? onsetNodes[0].textContent : (effectiveNodes.length > 0 ? effectiveNodes[0].textContent : null);
+
+                  const inicioFormat = formatearFecha(dateStartStr);
+                  const finFormat = formatearFecha(dateEndStr);
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
                   
+                  const eventNodes = capDoc.getElementsByTagName("event");
                   const headlineNodes = capDoc.getElementsByTagName("headline");
-                  const headline = headlineNodes.length > 0 ? headlineNodes[0].textContent : 'Alerta Meteorológica';
+                  const eventoTexto = eventNodes.length > 0 ? eventNodes[0].textContent : (headlineNodes.length > 0 ? headlineNodes[0].textContent : 'Alerta Meteorológica');
+
+                  let color = '#eab308';
+                  let nivel = 'Alerta Amarilla';
+                  
+                  const evtLower = eventoTexto.toLowerCase();
+
+                  if (severity === 'Extreme') { 
+                    color = '#ef4444'; nivel = 'Alerta Roja'; 
+                  } else if (severity === 'Severe') { 
+                    color = '#f97316'; nivel = 'Alerta Naranja'; 
+                  } else if (severity === 'Minor' || evtLower.includes('advertencia') || evtLower.includes('niebla') || evtLower.includes('ceniza')) {
+                    color = '#8b5cf6'; 
+                    nivel = 'Advertencia (Informate)';
+                  }
+
+                  if (!linksListados.has(link)) {
+                    linksListados.add(link);
+                    datosParaTabla.push({
+                      id: link,
+                      evento: eventoTexto,
+                      nivel: nivel,
+                      color: color,
+                      inicio: inicioFormat,
+                      fin: finFormat
+                    });
+                  }
 
                   const polygonNodes = capDoc.getElementsByTagName("polygon");
-                  
                   for (let j = 0; j < polygonNodes.length; j++) {
                     const polyString = polygonNodes[j].textContent.trim();
                     if (!polyString) continue;
 
-                    // 4. EL FILTRO MAGICO: Si ya dibujamos estas coordenadas exactas, las salteamos
                     if (poligonosYaDibujados.has(polyString)) continue;
                     poligonosYaDibujados.add(polyString);
 
@@ -124,28 +179,35 @@ export default function MapaAlertasSMN() {
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
 
-                    let color = '#eab308'; // Amarillo
-                    if (severity === 'Severe') color = '#f97316'; // Naranja
-                    if (severity === 'Extreme') color = '#ef4444'; // Rojo
-
                     var polygon = L.polygon(coords, {
                       color: color,
                       fillColor: color,
-                      fillOpacity: 0.4, // Ahora siempre será translúcido
+                      fillOpacity: 0.4,
                       weight: 2
                     });
                     
-                    polygon.bindPopup("<div style='font-family:sans-serif;'><b>" + headline + "</b><br/><span style='color:#64748b;font-size:12px;'>Gravedad: " + severity + "</span></div>");
+                    const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
+                      "<b style='color:#1e293b; font-size:14px;'>" + eventoTexto + "</b><br/>" +
+                      "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>" + nivel + "</span><br/>" +
+                      "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
+                      "<b>Vigencia:</b><br/>" +
+                      "Desde: " + inicioFormat + " hs<br/>" +
+                      "Hasta: " + finFormat + " hs</div>" +
+                      "</div>";
+
+                    polygon.bindPopup(popupHTML);
                     layerGroup.addLayer(polygon);
                     
                     alertasDibujadas++;
                   }
                 } catch (e) {
-                  // Error silencioso para no frenar el ciclo si falla un solo link
+                  // Silencioso
                 }
               }
               
-              statusDiv.innerText = "Mapa limpio: " + alertasDibujadas + " zonas bajo alerta";
+              window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
+
+              statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
 
             } catch (error) {
@@ -165,10 +227,10 @@ export default function MapaAlertasSMN() {
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       <div className="border-b border-gray-200 pb-2 mb-4">
         <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">
-          Radar de Alertas Oficiales (SMN)
+          Panel Automático de Alertas (SMN)
         </h2>
         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-          Lector automático de Protocolo CAP. El sistema cuenta con filtros de caducidad y deduplicación de geometría para evitar saturación visual en zonas con múltiples avisos concurrentes.
+          Monitor de alertas y advertencias con filtros de caducidad y deduplicación de geometría.
         </p>
       </div>
 
@@ -181,7 +243,7 @@ export default function MapaAlertasSMN() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-6 text-xs font-bold uppercase tracking-widest justify-center bg-gray-50 py-3 rounded-lg border border-gray-100">
+      <div className="flex flex-wrap gap-6 text-xs font-bold uppercase tracking-widest justify-center bg-gray-50 py-3 rounded-lg border border-gray-100 mb-6">
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-3.5 rounded-full bg-[#ef4444] shadow-sm"></span>
           <span className="text-gray-700">Alerta Roja</span>
@@ -193,6 +255,56 @@ export default function MapaAlertasSMN() {
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-3.5 rounded-full bg-[#eab308] shadow-sm"></span>
           <span className="text-gray-700">Alerta Amarilla</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full bg-[#8b5cf6] shadow-sm"></span>
+          <span className="text-gray-700">Advertencia / Informate</span>
+        </div>
+      </div>
+
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-tight">Resumen Operativo de Eventos Activos</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Nivel</th>
+                <th className="px-4 py-3 font-semibold">Fenómeno</th>
+                <th className="px-4 py-3 font-semibold">Vigencia (Inicio - Fin)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {alertasTabla.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-6 text-center text-gray-500 text-sm">
+                    Analizando reportes o sin novedades activas en el territorio.
+                  </td>
+                </tr>
+              ) : (
+                alertasTabla.map((alerta) => (
+                  <tr key={alerta.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span 
+                        className="px-2.5 py-1 rounded-md text-white text-xs font-bold whitespace-nowrap" 
+                        style={{ backgroundColor: alerta.color }}
+                      >
+                        {alerta.nivel}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{alerta.evento}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <div className="flex flex-col gap-0.5">
+                        <span><b className="text-gray-700">Desde:</b> {alerta.inicio} hs</span>
+                        <span><b className="text-gray-700">Hasta:</b> {alerta.fin} hs</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
