@@ -149,11 +149,8 @@ export default function MapaAlertasSMN() {
                 return;
               }
 
-              statusDiv.innerText = "Descargando reportes en paralelo...";
+              statusDiv.innerText = "Cargando reportes...";
               
-              // -----------------------------------------------------
-              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
-              // -----------------------------------------------------
               const fetchPromises = linksUnicos.map(link => 
                 fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
                   .then(res => res.text())
@@ -161,7 +158,6 @@ export default function MapaAlertasSMN() {
                   .catch(err => null) // Si uno falla, no rompe el resto
               );
 
-              // Esperamos a que TODOS se descarguen al mismo tiempo
               const capsDescargados = await Promise.all(fetchPromises);
 
               statusDiv.innerText = "Procesando e indexando mapas...";
@@ -171,7 +167,6 @@ export default function MapaAlertasSMN() {
               const datosParaTabla = [];
               const linksListados = new Set();
 
-              // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
                 if (!capData) continue;
 
@@ -312,7 +307,7 @@ export default function MapaAlertasSMN() {
           Panel Automático de Alertas (SMN)
         </h2>
         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-          Monitor de alertas y advertencias con filtros de caducidad y deduplicación de geometría.
+          Alertas leídas mediante CAP del SMN.
         </p>
       </div>
 
