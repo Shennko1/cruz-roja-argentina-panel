@@ -1,19 +1,10 @@
-'use client';
+"use client";
+import React, { useState } from "react";
 
-import React, { useEffect, useState } from 'react';
-
-export default function DashboardGeofisica() {
-  const [sismosTabla, setSismosTabla] = useState([]);
-
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data && event.data.type === 'INPRES_DATA_READY') {
-        setSismosTabla(event.data.payload);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+export default function GeofisicaPage() {
+  const [isInpresOpen, setIsInpresOpen] = useState(false);
+  const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
+  const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
 
   const mapHtml = `
     <!DOCTYPE html>
@@ -39,12 +30,18 @@ export default function DashboardGeofisica() {
           text-transform: uppercase;
           letter-spacing: 0.05em;
           border: 1px solid #e2e8f0;
-          transition: all 0.3s ease;
+        }
+        .leaflet-tooltip.custom-tooltip {
+          background: white;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          border-radius: 8px;
+          padding: 8px 12px;
         }
       </style>
     </head>
     <body>
-      <div id="loading" class="loading">Sincronizando con INPRES...</div>
+      <div id="loading" class="loading">Sincronizando XML...</div>
       <div id="map"></div>
       
       <script>
@@ -80,28 +77,29 @@ export default function DashboardGeofisica() {
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xmlText, "application/xml");
               
-              const sismos = xmlDoc.getElementsByTagName("sismo");
-              const datosTabla = [];
+              const items = xmlDoc.getElementsByTagName("item");
 
-              for (let i = 0; i < sismos.length; i++) {
-                const s = sismos[i];
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i];
                 
-                const fecha = s.getElementsByTagName("fecha")[0]?.textContent || "";
-                const hora = s.getElementsByTagName("hora")[0]?.textContent || "";
-                const lat = parseFloat(s.getElementsByTagName("lat")[0]?.textContent || s.getElementsByTagName("latitud")[0]?.textContent);
-                const lng = parseFloat(s.getElementsByTagName("lon")[0]?.textContent || s.getElementsByTagName("longitud")[0]?.textContent);
-                const mag = parseFloat(s.getElementsByTagName("magnitud")[0]?.textContent || "0");
-                const prof = s.getElementsByTagName("profundidad")[0]?.textContent || "";
-                const epi = s.getElementsByTagName("epicentro")[0]?.textContent || "Zona no especificada";
+                // Extracción exacta de las etiquetas solicitadas
+                const latStr = (item.getElementsByTagName("latitude")[0] || item.getElementsByTagName("geo:lat")[0])?.textContent;
+                const lonStr = (item.getElementsByTagName("longitude")[0] || item.getElementsByTagName("geo:long")[0])?.textContent;
+                const magStr = item.getElementsByTagName("magnitude")[0]?.textContent || "N/D";
+                const dateStr = (item.getElementsByTagName("pubdate")[0] || item.getElementsByTagName("pubDate")[0])?.textContent || "Fecha desconocida";
 
-                if (!isNaN(lat) && !isNaN(lng)) {
+                const lat = parseFloat(latStr);
+                const lon = parseFloat(lonStr);
+                const mag = parseFloat(magStr);
+
+                if (!isNaN(lat) && !isNaN(lon)) {
                   let color = '#3b82f6'; // Azul (< 3)
                   let radius = 6;
                   if (mag >= 3 && mag < 4.5) { color = '#eab308'; radius = 10; } // Amarillo
                   if (mag >= 4.5 && mag < 6) { color = '#f97316'; radius = 14; } // Naranja
                   if (mag >= 6) { color = '#ef4444'; radius = 18; } // Rojo
 
-                  const marker = L.circleMarker([lat, lng], {
+                  const marker = L.circleMarker([lat, lon], {
                     radius: radius,
                     fillColor: color,
                     color: '#ffffff',
@@ -110,31 +108,32 @@ export default function DashboardGeofisica() {
                     fillOpacity: 0.8
                   });
 
-                  const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
-                                    "<b style='color:#1e293b; font-size:14px;'>" + epi + "</b><br/>" +
-                                    "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>Magnitud: " + mag + "</span><br/>" +
-                                    "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
-                                    "<b>Profundidad:</b> " + prof + " km<br/>" +
-                                    "<b>Fecha:</b> " + fecha + " a las " + hora + "</div>" +
-                                    "</div>";
+                  // Tooltip que aparece al poner el mouse arriba (hover)
+                  const tooltipHTML = "<div style='font-family:sans-serif; text-align:left; min-width:140px;'>" +
+                                      "<div style='background:" + color + "; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; display:inline-block; margin-bottom:6px;'>" +
+                                      "Magnitud: " + (isNaN(mag) ? magStr : mag) + "</div><br/>" +
+                                      "<span style='font-size:11px; color:#475569; font-weight:bold;'>" + dateStr + "</span>" +
+                                      "</div>";
                   
-                  marker.bindPopup(popupHTML);
+                  marker.bindTooltip(tooltipHTML, {
+                    direction: 'top',
+                    className: 'custom-tooltip',
+                    offset: [0, -10]
+                  });
+                  
                   layerGroup.addLayer(marker);
-
-                  datosTabla.push({ fecha, hora, epi, mag, prof, color });
                 }
               }
               
-              window.parent.postMessage({ type: 'INPRES_DATA_READY', payload: datosTabla }, '*');
-              statusDiv.innerText = "Mapa listo: " + datosTabla.length + " sismos sentidos";
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+              statusDiv.innerText = "Mapa actualizado";
+              setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
             } catch(e) {
-              statusDiv.innerText = "Error cargando INPRES";
+              statusDiv.innerText = "Error cargando XML";
             }
           }
 
           cargarSismos();
-          setInterval(cargarSismos, 300000);
+          setInterval(cargarSismos, 300000); // 5 minutos
         });
       </script>
     </body>
@@ -142,187 +141,153 @@ export default function DashboardGeofisica() {
   `;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-sans">
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       
-      {/* 1. SECCIÓN INPRES: MAPA + TABLA (Estilo SMN Exacto) */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm col-span-12">
-        <div className="border-b border-gray-200 pb-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">
-            Panel Automático de Sismos Sentidos (INPRES)
-          </h2>
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Mapa interactivo y registro tabular alimentado por el XML oficial de sismos sentidos.
-          </p>
-        </div>
+      {/* CABECERA */}
+      <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-800">
+          Monitoreo: Sismos y Geofísica
+        </h2>
+        <span className="text-xs font-medium bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
+          En vivo
+        </span>
+      </div>
 
-        <div className="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50 mb-6 z-0">
-          <iframe 
-            srcDoc={mapHtml} 
-            className="w-full h-full border-0 absolute inset-0" 
-            title="Mapa INPRES XML" 
-            sandbox="allow-scripts allow-same-origin allow-popups"
-          />
-        </div>
+      {/* AREA DE TRABAJO (Blank State) */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
+        Agregar información.
+      </div>
 
-        <div className="flex flex-wrap gap-6 text-xs font-bold uppercase tracking-widest justify-center bg-gray-50 py-3 rounded-lg border border-gray-100 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#ef4444] shadow-sm"></span>
-            <span className="text-gray-700">Mag ≥ 6.0</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#f97316] shadow-sm"></span>
-            <span className="text-gray-700">Mag 4.5 - 5.9</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#eab308] shadow-sm"></span>
-            <span className="text-gray-700">Mag 3.0 - 4.4</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#3b82f6] shadow-sm"></span>
-            <span className="text-gray-700">Mag &lt; 3.0</span>
-          </div>
+      {/* 1. MAPA GEOFÍSICO (INPRES) - Siempre visible */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+          <img src="/earthquake.png" alt="Ícono Sismo" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+            Sismos Sentidos (XML Oficial)
+          </h3>
         </div>
-
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
-          <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-tight">Resumen Operativo de Eventos Activos</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1 bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col justify-between shadow-sm">
+            <div>
+              <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase">
+                ¿Para qué sirve este mapa?
+              </h4>
+              <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
+                Visualiza en tiempo real los sismos reportados a través del XML de INPRES. Pasá el mouse sobre los puntos para ver detalles.
+              </p>
+              <ul className="text-[12px] text-gray-500 space-y-3">
+                <li className="flex gap-2">
+                  <span className="text-blue-500 font-bold">•</span>
+                  <span><strong>Colores:</strong> Indican la magnitud. Rojo (≥ 6), Naranja (4.5 - 5.9), Amarillo (3 - 4.4), Azul (&lt; 3).</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-blue-500 font-bold">•</span>
+                  <span><strong>Interacción:</strong> Solo con posar el cursor se despliega la magnitud y la fecha de publicación (pubdate).</span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 font-semibold w-1/6">Magnitud</th>
-                  <th className="px-4 py-3 font-semibold w-3/6">Epicentro</th>
-                  <th className="px-4 py-3 font-semibold w-1/6">Profundidad</th>
-                  <th className="px-4 py-3 font-semibold w-1/6">Fecha y Hora</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {sismosTabla.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="px-4 py-6 text-center text-gray-500 text-sm">
-                      Analizando reportes o sin sismos recientes.
-                    </td>
-                  </tr>
-                ) : (
-                  sismosTabla.map((sismo, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 pl-6">
-                        <span 
-                          className="px-2.5 py-1 rounded-md text-white text-xs font-bold whitespace-nowrap" 
-                          style={{ backgroundColor: sismo.color }}
-                        >
-                          Mag: {sismo.mag}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{sismo.epi}</td>
-                      <td className="px-4 py-3 text-xs">
-                        <b className="text-gray-700">{sismo.prof} km</b>
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        <div className="flex flex-col gap-0.5">
-                          <span>{sismo.fecha}</span>
-                          <span>{sismo.hora} hs</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="lg:col-span-3 rounded-xl overflow-hidden border border-gray-300 shadow-md bg-gray-100 h-[500px] relative z-0">
+            <iframe 
+              srcDoc={mapHtml}
+              className="w-full h-full border-0 absolute inset-0" 
+              title="Mapa INPRES" 
+              sandbox="allow-scripts allow-same-origin"
+            ></iframe>
           </div>
         </div>
       </div>
 
-      {/* 2. SECCIÓN VOLCANO DISCOVERY (Estilo SMN Aplicado) */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm col-span-12 lg:col-span-6">
-        <div className="border-b border-gray-200 pb-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">
-            Monitoreo Global (VolcanoDiscovery)
-          </h2>
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Mapa de sismicidad enfocado en Argentina para evaluar actividad tectónica transfronteriza.
-          </p>
-        </div>
-        <div className="w-full h-[400px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50 z-0">
-          <iframe 
-            src="https://earthquakes.volcanodiscovery.com/map/Argentina?L=8" 
-            className="w-full h-full border-0 absolute inset-0" 
-            title="Volcano Discovery Map" 
-          />
-        </div>
+      {/* 2. REGISTRO OFICIAL (Embed) - Desplegable */}
+      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button onClick={() => setIsInpresOpen(!isInpresOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <img src="/floods.png" alt="Ícono INPRES" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              Registro Oficial del INPRES
+            </h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isInpresOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {isInpresOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50">
+              <iframe 
+                src="https://www.inpres.gob.ar/desktop/" 
+                className="w-full h-full border-0 absolute inset-0" 
+                title="Sitio INPRES Oficial" 
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 3. SECCIÓN BÚSQUEDAS EXTERNAS (Estilo SMN Aplicado) */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm col-span-12 lg:col-span-6 flex flex-col">
-        <div className="border-b border-gray-200 pb-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">
-            Búsquedas Externas (Redes y Noticias)
-          </h2>
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Accesos rápidos a consultas en redes sociales y agregadores de noticias para relevamiento de impacto.
-          </p>
-        </div>
-        
-        <div className="flex flex-col gap-4 flex-grow justify-center">
-          <a 
-            href="https://www.facebook.com/search/top/?q=INPRES" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-blue-100 bg-blue-50 hover:bg-blue-100 transition-colors group"
-          >
-            <div className="flex flex-col">
-              <span className="font-bold text-blue-900 group-hover:text-blue-700">Facebook: Búsqueda "INPRES"</span>
-              <span className="text-xs text-blue-600/80 mt-1">Reportes ciudadanos y publicaciones públicas.</span>
+      {/* 3. MONITOREO GLOBAL (Volcano Discovery) - Desplegable */}
+      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button onClick={() => setIsVolcanoOpen(!isVolcanoOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <img src="/media.png" alt="Ícono Global" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              Monitoreo Global (VolcanoDiscovery)
+            </h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isVolcanoOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {isVolcanoOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="w-full h-[500px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50">
+              <iframe 
+                src="https://earthquakes.volcanodiscovery.com/map/Argentina?L=8" 
+                className="w-full h-full border-0 absolute inset-0" 
+                title="Volcano Discovery Map" 
+              />
             </div>
-            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-          </a>
-
-          <a 
-            href="https://www.google.com/search?q=INPRES&tbm=nws&tbs=qdr:d" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-emerald-100 bg-emerald-50 hover:bg-emerald-100 transition-colors group"
-          >
-            <div className="flex flex-col">
-              <span className="font-bold text-emerald-900 group-hover:text-emerald-700">Google News: Sismología (24hs)</span>
-              <span className="text-xs text-emerald-600/80 mt-1">Filtro de menciones institucionales recientes.</span>
-            </div>
-            <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-          </a>
-
-          <a 
-            href="https://www.google.com/search?q=deslizamiento+OR+alud+OR+derrumbe+argentina&tbm=nws&tbs=qdr:w" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-between p-4 rounded-xl border border-orange-100 bg-orange-50 hover:bg-orange-100 transition-colors group"
-          >
-            <div className="flex flex-col">
-              <span className="font-bold text-orange-900 group-hover:text-orange-700">Google News: Deslizamientos (7 días)</span>
-              <span className="text-xs text-orange-600/80 mt-1">Alertas sobre movimientos en masa, aludes y derrumbes.</span>
-            </div>
-            <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-          </a>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* 4. SECCIÓN EMBED INPRES (Estilo SMN, Ancho Completo Abajo) */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm col-span-12">
-        <div className="border-b border-gray-200 pb-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">
-            Registro Oficial del INPRES
-          </h2>
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Visualización directa del sitio web oficial para contrastar rápidamente los datos parseados.
-          </p>
-        </div>
-        <div className="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50 z-0">
-          <iframe 
-            src="https://www.inpres.gob.ar/desktop/" 
-            className="w-full h-full border-0 absolute inset-0" 
-            title="Lista INPRES Oficial" 
-          />
-        </div>
+      {/* 4. NOTICIAS Y REPORTES (Launchers) - Desplegable */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              Buscar Repercusiones y Noticias
+            </h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {isNoticiasOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+              <div className="mb-5 pb-4 border-b border-gray-200">
+                <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">
+                  ¿Para qué usar estos botones?
+                </h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  Cada botón abre una pestaña nueva configurada para rastrear impactos y reportes ciudadanos relacionados con eventos sísmicos recientes en redes o medios digitales.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <a href="https://www.facebook.com/search/top/?q=INPRES" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center">
+                  Facebook: Búsqueda "INPRES"
+                </a>
+                <a href="https://www.google.com/search?q=INPRES&tbm=nws&tbs=qdr:d" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center">
+                  Noticias: INPRES (Últimas 24h)
+                </a>
+                <a href="https://www.google.com/search?q=deslizamiento+OR+alud+OR+derrumbe+argentina&tbm=nws&tbs=qdr:w" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm text-center">
+                  Noticias: Deslizamientos (7 días)
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>
