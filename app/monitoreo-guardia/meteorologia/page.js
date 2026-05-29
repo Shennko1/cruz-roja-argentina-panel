@@ -36,7 +36,7 @@ export default function HidrometeorologiaPage() {
                 ¿Para qué sirve este mapa?
               </h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Puede utilizarse para visualizar el avance de fenómenos meteorológicos en el tiempo, además de su intensidad.
+                Puede utilizarse para visualizar el diferentes fenómenos meteorológicos. Los mismos pueden cambiarse al tocar en el extremo superior derecho del mapa.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
@@ -90,7 +90,7 @@ export default function HidrometeorologiaPage() {
                 <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Mapa del Instituto Nacional del Agua con las mediciones de todos los puertos del país.</p>
                 <p className="text-[12px] text-gray-600 leading-relaxed">Puede utilizarse para evaluar tendencias de aumento/descenso de ríos y posibles inundaciones o evacuaciones.</p>
               </div>
-              <a href="https://alerta.ina.gob.ar/pub/mapa" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa de Prefectura ↗</a>
+              <a href="https://alerta.ina.gob.ar/pub/mapa" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa ↗</a>
             </div>
           </div>
         )}
@@ -115,6 +115,8 @@ export default function HidrometeorologiaPage() {
             {/* SUB-SECCIÓN: DATOS SECUNDARIOS */}
             <div>
               <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Cuentas no oficiales</h4>
+          <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Proveen imagenes de impactos, además de compartir alertas de utilidad para monitoreo general. </p>
+          <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Deben usarse para tener un panorama general, y para saber dónde buscar información concreta.. </p>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Tiempo en Arg */}
@@ -154,11 +156,8 @@ export default function HidrometeorologiaPage() {
           <div className="p-4 border-t border-gray-200 bg-white">
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
               <div className="mb-5 pb-4 border-b border-gray-200">
-                <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase">
-                  ¿Para qué usar estos botones?
-                </h4>
                 <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Cada botón abre una pestaña nueva en Google News, ya configurada para buscar palabras específicas en Argentina (Tormentas, Inundaciones, Evacuados). Muestra solo noticias publicadas en las últimas 24 horas. Es el atajo más rápido y estable para rastrear la situación sin demoras de carga.
+                  Búscador de Noticias en últimas 24 hs por localidad, con palabras específicas relacionadas a los eventos que se desee monitorear.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
