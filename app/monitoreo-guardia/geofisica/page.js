@@ -66,31 +66,48 @@ export default function GeofisicaPage() {
             const statusDiv = document.getElementById('loading');
             try {
               statusDiv.style.display = 'block';
+              statusDiv.innerText = "Sincronizando XML...";
               layerGroup.clearLayers();
               
-              const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+              // Proxy alternativo más estable para saltar CORS y Mixed Content
+              const proxyUrl = 'https://api.allorigins.win/raw?url=';
               const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
               
               const res = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-              const xmlText = await res.text();
+              if (!res.ok) throw new Error("Fallo de red o servidor bloqueado.");
               
+              const xmlText = await res.text();
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xmlText, "application/xml");
               
-              const items = xmlDoc.getElementsByTagName("item");
+              // Buscamos items (sensibles o insensibles a mayúsculas si el feed cambia)
+              let items = xmlDoc.getElementsByTagName("item");
+              if (items.length === 0) items = xmlDoc.getElementsByTagName("Item"); // Fallback
+              
+              let sismosCargados = 0;
 
               for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                
-                // Extracción exacta de las etiquetas solicitadas
-                const latStr = (item.getElementsByTagName("latitude")[0] || item.getElementsByTagName("geo:lat")[0])?.textContent;
-                const lonStr = (item.getElementsByTagName("longitude")[0] || item.getElementsByTagName("geo:long")[0])?.textContent;
-                const magStr = item.getElementsByTagName("magnitude")[0]?.textContent || "N/D";
-                const dateStr = (item.getElementsByTagName("pubdate")[0] || item.getElementsByTagName("pubDate")[0])?.textContent || "Fecha desconocida";
+                let lat = NaN, lon = NaN, mag = NaN, dateStr = "Fecha desconocida";
 
-                const lat = parseFloat(latStr);
-                const lon = parseFloat(lonStr);
-                const mag = parseFloat(magStr);
+                // Parseo hiperflexible: miramos todos los nodos hijos
+                const children = item.children || item.childNodes;
+                for (let j = 0; j < children.length; j++) {
+                  const child = children[j];
+                  if (child.nodeType !== 1) continue; // Si no es etiqueta, lo salteamos
+                  
+                  // Limpiamos la etiqueta para comparar fácil
+                  const tag = child.nodeName.toLowerCase().replace("geo:", "");
+                  const val = child.textContent.trim();
+
+                  // Limpieza de formato (por si usan comas en vez de puntos)
+                  const cleanNum = val.replace(',', '.');
+
+                  if (tag === "latitude" || tag === "lat") lat = parseFloat(cleanNum);
+                  else if (tag === "longitude" || tag === "lon" || tag === "long") lon = parseFloat(cleanNum);
+                  else if (tag === "magnitude" || tag === "mag" || tag === "magnitud") mag = parseFloat(cleanNum.replace(/[^0-9.-]/g, ''));
+                  else if (tag === "pubdate" || tag === "fecha" || tag === "date") dateStr = val;
+                }
 
                 if (!isNaN(lat) && !isNaN(lon)) {
                   let color = '#3b82f6'; // Azul (< 3)
@@ -108,10 +125,10 @@ export default function GeofisicaPage() {
                     fillOpacity: 0.8
                   });
 
-                  // Tooltip que aparece al poner el mouse arriba (hover)
+                  // Tooltip hover
                   const tooltipHTML = "<div style='font-family:sans-serif; text-align:left; min-width:140px;'>" +
                                       "<div style='background:" + color + "; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; display:inline-block; margin-bottom:6px;'>" +
-                                      "Magnitud: " + (isNaN(mag) ? magStr : mag) + "</div><br/>" +
+                                      "Magnitud: " + (isNaN(mag) ? 'N/D' : mag) + "</div><br/>" +
                                       "<span style='font-size:11px; color:#475569; font-weight:bold;'>" + dateStr + "</span>" +
                                       "</div>";
                   
@@ -122,13 +139,19 @@ export default function GeofisicaPage() {
                   });
                   
                   layerGroup.addLayer(marker);
+                  sismosCargados++;
                 }
               }
               
-              statusDiv.innerText = "Mapa actualizado";
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+              if (sismosCargados > 0) {
+                statusDiv.innerText = "Mapa actualizado (" + sismosCargados + " sismos)";
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+              } else {
+                statusDiv.innerText = "XML sin coordenadas válidas";
+              }
             } catch(e) {
-              statusDiv.innerText = "Error cargando XML";
+              console.error("Fallo al cargar INPRES:", e);
+              statusDiv.innerText = "Error cargando XML (Posible bloqueo)";
             }
           }
 
