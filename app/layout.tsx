@@ -19,13 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* 1. HEADER OPTIMIZADO: Altura reducida a 85px y medidas del logo 100% estáticas */}
           <header className="h-[85px] mb-6 pb-2 border-b-4 border-[#ee3224] flex items-center gap-4">
             <Image 
-              src="/enmo.jpg" 
-              alt="Logo" 
-              width={100}  // Ancho fijo exacto
-              height={70}  // Alto fijo exacto
-              className="w-[100px] h-[70px] object-contain" // Bloquea los costados por completo
-              priority 
-            />
+  src="/enmo.jpg" 
+  alt="Logo" 
+  width={100}  
+  height={70}  
+  // Agregamos shrink-0 y min-w para bloquear el comportamiento flex
+  className="w-[100px] min-w-[100px] h-[70px] shrink-0 object-contain" 
+  priority 
+/>
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224] leading-none">Equipo Nacional de Monitoreo</h1>
               <p className="text-gray-500 text-sm mt-1 uppercase tracking-wider">Panel de Alerta y Monitoreo de Emergencias</p>
