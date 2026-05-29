@@ -25,7 +25,7 @@ export default function MonitoreoLayout({ children }) {
             </Link>
             
             <Link href="/monitoreo-guardia/geofisica" className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-[11px] lg:text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-             <img src="/geo.png" alt="Ícono Geofísica" className="w-5 h-5 lg:w-6 lg:h-6 object-contain" /> Geofísica
+             <img src="/geo.png" alt="Ícono Geofísica" className="w-5 h-5 lg:w-6 lg:h-6 object-contain" /> Geofísica y Deslizamientos
             </Link>
             
              <Link href="/monitoreo-guardia/tension" className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-[11px] lg:text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
