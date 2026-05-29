@@ -12,16 +12,13 @@ export default function HidrometeorologiaPage() {
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
-          Monitoreo: Hidrometeorología
+          Hidrometeorología
         </h2>
-        <span className="text-xs font-medium bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
-          En vivo
-        </span>
       </div>
 
       {/* AREA DE TRABAJO (Blank State) */}
       <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
-        Agregar información.
+        Incluye herramientas de monitoreo meteorológico en tiempo real, seguimiento de riesgo hídrico, visualización de alertas, monitoreo de redes sociales y búsqueda de noticias relacionadas a fenómenos hidrometeorológicos.
       </div>
 
       {/* 1. MAPA METEOROLÓGICO (Windy) - Siempre visible */}
@@ -39,16 +36,16 @@ export default function HidrometeorologiaPage() {
                 ¿Para qué sirve este mapa?
               </h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Muestra dónde está lloviendo ahora mismo y hacia dónde se mueven las tormentas. Usalo para ver rápido si una zona está siendo afectada.
+                Puede utilizarse para visualizar el avance de fenómenos meteorológicos en el tiempo, además de su intensidad.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Colores:</strong> Indican qué tan fuerte llueve. Si ves amarillo o rojo, es tormenta fuerte.</span>
+                  <span><strong>Colores:</strong> Indican intensidad, siguiendo la barra de precipitación de color en la sección inferior del mapa. </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Evolución:</strong> Tocá la línea de tiempo abajo para ver el pronóstico de las próximas horas.</span>
+                  <span><strong>Evolución:</strong> Al tocar el botón de reproducción, se verá el movimiento del fenómeno meteorológico.</span>
                 </li>
               </ul>
             </div>
@@ -82,18 +79,18 @@ export default function HidrometeorologiaPage() {
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
                 <h4 className="text-sm font-bold text-gray-800 mb-2">Google FloodHub</h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> Un mapa global que marca específicamente las zonas con peligro de inundación.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Al hacer clic, te lleva a la plataforma para ver si hay pronósticos de desbordes o inundaciones repentinas.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Plataforma gratuita de Google que utiliza inteligencia artificial para predecir inundaciones fluviales con hasta 7 días de anticipación. <strong> No reemplaza a los sistemas oficiales o locales de alerta. </strong> </p>
+                <p className="text-[12px] text-gray-600 leading-relaxed"> Puede usarse como complemento para estimar posibles impactos en localidades afectadas por lluvia. Al hacer click en "?", se puede encontrar un manual de uso</p>
               </div>
               <a href="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir FloodHub ↗</a>
             </div>
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <h4 className="text-sm font-bold text-gray-800 mb-2">Niveles de Ríos (Prefectura)</h4>
-                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"><strong>Qué vas a encontrar:</strong> El mapa interactivo oficial con las mediciones reales de todos los puertos del país.</p>
-                <p className="text-[12px] text-gray-600 leading-relaxed"><strong>Para qué usarlo:</strong> Te sirve para ver la altura exacta del agua hoy y confirmar con datos oficiales si un río está creciendo.</p>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Sistema de Información y Alerta Hidrológico</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Mapa del Instituto Nacional del Agua con las mediciones de todos los puertos del país.</p>
+                <p className="text-[12px] text-gray-600 leading-relaxed">Puede utilizarse para evaluar tendencias de aumento/descenso de ríos y posibles inundaciones o evacuaciones.</p>
               </div>
-              <a href="https://contenidosweb.prefecturanaval.gob.ar/alturas/mapa.php" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa de Prefectura ↗</a>
+              <a href="https://alerta.ina.gob.ar/pub/mapa" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa de Prefectura ↗</a>
             </div>
           </div>
         )}
@@ -105,7 +102,7 @@ export default function HidrometeorologiaPage() {
           <div className="flex items-center gap-3">
             <img src="/media.png" alt="Ícono Redes Sociales" className="w-9 h-9 object-contain" />
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Redes Sociales (Muros de Facebook)
+              Redes Sociales (Facebook)
             </h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRedesOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,26 +112,9 @@ export default function HidrometeorologiaPage() {
         {isRedesOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
             
-            {/* SUB-SECCIÓN: ALERTAS OFICIALES */}
-            <div className="mb-8">
-              <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Alertas Oficiales</h4>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* SMN */}
-                <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
-                  <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FSMN.ar&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
-                </div>
-
-                {/* METRA */}
-                <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
-                  <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
-                </div>
-              </div>
-            </div>
-
             {/* SUB-SECCIÓN: DATOS SECUNDARIOS */}
             <div>
-              <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Datos Secundarios y Seguimiento</h4>
+              <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Cuentas no oficiales</h4>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Tiempo en Arg */}
@@ -145,6 +125,10 @@ export default function HidrometeorologiaPage() {
                 {/* Pronostico Extendido */}
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
+                </div>
+                   {/* METRA */}
+                <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
+                  <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
               </div>
             </div>
