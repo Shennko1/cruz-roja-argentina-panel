@@ -5,6 +5,32 @@ export default function HidrometeorologiaPage() {
   const [isRiesgoOpen, setIsRiesgoOpen] = useState(false);
   const [isRedesOpen, setIsRedesOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
+  
+  // Estado para la ubicación del buscador de noticias
+  const [ubicacion, setUbicacion] = useState("Argentina");
+
+  // Configuración de las búsquedas dinámicas
+  const busquedas = [
+    {
+      titulo: "Tormentas y Vientos",
+      terminos: '(tormenta OR tormentas OR temporal OR "vientos fuertes" OR zonda OR tornado)'
+    },
+    {
+      titulo: "Inundaciones",
+      terminos: '(inundación OR inundaciones OR crecida OR desborde)'
+    },
+    {
+      titulo: "Daños y Evacuados",
+      terminos: '(evacuados OR anegamientos OR daños)'
+    }
+  ];
+
+  // Función para construir la URL de Google News
+  const generarUrlGoogleNews = (terminos) => {
+    const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
+    const query = `${ubicacionFinal}${terminos} when:24h`;
+    return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
+  };
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
@@ -36,7 +62,7 @@ export default function HidrometeorologiaPage() {
                 ¿Para qué sirve este mapa?
               </h4>
               <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                Puede utilizarse para visualizar el diferentes fenómenos meteorológicos. Los mismos pueden cambiarse al tocar en el extremo superior derecho del mapa.
+                Puede utilizarse para visualizar diferentes fenómenos meteorológicos. Los mismos pueden cambiarse al tocar en el extremo superior derecho del mapa.
               </p>
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
@@ -111,12 +137,10 @@ export default function HidrometeorologiaPage() {
         </button>
         {isRedesOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            
-            {/* SUB-SECCIÓN: DATOS SECUNDARIOS */}
             <div>
               <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Cuentas no oficiales</h4>
-          <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Proveen imagenes de impactos, además de compartir alertas de utilidad para monitoreo general. </p>
-          <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Deben usarse para tener un panorama general, y para saber dónde buscar información concreta.. </p>
+              <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Proveen imagenes de impactos, además de compartir alertas de utilidad para monitoreo general. </p>
+              <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Deben usarse para tener un panorama general, y para saber dónde buscar información concreta. </p>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Tiempo en Arg */}
@@ -128,13 +152,14 @@ export default function HidrometeorologiaPage() {
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
-                   {/* METRA */}
+
+                {/* METRA */}
                 <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex justify-center bg-gray-50">
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="340" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
+
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -154,27 +179,57 @@ export default function HidrometeorologiaPage() {
         </button>
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
+              
+              {/* Descripción del funcionamiento (ARRIBA) */}
               <div className="mb-5 pb-4 border-b border-gray-200">
-                <p className="text-[12px] text-gray-600 leading-relaxed">
-                  Búscador de Noticias en últimas 24 hs por localidad, con palabras específicas relacionadas a los eventos que se desee monitorear.
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  <strong>¿Cómo funciona?</strong> Este buscador utiliza operadores booleanos (como la palabra <code>OR</code>). Esto permite agrupar múltiples términos similares en una sola consulta, ampliando los resultados para rastrear cualquier noticia que contenga al menos una de esas palabras clave. Todas las consultas buscan únicamente resultados de las <strong>últimas 24 horas</strong>.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <a href="https://news.google.com/search?q=(tormenta%20OR%20tormentas%20OR%20temporal)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm">
-                  Ver noticias de Tormentas
-                </a>
-                <a href="https://news.google.com/search?q=(inundaci%C3%B3n%20OR%20inundaciones%20OR%20crecida%20OR%20desborde)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm">
-                  Ver noticias de Inundaciones
-                </a>
-                <a href="https://news.google.com/search?q=(evacuados%20OR%20anegamientos%20OR%20da%C3%B1os)%20Argentina%20when%3A24h&hl=es-419&gl=AR&ceid=AR%3Aes-419" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 text-xs font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center shadow-sm">
-                  Ver reportes de Daños y Evacuados
-                </a>
+
+              {/* Grilla de Botones y Transparencia (AL MEDIO) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                {busquedas.map((item, index) => (
+                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between shadow-sm">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-800 mb-2">{item.titulo}</h4>
+                      <p className="text-[11px] text-gray-500 font-mono bg-gray-50 p-2 rounded border border-gray-100 mb-4 break-words">
+                        {item.terminos}
+                      </p>
+                    </div>
+                    <a 
+                      href={generarUrlGoogleNews(item.terminos)} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="w-full text-center bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-4 rounded-md transition-all shadow-sm"
+                    >
+                      Buscar en Google News
+                    </a>
+                  </div>
+                ))}
               </div>
+
+              {/* Input de Ubicación (ABAJO DE TODO) */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#ee3224] shadow-sm">
+                <label htmlFor="ubicacion" className="text-sm font-bold text-gray-700 whitespace-nowrap">
+                  📍 Ubicación a monitorear:
+                </label>
+                <input
+                  id="ubicacion"
+                  type="text"
+                  value={ubicacion}
+                  onChange={(e) => setUbicacion(e.target.value)}
+                  placeholder="Ej: Buenos Aires, Rosario, Cordoba..."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ee3224] focus:border-transparent transition-all"
+                />
+              </div>
+
             </div>
           </div>
         )}
       </div>
+
     </div>
   );
 }
