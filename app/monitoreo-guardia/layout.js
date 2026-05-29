@@ -11,22 +11,25 @@ export default function MonitoreoLayout({ children }) {
           {/* Identificador */}
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">ENMO Operaciones</h1>
+            <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">Dashboar de Monitoreo</h1>
           </div>
 
           {/* Navegación con Emojis (En una sola línea) */}
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar w-full lg:w-auto justify-center">
             <Link href="/monitoreo-guardia/meteorologia" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-             <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Meteorología
+             <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Hidrometeorología
             </Link>
             <Link href="/monitoreo-guardia/incendios" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <img src="/fire.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Incendios
+              <img src="/fire.png" alt="Ícono Incendios" className="w-9 h-9 object-contain" /> Incendios
             </Link>
             <Link href="/monitoreo-guardia/geofisica" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-             <img src="/geo.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" /> Geofísica
+             <img src="/geo.png" alt="Ícono Geofísica" className="w-9 h-9 object-contain" /> Geofísica y Deslizamientos
             </Link>
-            <Link href="/monitoreo-guardia/redes" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
-              <span>📡</span> Redes
+             <Link href="/monitoreo-guardia/tension" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
+             <img src="/soc.png" alt="Ícono Tension Social" className="w-9 h-9 object-contain" /> Tensión Social
+            </Link>
+             <Link href="/monitoreo-guardia/epidemias" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-xs font-bold text-gray-600 uppercase whitespace-nowrap">
+             <img src="/epi.png" alt="Ícono Epidemiologías" className="w-9 h-9 object-contain" /> Epidemiologías
             </Link>
           </nav>
 
