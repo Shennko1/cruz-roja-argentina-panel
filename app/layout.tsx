@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
-import Image from "next/image";
+import Image from "next/image"; // Lo dejamos para los iconos del menú
 import "./globals.css";
 
 const montserrat = Montserrat({ subsets: ["latin"], display: 'swap' });
@@ -16,20 +16,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
         <div className="max-w-7xl mx-auto p-8">
           
-          {/* 1. HEADER OPTIMIZADO: Altura reducida a 85px y medidas del logo 100% estáticas */}
+          {/* 1. HEADER OPTIMIZADO: Altura reducida a 85px y logo blindado con estilos en línea */}
           <header className="h-[85px] mb-6 pb-2 border-b-4 border-[#ee3224] flex items-center gap-4">
             
-            {/* Contenedor estricto que bloquea a Flexbox */}
-            <div className="relative w-[100px] h-[70px] flex-none">
-              <Image 
-                src="/enmo.jpg" 
-                alt="Logo" 
-                fill
-                sizes="100px"
-                className="object-contain" 
-                priority 
-              />
-            </div>
+            {/* Usamos <img> clásico con inline-styles para que Next.js y Flexbox NO lo modifiquen */}
+            <img 
+              src="/enmo.jpg" 
+              alt="Logo" 
+              style={{ 
+                width: '100px', 
+                minWidth: '100px', 
+                height: '70px', 
+                objectFit: 'contain', 
+                flexShrink: 0 
+              }} 
+            />
             
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224] leading-none">Equipo Nacional de Monitoreo</h1>
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </header>
 
-          {/* 2. MENÚ AJUSTADO: Se eliminó el espacio muerto superior e inferior */}
+          {/* 2. MENÚ AJUSTADO */}
           <nav className="mb-6 border-b border-gray-200">
             <ul className="flex gap-6">
               {[
@@ -51,7 +52,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     href={item.path} 
                     className="flex items-center gap-2 pt-1 pb-2 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-colors border-b-2 border-transparent hover:border-[#ee3224] whitespace-nowrap"
                   >
-                    {/* Icono al tamaño original (w-9 h-9) pero contenido estrictamente */}
                     <Image 
                       src={item.icon} 
                       alt="" 
@@ -59,7 +59,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       height={36} 
                       className="w-9 h-9 object-contain block" 
                     />
-                    {/* El texto ahora se alinea perfectamente al centro del icono */}
                     <span className="leading-none pt-0.5">{item.name}</span>
                   </a>
                 </li>
