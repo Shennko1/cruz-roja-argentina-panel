@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
-import Image from "next/image"; // Lo dejamos para los iconos del menú
+import Image from "next/image";
+import Link from "next/link"; // 1. IMPORTAMOS LINK
 import "./globals.css";
 
 const montserrat = Montserrat({ subsets: ["latin"], display: 'swap' });
@@ -16,10 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${montserrat.className} antialiased bg-[#f4f4f4] min-h-screen`}>
         <div className="max-w-7xl mx-auto p-8">
           
-          {/* 1. HEADER OPTIMIZADO: Altura reducida a 85px y logo blindado con estilos en línea */}
+          {/* HEADER */}
           <header className="h-[85px] mb-6 pb-2 border-b-4 border-[#ee3224] flex items-center gap-4">
-            
-            {/* Usamos <img> clásico con inline-styles para que Next.js y Flexbox NO lo modifiquen */}
             <img 
               src="/enmo.jpg" 
               alt="Logo" 
@@ -31,14 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 flexShrink: 0 
               }} 
             />
-            
             <div>
               <h1 className="text-3xl font-bold text-[#ee3224] leading-none">Equipo Nacional de Monitoreo</h1>
               <p className="text-gray-500 text-sm mt-1 uppercase tracking-wider">Panel de Alerta y Monitoreo de Emergencias</p>
             </div>
           </header>
 
-          {/* 2. MENÚ AJUSTADO */}
+          {/* MENÚ CORREGIDO */}
           <nav className="mb-6 border-b border-gray-200">
             <ul className="flex gap-6">
               {[
@@ -48,7 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 { name: "Guías y Procesos", path: "/guias", icon: "/guia.png" }
               ].map((item) => (
                 <li key={item.path} className="flex">
-                  <a 
+                  {/* 2. REEMPLAZAMOS <a> POR <Link> */}
+                  <Link 
                     href={item.path} 
                     className="flex items-center gap-2 pt-1 pb-2 text-xs font-bold text-gray-600 uppercase hover:text-[#ee3224] transition-colors border-b-2 border-transparent hover:border-[#ee3224] whitespace-nowrap"
                   >
@@ -60,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       className="w-9 h-9 object-contain block" 
                     />
                     <span className="leading-none pt-0.5">{item.name}</span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
