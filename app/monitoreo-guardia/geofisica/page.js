@@ -62,6 +62,10 @@ export default function GeofisicaPage() {
 
           var layerGroup = L.layerGroup().addTo(map);
 
+          // CONFIGURACIÓN DE FILTRO DE TIEMPO
+          // Mostrar solo los sismos de los últimos X días. 
+          const DIAS_LIMITE = 7; 
+
           async function cargarSismos() {
             const statusDiv = document.getElementById('loading');
             try {
@@ -69,7 +73,6 @@ export default function GeofisicaPage() {
               statusDiv.innerText = "Sincronizando XML...";
               layerGroup.clearLayers();
               
-              // Proxy alternativo más estable para saltar CORS y Mixed Content
               const proxyUrl = 'https://api.allorigins.win/raw?url=';
               const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
               
@@ -80,27 +83,23 @@ export default function GeofisicaPage() {
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xmlText, "application/xml");
               
-              // Buscamos items (sensibles o insensibles a mayúsculas si el feed cambia)
               let items = xmlDoc.getElementsByTagName("item");
-              if (items.length === 0) items = xmlDoc.getElementsByTagName("Item"); // Fallback
+              if (items.length === 0) items = xmlDoc.getElementsByTagName("Item");
               
               let sismosCargados = 0;
+              const ahora = new Date();
 
               for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 let lat = NaN, lon = NaN, mag = NaN, dateStr = "Fecha desconocida";
 
-                // Parseo hiperflexible: miramos todos los nodos hijos
                 const children = item.children || item.childNodes;
                 for (let j = 0; j < children.length; j++) {
                   const child = children[j];
-                  if (child.nodeType !== 1) continue; // Si no es etiqueta, lo salteamos
+                  if (child.nodeType !== 1) continue; 
                   
-                  // Limpiamos la etiqueta para comparar fácil
                   const tag = child.nodeName.toLowerCase().replace("geo:", "");
                   const val = child.textContent.trim();
-
-                  // Limpieza de formato (por si usan comas en vez de puntos)
                   const cleanNum = val.replace(',', '.');
 
                   if (tag === "latitude" || tag === "lat") lat = parseFloat(cleanNum);
@@ -110,44 +109,60 @@ export default function GeofisicaPage() {
                 }
 
                 if (!isNaN(lat) && !isNaN(lon)) {
-                  let color = '#3b82f6'; // Azul (< 3)
-                  let radius = 6;
-                  if (mag >= 3 && mag < 4.5) { color = '#eab308'; radius = 10; } // Amarillo
-                  if (mag >= 4.5 && mag < 6) { color = '#f97316'; radius = 14; } // Naranja
-                  if (mag >= 6) { color = '#ef4444'; radius = 18; } // Rojo
-
-                  const marker = L.circleMarker([lat, lon], {
-                    radius: radius,
-                    fillColor: color,
-                    color: '#ffffff',
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                  });
-
-                  // Tooltip hover
-                  const tooltipHTML = "<div style='font-family:sans-serif; text-align:left; min-width:140px;'>" +
-                                      "<div style='background:" + color + "; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; display:inline-block; margin-bottom:6px;'>" +
-                                      "Magnitud: " + (isNaN(mag) ? 'N/D' : mag) + "</div><br/>" +
-                                      "<span style='font-size:11px; color:#475569; font-weight:bold;'>" + dateStr + "</span>" +
-                                      "</div>";
                   
-                  marker.bindTooltip(tooltipHTML, {
-                    direction: 'top',
-                    className: 'custom-tooltip',
-                    offset: [0, -10]
-                  });
-                  
-                  layerGroup.addLayer(marker);
-                  sismosCargados++;
+                  // FILTRO DE TIEMPO
+                  const sismoFecha = new Date(dateStr);
+                  let mostrarSismo = true;
+
+                  // Si la fecha es válida, calculamos cuántos días pasaron
+                  if (!isNaN(sismoFecha.getTime())) {
+                    const diferenciaMilisegundos = ahora - sismoFecha;
+                    const diferenciaDias = diferenciaMilisegundos / (1000 * 60 * 60 * 24);
+                    
+                    if (diferenciaDias > DIAS_LIMITE) {
+                      mostrarSismo = false; // Es demasiado viejo, lo descartamos
+                    }
+                  }
+
+                  if (mostrarSismo) {
+                    let color = '#3b82f6'; // Azul (< 3)
+                    let radius = 6;
+                    if (mag >= 3 && mag < 4.5) { color = '#eab308'; radius = 10; } // Amarillo
+                    if (mag >= 4.5 && mag < 6) { color = '#f97316'; radius = 14; } // Naranja
+                    if (mag >= 6) { color = '#ef4444'; radius = 18; } // Rojo
+
+                    const marker = L.circleMarker([lat, lon], {
+                      radius: radius,
+                      fillColor: color,
+                      color: '#ffffff',
+                      weight: 2,
+                      opacity: 1,
+                      fillOpacity: 0.8
+                    });
+
+                    const tooltipHTML = "<div style='font-family:sans-serif; text-align:left; min-width:140px;'>" +
+                                        "<div style='background:" + color + "; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; display:inline-block; margin-bottom:6px;'>" +
+                                        "Magnitud: " + (isNaN(mag) ? 'N/D' : mag) + "</div><br/>" +
+                                        "<span style='font-size:11px; color:#475569; font-weight:bold;'>" + dateStr + "</span>" +
+                                        "</div>";
+                    
+                    marker.bindTooltip(tooltipHTML, {
+                      direction: 'top',
+                      className: 'custom-tooltip',
+                      offset: [0, -10]
+                    });
+                    
+                    layerGroup.addLayer(marker);
+                    sismosCargados++;
+                  }
                 }
               }
               
               if (sismosCargados > 0) {
-                statusDiv.innerText = "Mapa actualizado (" + sismosCargados + " sismos)";
+                statusDiv.innerText = "Actualizado (" + sismosCargados + " recientes)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
               } else {
-                statusDiv.innerText = "XML sin coordenadas válidas";
+                statusDiv.innerText = "No hay sismos en los últimos " + DIAS_LIMITE + " días";
               }
             } catch(e) {
               console.error("Fallo al cargar INPRES:", e);
@@ -201,11 +216,11 @@ export default function GeofisicaPage() {
               <ul className="text-[12px] text-gray-500 space-y-3">
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Colores:</strong> Indican la magnitud. Rojo (≥ 6), Naranja (4.5 - 5.9), Amarillo (3 - 4.4), Azul (&lt; 3).</span>
+                  <span><strong>Filtro Actual:</strong> Muestra únicamente los eventos registrados en los últimos 7 días.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Interacción:</strong> Solo con posar el cursor se despliega la magnitud y la fecha de publicación (pubdate).</span>
+                  <span><strong>Colores:</strong> Indican la magnitud. Rojo (≥ 6), Naranja (4.5 - 5.9), Amarillo (3 - 4.4), Azul (&lt; 3).</span>
                 </li>
               </ul>
             </div>
