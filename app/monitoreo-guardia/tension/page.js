@@ -53,42 +53,20 @@ export default function TensionSocialPage() {
             Reportes de Movilidad y Cortes en Tiempo Real
           </h3>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-2 bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col justify-between shadow-sm">
-            <div>
-              <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase border-b border-gray-200 pb-2">
-                Monitoreo Colaborativo
-              </h4>
-              <p className="text-[12px] text-gray-600 mb-4 leading-relaxed">
-                El feed adjunto recopila reportes ciudadanos inmediatos sobre demoras, interrupciones de transporte y bloqueos de vías públicas.
-              </p>
-              <ul className="text-[12px] text-gray-500 space-y-3">
-                <li className="flex gap-2">
-                  <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Indicador temprano:</strong> Los cortes por protestas o asambleas gremiales suelen reportarse aquí antes de impactar en los medios masivos.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-blue-500 font-bold">•</span>
-                  <span><strong>Actualización:</strong> Deslizar hacia abajo dentro del cuadro para refrescar las publicaciones más recientes del feed.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          {/* Embed de Facebook optimizado para ocupar menos espacio vertical (altura 400px) */}
-          <div className="lg:col-span-2 bg-gray-50 p-2 rounded-xl border border-gray-200 flex justify-center items-center shadow-sm">
-            <div className="w-[340px] h-[400px] overflow-hidden rounded-lg border border-gray-300 bg-white">
-              <iframe 
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FAlertasTransito&tabs=timeline&width=340&height=400&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false&appId" 
-                width="340" 
-                height="400" 
-                style={{ border: "none", overflow: "hidden" }} 
-                scrolling="no" 
-                frameBorder="0" 
-                allowFullScreen={true}
-                title="Alertas Tránsito Facebook"
-              />
-            </div>
+        
+        {/* Contenedor centrado para el Embed de Facebook (Sin grilla) */}
+        <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 flex justify-center items-center shadow-sm">
+          <div className="w-[340px] h-[400px] overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
+            <iframe 
+              src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FAlertasTransito&tabs=timeline&width=340&height=400&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false&appId" 
+              width="340" 
+              height="400" 
+              style={{ border: "none", overflow: "hidden" }} 
+              scrolling="no" 
+              frameBorder="0" 
+              allowFullScreen={true}
+              title="Alertas Tránsito Facebook"
+            />
           </div>
         </div>
       </div>
