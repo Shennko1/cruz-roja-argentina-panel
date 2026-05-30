@@ -369,7 +369,7 @@ export default function HidrometeorologiaPage() {
               <iframe 
                 width="100%" 
                 height="100%" 
-                src="https://embed.windy.com/embed2.html?lat=-40.518&lon=-63.599&zoom=4&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" 
+                src="https://embed.windy.com/embed2.html?lat=-40.518&lon=-63.599&zoom=4&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1&lang=es" 
                 frameBorder="0" 
                 title="Windy Radar" 
                 allowFullScreen
