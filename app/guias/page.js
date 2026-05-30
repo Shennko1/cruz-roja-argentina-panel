@@ -12,7 +12,6 @@ export default function GuiasProcesosPage() {
     {
       id: 1,
       titulo: "1. Identidad y Propósito (ENMO)",
-      icono: "/info.png",
       contenido: (
         <div className="space-y-4">
           <p>En el marco del <strong>PECRA 2024-2029</strong>, el ENMO es el mecanismo operativo de Cruz Roja Argentina para monitorear amenazas las 24 horas, los 365 días del año.</p>
@@ -36,7 +35,6 @@ export default function GuiasProcesosPage() {
     {
       id: 2,
       titulo: "2. Estructura Organizativa",
-      icono: "/users.png",
       contenido: (
         <div className="space-y-3">
           <p>Liderado por la <strong>Dirección de Gestión del Riesgo</strong>, el ENMO se organiza en:</p>
@@ -51,7 +49,6 @@ export default function GuiasProcesosPage() {
     {
       id: 3,
       titulo: "3. Sistema de Guardias",
-      icono: "/clock.png",
       contenido: (
         <p className="text-[13px]">La operatividad 24/7 se garantiza mediante guardias pasivas rotativas de <strong>6 horas</strong>. Los turnos son: 00-06h, 06-12h, 12-18h y 18-24h, organizados semanalmente mediante encuestas de disponibilidad.</p>
       )
@@ -59,7 +56,6 @@ export default function GuiasProcesosPage() {
     {
       id: 4,
       titulo: "4. Flujo de Monitoreo y Seguimiento",
-      icono: "/flow.png",
       contenido: (
         <div className="space-y-4 text-[13px]">
           <div>
@@ -76,7 +72,6 @@ export default function GuiasProcesosPage() {
     {
       id: 5,
       titulo: "5. Productos Técnicos",
-      icono: "/data.png",
       contenido: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[{t:"Reporte ENMO", d:"Mensaje breve de WA con caracterización rápida."}, {t:"IAR", d:"Análisis profundo con pronósticos y niveles de riesgo."}, {t:"IdS", d:"Informe técnico con impacto, vacíos y acciones."}].map((p,i) => (
@@ -95,7 +90,8 @@ export default function GuiasProcesosPage() {
       <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 mb-8">
         <h3 className="text-sm font-bold text-blue-900 mb-2 uppercase tracking-wide">Manual de Uso de esta Plataforma</h3>
         <p className="text-xs text-blue-800 leading-relaxed mb-3">
-          Esta plataforma es tu herramienta central de trabajo. Aquí encontrarás acceso directo a mapas en tiempo real, seguimiento de eventos y los recursos necesarios para tus guardias. Te recomendamos consultar regularmente los protocolos cargados en la sección de PDF y mantener siempre actualizada la Matriz de Seguimiento ante cualquier evento activo.
+          Esta plataforma es tu herramienta central de trabajo. Acá encontrarás acceso directo a mapas en tiempo real, dashboards, seguimiento de eventos y los recursos necesarios para tus guardias. Te recomendamos consultar regularmente los protocolos cargados en la sección de PDF y mantener siempre actualizada la Matriz de Seguimiento ante cualquier evento activo.
+          No es necesario publicar alertas o eventos que se hayan registrado en algunas de las secciones de la página (Alertas SMN, INPRES, boletines), sobre todo si no hay afectaciones. Es necesario hacer búsqueda de afectaciones confirmadas o posibles en las localidades ubicadas, y publicar eso. 
         </p>
       </div>
 
@@ -106,9 +102,9 @@ export default function GuiasProcesosPage() {
           <div>
             <p className="font-bold mb-1 underline">¿Cuándo publicar?</p>
             <ul className="list-disc ml-4 space-y-1">
-              <li>Alertas oficiales (SMN, INA, etc).</li>
+              <li>Alertas oficiales con alta probabilidad de impacto.</li>
               <li>Noticias de impacto confirmadas.</li>
-              <li>Actualizaciones críticas de eventos en seguimiento.</li>
+              <li>Actualizaciones críticas de eventos en seguimiento o monitoreo.</li>
             </ul>
           </div>
           <div>
@@ -116,7 +112,7 @@ export default function GuiasProcesosPage() {
             <ul className="list-disc ml-4 space-y-1">
               <li>Información no verificada o rumores.</li>
               <li>Debates ajenos al monitoreo técnico.</li>
-              <li>Contenido ya compartido por otro integrante.</li>
+              <li>Contenido ya compartido por otro integrante o de público conocimiento (Alertas públicas).</li>
             </ul>
           </div>
         </div>
@@ -128,7 +124,6 @@ export default function GuiasProcesosPage() {
           <div key={seccion.id} className="border border-gray-200 rounded-xl overflow-hidden">
             <button onClick={() => toggleSection(seccion.id)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
               <div className="flex items-center gap-3">
-                <img src={seccion.icono} alt="icono" className="w-6 h-6 object-contain" />
                 <h3 className="text-sm font-bold text-gray-700 uppercase">{seccion.titulo}</h3>
               </div>
               <svg className={`w-5 h-5 text-gray-500 transition-transform ${activeSection === seccion.id ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
