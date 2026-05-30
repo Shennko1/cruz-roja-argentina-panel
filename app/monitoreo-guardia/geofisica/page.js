@@ -24,7 +24,7 @@ export default function GeofisicaPage() {
 
   const generarUrlGoogleNews = (terminos) => {
     const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
-    const query = `${ubicacionFinal}${terminos} when:2`; 
+    const query = `${ubicacionFinal}${terminos} when:24h`; 
     return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
   };
 
