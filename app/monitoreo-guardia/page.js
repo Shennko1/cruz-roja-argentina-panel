@@ -24,7 +24,7 @@ export default function MonitoreoGuardiasPage() {
         <ul className="text-sm text-gray-700 space-y-2">
           <li>• La Matriz de Seguimiento permite visualizar eventos que estan o estuvieron activos.</li>
           <li>• El reporte de eventos se utiliza para cargar noticias de eventos que quizá requieran monitoreo o seguimiento.</li>
-          <li>• El registro de guardia sirve para registrar la actividad realizada durante el turno (En desarollo).</li>
+          <li>• El registro de guardia sirve para registrar la actividad realizada durante el turno.</li>
         </ul>
       </div>
 
