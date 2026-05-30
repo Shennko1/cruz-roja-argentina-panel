@@ -98,7 +98,6 @@ export default function HidrometeorologiaPage() {
       
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          // Centrado inicial adaptado para la visualización vertical de Argentina
           var map = L.map('map').setView([-38.4161, -63.6167], 4);
           L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
             attribution: '© Instituto Geográfico Nacional'
@@ -351,9 +350,10 @@ export default function HidrometeorologiaPage() {
           
           {/* COLUMNA 1: MAPA DE LLUVIA (WINDY) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
+            <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                🌧️ Mapa de Lluvia y Radar (Windy)
+               Mapa de Lluvia y Radar (Windy)
               </span>
               <a 
                 href="https://www.youtube.com/watch?v=RhNgxywKjw4" 
@@ -364,29 +364,44 @@ export default function HidrometeorologiaPage() {
                 Ver tutorial ↗
               </a>
             </div>
-            <div className="p-3 bg-blue-50/40 border-b border-blue-100 text-[11px] text-gray-600 leading-relaxed">
-              <strong>Instrucciones:</strong> Permite visualizar fenómenos en tiempo real. Puede cambiar el modelo o la capa activa (Lluvia, Nubes, Viento, Radar) presionando el menú del extremo superior derecho. Los colores inferiores indican la intensidad.
-            </div>
+            
             <div className="w-full h-[600px] bg-gray-100">
               <iframe 
                 width="100%" 
                 height="100%" 
-                src="https://embed.windy.com/embed2.html?lat=-38.416&lon=-63.617&zoom=4&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" 
+                src="https://embed.windy.com/embed2.html?lat=-40.518&lon=-63.599&zoom=4&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" 
                 frameBorder="0" 
                 title="Windy Radar" 
                 allowFullScreen
               ></iframe>
             </div>
+
+            {/* Instrucciones movidas al subtítulo */}
+            <div className="p-3 bg-blue-50/40 border-t border-blue-100 text-[11px] text-gray-600 leading-relaxed">
+              Permite visualizar fenómenos en tiempo real. Puede cambiar el modelo o la capa activa (Lluvia, Nubes, Viento, Radar) presionando el menú en la esquina superior derecha. Los colores inferiores indican intensidad.
+            </div>
           </div>
 
           {/* COLUMNA 2: MAPA DE ALERTAS (SMN) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
+            <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                ⚠️ Alertas del Servicio Meteorológico Nacional
+                Alertas del Servicio Meteorológico Nacional
               </span>
             </div>
-            <div className="p-3 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider justify-center">
+            
+            <div className="w-full h-[600px] relative bg-gray-100">
+              <iframe 
+                srcDoc={smnMapHtml} 
+                className="w-full h-full border-0 absolute inset-0" 
+                title="Mapa CAP SMN" 
+                sandbox="allow-scripts allow-same-origin allow-popups"
+              />
+            </div>
+
+            {/* Leyenda movida al subtítulo para mantener la simetría con Windy */}
+            <div className="p-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider justify-center">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
                 <span className="text-gray-700">Alerta Roja</span>
@@ -403,14 +418,6 @@ export default function HidrometeorologiaPage() {
                 <span className="w-3 h-3 rounded-full bg-[#8b5cf6]"></span>
                 <span className="text-gray-700">Advertencia</span>
               </div>
-            </div>
-            <div className="w-full h-[600px] relative bg-gray-100">
-              <iframe 
-                srcDoc={smnMapHtml} 
-                className="w-full h-full border-0 absolute inset-0" 
-                title="Mapa CAP SMN" 
-                sandbox="allow-scripts allow-same-origin allow-popups"
-              />
             </div>
           </div>
 
@@ -500,7 +507,7 @@ export default function HidrometeorologiaPage() {
                   Puede usarse como complemento para estimar posibles impactos en localidades afectadas por lluvia. Al hacer clic en el botón de ayuda dentro de su interfaz, se puede acceder al manual de uso en español.
                 </p>
               </div>
-              <a href="https://sites.research.google/floods/l/-36.03176295791796/-60.050830721829755/4.465513712098249/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir FloodHub ↗</a>
+              <a href="https://sites.research.google/floods/l/-40.476461911063325/-63.59899572450027/3.6899628892558125/p/ChIJZ8b99fXKvJURqA_wKpl3Lz0?hl=es" target="_blank" rel="noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir FloodHub ↗</a>
             </div>
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
@@ -531,7 +538,7 @@ export default function HidrometeorologiaPage() {
           <div className="p-4 border-t border-gray-200 bg-white">
             <div>
               <h4 className="text-xs font-bold text-gray-800 mb-4 uppercase border-b border-gray-100 pb-2">Cuentas comunitarias de meteorología</h4>
-              <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Proveen imágenes de impactos en tiempo real, además de compartir alertas y análisis de utilidad para el monitoreo general en territorio argentino. </p>
+              <p className="text-[12px] text-gray-600 leading-relaxed mb-2"> Proveen imágenes de impactos en tiempo real, además de compartir alertas y análisis de utilidad para el monitoreo general. </p>
               <p className="text-[12px] text-gray-600 leading-relaxed mb-4"> Deben usarse para obtener un panorama rápido de la situación y saber dónde orientar las búsquedas concretas de información. </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -580,7 +587,7 @@ export default function HidrometeorologiaPage() {
               {/* Descripción del funcionamiento (ARRIBA) */}
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <p className="text-[13px] text-gray-600 leading-relaxed">
-                  <strong>¿Cómo funciona?</strong> Este buscador automatizado utiliza operadores booleanos avanzados (como la palabra reservada <code>OR</code>). Esto permite agrupar múltiples términos similares en una sola consulta estructurada, expandiendo la cobertura de rastreo para indexar cualquier noticia que incluya al menos una de estas palabras clave. Todas las solicitudes filtran cronológicamente resultados de las <strong>últimas 24 horas</strong>.
+                  Este buscador automatizado utiliza operadores booleanos avanzados (como la palabra <code>OR</code>). Esto permite agrupar múltiples términos similares en una sola consulta estructurada, expandiendo la cobertura a cualquier noticia que incluya al menos una de estas palabras clave. Todas las solicitudes filtran cronológicamente resultados de las <strong>últimas 24 horas</strong>.
                 </p>
               </div>
 
