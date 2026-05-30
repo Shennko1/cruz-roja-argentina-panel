@@ -50,7 +50,7 @@ export default function IncendiosPage() {
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
-          Monitoreo: Incendios y Focos de Calor
+          Incendios y Focos de Calor
         </h2>
         <span className="text-xs font-medium bg-red-50 text-red-600 px-3 py-1 rounded-full border border-red-100">
           En vivo
@@ -67,7 +67,7 @@ export default function IncendiosPage() {
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
           <img src="/fire.png" alt="Ícono Fuego" className="w-9 h-9 object-contain" />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-            Mapas Operativos: Focos de Calor en Tiempo Real
+            Focos de Calor en Tiempo Real
           </h3>
         </div>
 
@@ -79,10 +79,10 @@ export default function IncendiosPage() {
           </p>
         </div>
 
-        {/* Grilla principal de mapas (Side by Side) */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        {/* Grilla principal de mapas (Ancho Completo) */}
+        <div className="flex flex-col gap-8">
           
-          {/* COLUMNA 1: Huella del Fuego */}
+          {/* MAPA 1: Huella del Fuego */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -99,12 +99,12 @@ export default function IncendiosPage() {
                 allowFullScreen
               ></iframe>
             </div>
-            <div className="p-3 bg-red-50/40 border-t border-red-100 text-[11px] text-gray-600 leading-relaxed">
+            <div className="p-3 bg-red-50/40 border-t border-red-100 text-[12px] text-gray-700 leading-relaxed">
               Mapa interactivo de focos de calor activos en Argentina detectados por satélites VIIRS en tiempo real (últimas 48 horas).
             </div>
           </div>
 
-          {/* COLUMNA 2: Patagonia Fires */}
+          {/* MAPA 2: Patagonia Fires */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -121,10 +121,11 @@ export default function IncendiosPage() {
                 allowFullScreen
               ></iframe>
             </div>
-            <div className="p-3 bg-red-50/40 border-t border-red-100 text-[11px] text-gray-600 leading-relaxed">
+            <div className="p-3 bg-red-50/40 border-t border-red-100 text-[12px] text-gray-700 leading-relaxed">
               Visualiza focos de incendio activos en Argentina y Chile usando datos satelitales de NASA. Se ajusta automáticamente a las últimas 48 horas.
             </div>
           </div>
+
         </div>
       </div>
 
@@ -132,9 +133,9 @@ export default function IncendiosPage() {
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsRiesgoOpen(!isRiesgoOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
-            <img src="/smoke.png" alt="Ícono Riesgo" className="w-9 h-9 object-contain" />
+            <img src="/data.png" alt="Ícono Datos" className="w-9 h-9 object-contain" />
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Análisis Avanzado (FIRMS) e Índices de Peligro
+              Análisis Avanzado e Índices de Peligro
             </h3>
           </div>
           <svg className={`w-5 h-5 text-gray-500 transition-transform ${isRiesgoOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,33 +145,21 @@ export default function IncendiosPage() {
         {isRiesgoOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
             
-            {/* Mapa FIRMS */}
-            <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  NASA FIRMS: Verificación de Puntos Estáticos vs Nuevos
-                </span>
-              </div>
-              <div className="p-3 bg-gray-50 border-b border-gray-200 text-[12px] text-gray-700 leading-relaxed">
-                <strong>Guía de colores:</strong> Los puntos de calor estáticos (repetidos en el tiempo, como industrias) se muestran en <strong>celeste</strong> y en <strong>rosa</strong>. Los puntos <strong>rojos</strong> son focos nuevos detectados, probablemente incendios, pero también pueden ser quemas controladas.
-              </div>
-              <div className="w-full h-[600px] bg-gray-100">
-                <iframe 
-                  width="100%" 
-                  height="100%" 
-                  src="https://firms.modaps.eosdis.nasa.gov/map/#m:advanced;d:today,today;l:fires_landsat_landsat,fires_modis_aqua,fires_modis_terra,fires_viirs_noaa20,fires_viirs_noaa21,fires_viirs_snpp,sta_detections,sta_mask,country-outline,firefly;@-59.8,-38.9,4.6z" 
-                  frameBorder="0" 
-                  title="NASA FIRMS" 
-                  allowFullScreen
-                ></iframe>
-              </div>
-            </div>
-
-            {/* Launchers de Riesgo Oficiales */}
-            <h4 className="text-xs font-bold text-gray-800 mb-3 uppercase border-b border-gray-100 pb-2">Índices Oficiales de Argentina</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[180px]">
+              {/* Launcher: FIRMS */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[200px]">
+                <div>
+                  <h4 className="text-sm font-bold text-gray-800 mb-2">Verificación de Puntos Estáticos vs Nuevos (FIRMS)</h4>
+                  <p className="text-[12px] text-gray-600 leading-relaxed">
+                    <strong>Guía de colores:</strong> Los puntos de calor estáticos repetidos en el tiempo (ej. industrias) están en <strong>celeste</strong> y <strong>rosa</strong>. Los puntos <strong>rojos</strong> son focos nuevos detectados (probables incendios o quemas).
+                  </p>
+                </div>
+                <a href="https://firms.modaps.eosdis.nasa.gov/map/#m:advanced;d:today,today;l:fires_landsat_landsat,fires_modis_aqua,fires_modis_terra,fires_viirs_noaa20,fires_viirs_noaa21,fires_viirs_snpp,sta_detections,sta_mask,country-outline,firefly;@-59.8,-38.9,4.6z" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Mapa FIRMS ↗</a>
+              </div>
+
+              {/* Launcher: SMN */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[200px]">
                 <div>
                   <h4 className="text-sm font-bold text-gray-800 mb-2">Índices de Peligro (SMN)</h4>
                   <p className="text-[12px] text-gray-600 leading-relaxed">
@@ -180,7 +169,8 @@ export default function IncendiosPage() {
                 <a href="https://www.smn.gob.ar/indices_peligro_fuego" target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-6 rounded-lg transition-colors text-center mt-4 block">Abrir Índices SMN ↗</a>
               </div>
 
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[180px]">
+              {/* Launcher: SNMF */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[200px]">
                 <div>
                   <h4 className="text-sm font-bold text-gray-800 mb-2">Alerta Temprana (SNMF)</h4>
                   <p className="text-[12px] text-gray-600 leading-relaxed">
@@ -251,7 +241,7 @@ export default function IncendiosPage() {
               {/* Descripción del funcionamiento (ARRIBA) */}
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <p className="text-[13px] text-gray-600 leading-relaxed">
-                  Este buscador automatizado utiliza operadores booleanos para expandir la cobertura a cualquier noticia que incluya al menos una de las palabras clave. Todas las solicitudes filtran cronológicamente resultados de las <strong>últimas 24 horas</strong>. Útil para verificar rápido operativos o cortes de ruta en localidades específicas.
+                  Este buscador automatizado utiliza operadores booleanos para expandir la cobertura a cualquier noticia que incluya al menos una de las palabras clave. Todas las solicitudes filtran cronológicamente resultados de las <strong>últimas 24 horas</strong>.
                 </p>
               </div>
 
