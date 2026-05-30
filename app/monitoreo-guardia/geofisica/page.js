@@ -228,7 +228,7 @@ export default function GeofisicaPage() {
       <div className="mb-10">
         
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/earthquake.png" alt="Ícono Sismo" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+          <img src="/geo.png" alt="Ícono Sismo" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
             Reporte Oficial INPRES
           </h3>
