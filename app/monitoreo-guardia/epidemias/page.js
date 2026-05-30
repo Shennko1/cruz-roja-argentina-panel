@@ -5,31 +5,13 @@ export default function EpidemiologiaPage() {
   const [isNacionalOpen, setIsNacionalOpen] = useState(false);
   const [isOmsOpen, setIsOmsOpen] = useState(false);
 
-  // Estado para manejar qué fuente nacional se muestra en el iframe
-  const [activeNacionalUrl, setActiveNacionalUrl] = useState("https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/boletines-2026");
-
-  const fuentesNacionales = [
-    {
-      nombre: "Boletines 2026",
-      url: "https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/boletines-2026"
-    },
-    {
-      nombre: "Comunicaciones",
-      url: "https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/comunicaciones-epidemiologicas"
-    },
-    {
-      nombre: "Circulares",
-      url: "https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/circulares-de-vigilancia-epidemiologica"
-    }
-  ];
-
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
-          Epidemiologías
+          Epidemiología
         </h2>
       </div>
 
@@ -80,7 +62,7 @@ export default function EpidemiologiaPage() {
         </div>
       </div>
 
-      {/* 2. REPORTES NACIONALES (Visor Tabulado) - Desplegable */}
+      {/* 2. REPORTES NACIONALES (Tarjetas de Acceso) - Desplegable */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsNacionalOpen(!isNacionalOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -94,42 +76,35 @@ export default function EpidemiologiaPage() {
           </svg>
         </button>
         {isNacionalOpen && (
-          <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-4">
-              
-              {/* Selector de Pestañas */}
-              <div className="flex flex-col sm:flex-row gap-2 border-b border-gray-200 pb-3">
-                {fuentesNacionales.map((fuente, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveNacionalUrl(fuente.url)}
-                    className={`px-4 py-2 text-xs font-bold uppercase rounded-lg transition-colors ${
-                      activeNacionalUrl === fuente.url 
-                        ? "bg-blue-600 text-white shadow-sm" 
-                        : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100"
-                    }`}
-                  >
-                    {fuente.nombre}
-                  </button>
-                ))}
+          <div className="p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Boletines Nacionales */}
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Boletines Epidemiológicos 2026</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2">Publicaciones periódicas oficiales que consolidan la situación epidemiológica a nivel nacional.</p>
               </div>
-
-              {/* Contenedor del Iframe Dinámico */}
-              <div className="w-full h-[600px] rounded-lg overflow-hidden border border-gray-300 bg-white relative">
-                <div className="absolute top-0 left-0 w-full p-2 bg-gray-100 border-b border-gray-200 text-xs text-gray-500 font-mono z-10 flex justify-between items-center">
-                  <span className="truncate pr-4">Fuente: {activeNacionalUrl}</span>
-                  <a href={activeNacionalUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex-shrink-0 font-bold">
-                    Abrir en pestaña ↗
-                  </a>
-                </div>
-                <iframe 
-                  src={activeNacionalUrl} 
-                  className="w-full h-full border-0 pt-8" 
-                  title="Visor Oficial Nacional" 
-                />
-              </div>
-
+              <a href="https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/boletines-2026" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-6 rounded-lg transition-all text-center mt-4 block shadow-sm">Abrir Boletines ↗</a>
             </div>
+
+            {/* Comunicaciones */}
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Comunicaciones Epidemiológicas</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2">Avisos y reportes específicos generados ante eventos inusuales o prioritarios para la salud pública nacional.</p>
+              </div>
+              <a href="https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/comunicaciones-epidemiologicas" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-6 rounded-lg transition-all text-center mt-4 block shadow-sm">Abrir Comunicaciones ↗</a>
+            </div>
+
+            {/* Circulares */}
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Circulares de Vigilancia</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed mb-2">Instrucciones y normativas para la notificación y seguimiento de enfermedades específicas en todo el país.</p>
+              </div>
+              <a href="https://www.argentina.gob.ar/salud/boletin-epidemiologico-nacional/circulares-de-vigilancia-epidemiologica" target="_blank" rel="noreferrer" className="bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-6 rounded-lg transition-all text-center mt-4 block shadow-sm">Abrir Circulares ↗</a>
+            </div>
+
           </div>
         )}
       </div>
