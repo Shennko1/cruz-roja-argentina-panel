@@ -4,6 +4,33 @@ import React, { useState } from "react";
 export default function EpidemiologiaPage() {
   const [isNacionalOpen, setIsNacionalOpen] = useState(false);
   const [isOmsOpen, setIsOmsOpen] = useState(false);
+  const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
+
+  // Estado para la ubicación del buscador de noticias
+  const [ubicacion, setUbicacion] = useState("Argentina");
+
+  // Configuración de las búsquedas dinámicas para Epidemiología
+  const busquedasEpi = [
+    {
+      titulo: "Enfermedades por Mosquitos",
+      terminos: '(dengue OR zika OR chikungunya OR aedes)'
+    },
+    {
+      titulo: "Enfermedades Respiratorias",
+      terminos: '(covid OR gripe OR influenza OR VSR OR neumonía)'
+    },
+    {
+      titulo: "Brotes y Alertas Sanitarias",
+      terminos: '(brote OR epidemia OR contagios OR "alerta sanitaria")'
+    }
+  ];
+
+  // Función para construir la URL de Google News
+  const generarUrlGoogleNews = (terminos) => {
+    const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
+    const query = `${ubicacionFinal}${terminos} when:24h`;
+    return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
+  };
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
@@ -17,7 +44,7 @@ export default function EpidemiologiaPage() {
 
       {/* AREA DE TRABAJO (Blank State) */}
       <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
-        Herramientas de monitoreo de brotes, acceso directo a boletines oficiales del Ministerio de Salud, seguimiento de alertas de la OMS/OPS y mapas de reportes complementarios.
+        Herramientas de monitoreo de brotes, acceso directo a boletines oficiales del Ministerio de Salud, seguimiento de alertas de la OMS/OPS y búsqueda de noticias sobre reportes sanitarios.
       </div>
 
       {/* 1. MAPA EPIDEMIOLÓGICO (HealthMap) - Siempre visible */}
@@ -124,25 +151,82 @@ export default function EpidemiologiaPage() {
         </button>
         {isOmsOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-4">
-                <p className="text-[13px] text-gray-600 leading-relaxed">
-                  Repositorio oficial de la Organización Panamericana de la Salud. Contiene información sobre eventos de salud pública de importancia internacional, brotes regionales y guías de vigilancia.
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-gray-800 mb-2">Repositorio Oficial OPS/OMS</h4>
+                <p className="text-[12px] text-gray-600 leading-relaxed">
+                  Contiene información sobre eventos de salud pública de importancia internacional, brotes regionales y guías de vigilancia emitidas por la Organización Panamericana de la Salud.
                 </p>
               </div>
-              <div className="w-full h-[600px] rounded-lg overflow-hidden border border-gray-300 bg-white relative">
-                <div className="absolute top-0 left-0 w-full p-2 bg-gray-100 border-b border-gray-200 text-xs text-gray-500 font-mono z-10 flex justify-between items-center">
-                  <span className="truncate pr-4">Fuente: paho.org/es/alertas-actualizaciones-epidemiologicas</span>
-                  <a href="https://www.paho.org/es/alertas-actualizaciones-epidemiologicas" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex-shrink-0 font-bold">
-                    Abrir en pestaña ↗
-                  </a>
-                </div>
-                <iframe 
-                  src="https://www.paho.org/es/alertas-actualizaciones-epidemiologicas" 
-                  className="w-full h-full border-0 pt-8" 
-                  title="Visor Alertas OPS" 
+              <a href="https://www.paho.org/es/alertas-actualizaciones-epidemiologicas" target="_blank" rel="noreferrer" className="w-full md:w-auto bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-3 px-8 rounded-lg transition-all text-center shadow-sm whitespace-nowrap">
+                Acceder a las Alertas ↗
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. NOTICIAS (Launchers) - Desplegable */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              Buscar en Noticias (Últimas 24h)
+            </h3>
+          </div>
+          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {isNoticiasOpen && (
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
+              
+              {/* Descripción del funcionamiento (ARRIBA) */}
+              <div className="mb-5 pb-4 border-b border-gray-200">
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  <strong>¿Cómo funciona?</strong> Este buscador utiliza operadores booleanos (como la palabra <code>OR</code>). Esto permite agrupar múltiples términos similares en una sola consulta, ampliando los resultados para rastrear cualquier noticia que contenga al menos una de esas palabras clave. Todas las consultas buscan únicamente resultados de las <strong>últimas 24 horas</strong>.
+                </p>
+              </div>
+
+              {/* Grilla de Botones y Transparencia (AL MEDIO) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                {busquedasEpi.map((item, index) => (
+                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between shadow-sm">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-800 mb-2">{item.titulo}</h4>
+                      <p className="text-[11px] text-gray-500 font-mono bg-gray-50 p-2 rounded border border-gray-100 mb-4 break-words">
+                        {item.terminos}
+                      </p>
+                    </div>
+                    <a 
+                      href={generarUrlGoogleNews(item.terminos)} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="w-full text-center bg-white border border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-4 rounded-md transition-all shadow-sm"
+                    >
+                      Buscar en Google News
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              {/* Input de Ubicación (ABAJO DE TODO) */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#ee3224] shadow-sm">
+                <label htmlFor="ubicacion" className="text-sm font-bold text-gray-700 whitespace-nowrap">
+                  📍 Ubicación a monitorear:
+                </label>
+                <input
+                  id="ubicacion"
+                  type="text"
+                  value={ubicacion}
+                  onChange={(e) => setUbicacion(e.target.value)}
+                  placeholder="Ej: Buenos Aires, Rosario, Cordoba..."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ee3224] focus:border-transparent transition-all"
                 />
               </div>
+
             </div>
           </div>
         )}
