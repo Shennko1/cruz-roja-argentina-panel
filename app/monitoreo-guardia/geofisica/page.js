@@ -5,10 +5,8 @@ export default function GeofisicaPage() {
   const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
 
-  // Estado para la ubicación del buscador de noticias
   const [ubicacion, setUbicacion] = useState("Argentina");
 
-  // Configuración de las búsquedas dinámicas de noticias (Geofísica)
   const busquedas = [
     {
       titulo: "Sismos y Terremotos",
@@ -24,10 +22,9 @@ export default function GeofisicaPage() {
     }
   ];
 
-  // Función para construir la URL de Google News
   const generarUrlGoogleNews = (terminos) => {
     const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
-    const query = `${ubicacionFinal}${terminos} when:7d`; // Ampliado a 7 días por la naturaleza geofísica
+    const query = `${ubicacionFinal}${terminos} when:2`; 
     return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
   };
 
@@ -87,7 +84,6 @@ export default function GeofisicaPage() {
 
           var layerGroup = L.layerGroup().addTo(map);
 
-          // Mostrar solo los sismos de los últimos X días. 
           const DIAS_LIMITE = 7; 
           const meses = { 'Jan':0, 'Feb':1, 'Mar':2, 'Apr':3, 'May':4, 'Jun':5, 'Jul':6, 'Aug':7, 'Sep':8, 'Oct':9, 'Nov':10, 'Dec':11 };
 
@@ -98,18 +94,22 @@ export default function GeofisicaPage() {
               statusDiv.innerText = "Sincronizando XML...";
               layerGroup.clearLayers();
               
-              // Usamos el endpoint GET de allorigins para evitar bloqueos de formato raw
+              // Se utiliza un proxy que maneja HTTP crudo sin envolver en JSON
               const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
-              const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+              const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
               
               const res = await fetch(proxyUrl);
               if (!res.ok) throw new Error("Fallo de red al contactar proxy.");
               
-              const data = await res.json();
-              const xmlText = data.contents;
+              const xmlText = await res.text();
               
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+              
+              // Verificamos si hubo un error en el parseo del XML
+              const parseError = xmlDoc.getElementsByTagName("parsererror");
+              if (parseError.length > 0) throw new Error("Error al parsear el XML");
+
               const items = xmlDoc.getElementsByTagName("item");
               
               let sismosCargados = 0;
@@ -118,7 +118,6 @@ export default function GeofisicaPage() {
               for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 
-                // Extracción directa basada en la estructura oficial de INPRES
                 const latNode = item.getElementsByTagName("latitude")[0];
                 const lonNode = item.getElementsByTagName("longitude")[0];
                 const magNode = item.getElementsByTagName("magnitude")[0];
@@ -135,7 +134,6 @@ export default function GeofisicaPage() {
                   const depth = depthNode ? depthNode.textContent.trim() : "";
 
                   if (!isNaN(lat) && !isNaN(lon)) {
-                    // Parseo del formato "29 May 05:14 hs."
                     let sismoFecha = new Date();
                     const parts = dateStr.split(' ');
                     if(parts.length >= 3) {
@@ -144,7 +142,6 @@ export default function GeofisicaPage() {
                        const timeParts = parts[2].split(':');
                        if(timeParts.length === 2 && meses[monthStr] !== undefined) {
                          sismoFecha = new Date(ahora.getFullYear(), meses[monthStr], day, parseInt(timeParts[0]), parseInt(timeParts[1]));
-                         // Si la fecha calculada es en el futuro, significa que fue a fines del año pasado
                          if (sismoFecha > ahora) sismoFecha.setFullYear(sismoFecha.getFullYear() - 1);
                        }
                     }
@@ -225,7 +222,7 @@ export default function GeofisicaPage() {
         </span>
       </div>
 
-      {/* 1. MAPAS OFICIALES INPRES - Siempre visibles en Grilla Dividida */}
+      {/* 1. MAPAS OFICIALES INPRES */}
       <div className="mb-10">
         
         <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
@@ -241,7 +238,7 @@ export default function GeofisicaPage() {
           <div className="flex flex-col h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
             <div className="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Sismos Sentidos (Mapa Mapeado)</h3>
+                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Sismos Sentidos</h3>
                 <p className="text-[10px] text-gray-500 uppercase">Datos XML - Últimos 7 Días</p>
               </div>
             </div>
@@ -275,7 +272,7 @@ export default function GeofisicaPage() {
         </div>
       </div>
 
-      {/* 2. MONITOREO GLOBAL (Volcano Discovery) - Desplegable */}
+      {/* 2. MONITOREO GLOBAL (Volcano Discovery) */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsVolcanoOpen(!isVolcanoOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -290,12 +287,10 @@ export default function GeofisicaPage() {
         </button>
         {isVolcanoOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            
-            {/* Disclaimer VolcanoDiscovery */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-r-lg shadow-sm">
               <h4 className="text-sm font-bold text-yellow-800 mb-1">Aviso sobre esta fuente:</h4>
               <p className="text-[12px] text-yellow-700 leading-relaxed">
-                VolcanoDiscovery es una plataforma <strong>complementaria y extraoficial</strong>. La cartografía base está en inglés y contiene topónimos no reconocidos oficialmente (ej. Islas Malvinas). Además, al incluir reportes ciudadanos, la magnitud o ubicación exacta puede diferir de los registros oficiales del INPRES. Utilizar solo como referencia rápida.
+                VolcanoDiscovery es una plataforma <strong>complementaria y extraoficial</strong>. La cartografía base está en inglés y contiene topónimos no reconocidos oficialmente (ej. Islas Malvinas). Además, la magnitud o ubicación exacta puede diferir de los registros oficiales del INPRES. Utilizar solo como referencia rápida.
               </p>
             </div>
 
@@ -310,7 +305,7 @@ export default function GeofisicaPage() {
         )}
       </div>
 
-      {/* 3. NOTICIAS (Buscador Dinámico) - Desplegable */}
+      {/* 3. NOTICIAS */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -329,11 +324,10 @@ export default function GeofisicaPage() {
               
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <p className="text-[13px] text-gray-600 leading-relaxed">
-                  Buscador automatizado para corroborar incidentes en el territorio a través de medios digitales. Todas las solicitudes filtran cronológicamente resultados de los <strong>últimos 7 días</strong>.
+                  Buscador automatizado para corroborar incidentes en el territorio a través de medios digitales. Todas las solicitudes filtran cronológicamente resultados de los <strong>últimas 24 hs.</strong>.
                 </p>
               </div>
 
-              {/* Grilla de Botones */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                 {busquedas.map((item, index) => (
                   <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between shadow-sm">
@@ -355,7 +349,6 @@ export default function GeofisicaPage() {
                 ))}
               </div>
 
-              {/* Input de Ubicación */}
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#3b82f6] shadow-sm">
                 <label htmlFor="ubicacion" className="text-sm font-bold text-gray-700 whitespace-nowrap">
                   📍 Ubicación a monitorear:
