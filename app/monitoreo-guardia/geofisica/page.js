@@ -215,13 +215,15 @@ export default function GeofisicaPage() {
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
-          Monitoreo: Sismos y Geofísica
+          Sismos y Geofísica
         </h2>
-        <span className="text-xs font-medium bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
-          En vivo
-        </span>
       </div>
-
+  
+   {/* ÁREA DE TRABAJO */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
+        Incluye herramientas de detección de sismos en tiempo real, lista de sismos sentidos por INPRES, mapa de sismos registrados por el Centro Sismológico Euro-Mediterráneo (EMSC) mediante VolcanoDiscovery, y búsqueda dinámica de noticias para corroborar incidentes en el territorio.
+      </div>
+  
       {/* 1. MAPAS OFICIALES INPRES */}
       <div className="mb-10">
         
