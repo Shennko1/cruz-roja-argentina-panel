@@ -52,9 +52,6 @@ export default function IncendiosPage() {
         <h2 className="text-xl font-bold text-gray-800">
           Incendios y Focos de Calor
         </h2>
-        <span className="text-xs font-medium bg-red-50 text-red-600 px-3 py-1 rounded-full border border-red-100">
-          En vivo
-        </span>
       </div>
 
       {/* ÁREA DE TRABAJO */}
