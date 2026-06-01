@@ -4,7 +4,6 @@ import React, { useState } from "react";
 export default function GeofisicaPage() {
   const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
-
   const [ubicacion, setUbicacion] = useState("Argentina");
 
   const busquedas = [
@@ -91,33 +90,37 @@ export default function GeofisicaPage() {
             const statusDiv = document.getElementById('loading');
             try {
               statusDiv.style.display = 'block';
-              statusDiv.innerText = "Sincronizando XML...";
+              statusDiv.innerText = "Obteniendo datos del INPRES...";
               layerGroup.clearLayers();
               
-              // Se utiliza un proxy que maneja HTTP crudo sin envolver en JSON
+              // Se cambia el proxy a AllOrigins en modo RAW, es mucho más estable que corsproxy.io
               const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
-              const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+              const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
               
               const res = await fetch(proxyUrl);
-              if (!res.ok) throw new Error("Fallo de red al contactar proxy.");
+              if (!res.ok) throw new Error("Fallo al conectar con el servidor proxy.");
               
               const xmlText = await res.text();
               
+              // Validamos que la respuesta no sea un HTML de error del proxy
+              if (xmlText.trim().startsWith("<!DOCTYPE") || xmlText.trim().startsWith("<html")) {
+                 throw new Error("El proxy devolvió un HTML en lugar de XML.");
+              }
+
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xmlText, "application/xml");
               
-              // Verificamos si hubo un error en el parseo del XML
               const parseError = xmlDoc.getElementsByTagName("parsererror");
-              if (parseError.length > 0) throw new Error("Error al parsear el XML");
+              if (parseError.length > 0) throw new Error("Error en la estructura del XML del INPRES");
 
               const items = xmlDoc.getElementsByTagName("item");
-              
               let sismosCargados = 0;
               const ahora = new Date();
 
               for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 
+                // Extraemos valores con seguridad por si algún nodo falta
                 const latNode = item.getElementsByTagName("latitude")[0];
                 const lonNode = item.getElementsByTagName("longitude")[0];
                 const magNode = item.getElementsByTagName("magnitude")[0];
@@ -136,11 +139,13 @@ export default function GeofisicaPage() {
                   if (!isNaN(lat) && !isNaN(lon)) {
                     let sismoFecha = new Date();
                     const parts = dateStr.split(' ');
+                    
                     if(parts.length >= 3) {
                        const day = parseInt(parts[0]);
                        const monthStr = parts[1];
                        const timeParts = parts[2].split(':');
                        if(timeParts.length === 2 && meses[monthStr] !== undefined) {
+                         // Asume el año actual, ajusta si el mes es mayor al actual (ej. cambio de año)
                          sismoFecha = new Date(ahora.getFullYear(), meses[monthStr], day, parseInt(timeParts[0]), parseInt(timeParts[1]));
                          if (sismoFecha > ahora) sismoFecha.setFullYear(sismoFecha.getFullYear() - 1);
                        }
@@ -197,7 +202,8 @@ export default function GeofisicaPage() {
               }
             } catch(e) {
               console.error("Fallo al cargar INPRES:", e);
-              statusDiv.innerText = "Error cargando XML (Intente refrescar)";
+              statusDiv.innerText = "Error cargando datos. Reintentando en breve...";
+              setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
             }
           }
 
