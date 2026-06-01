@@ -93,7 +93,6 @@ export default function GeofisicaPage() {
               statusDiv.innerText = "Obteniendo datos del INPRES...";
               layerGroup.clearLayers();
               
-              // Se cambia el proxy a AllOrigins en modo RAW, es mucho más estable que corsproxy.io
               const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
               const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
               
@@ -102,7 +101,6 @@ export default function GeofisicaPage() {
               
               const xmlText = await res.text();
               
-              // Validamos que la respuesta no sea un HTML de error del proxy
               if (xmlText.trim().startsWith("<!DOCTYPE") || xmlText.trim().startsWith("<html")) {
                  throw new Error("El proxy devolvió un HTML en lugar de XML.");
               }
@@ -120,7 +118,6 @@ export default function GeofisicaPage() {
               for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 
-                // Extraemos valores con seguridad por si algún nodo falta
                 const latNode = item.getElementsByTagName("latitude")[0];
                 const lonNode = item.getElementsByTagName("longitude")[0];
                 const magNode = item.getElementsByTagName("magnitude")[0];
@@ -145,7 +142,6 @@ export default function GeofisicaPage() {
                        const monthStr = parts[1];
                        const timeParts = parts[2].split(':');
                        if(timeParts.length === 2 && meses[monthStr] !== undefined) {
-                         // Asume el año actual, ajusta si el mes es mayor al actual (ej. cambio de año)
                          sismoFecha = new Date(ahora.getFullYear(), meses[monthStr], day, parseInt(timeParts[0]), parseInt(timeParts[1]));
                          if (sismoFecha > ahora) sismoFecha.setFullYear(sismoFecha.getFullYear() - 1);
                        }
@@ -216,7 +212,8 @@ export default function GeofisicaPage() {
   `;
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
+    // Se ajustó p-6 a p-3 sm:p-6 para celulares
+    <div className="bg-white p-3 sm:p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
       
       {/* CABECERA */}
       <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
@@ -225,7 +222,7 @@ export default function GeofisicaPage() {
         </h2>
       </div>
   
-   {/* ÁREA DE TRABAJO */}
+      {/* ÁREA DE TRABAJO */}
       <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
         Incluye herramientas de detección de sismos en tiempo real, lista de sismos sentidos por INPRES, mapa de sismos registrados por el Centro Sismológico Euro-Mediterráneo (EMSC) mediante VolcanoDiscovery, y búsqueda dinámica de noticias para corroborar incidentes en el territorio.
       </div>
@@ -242,8 +239,8 @@ export default function GeofisicaPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* LADO IZQUIERDO: Mapa Sismos Sentidos (XML) */}
-          <div className="flex flex-col h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
+          {/* LADO IZQUIERDO: Mapa Sismos Sentidos (XML) - Altura responsive */}
+          <div className="flex flex-col h-[400px] lg:h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
             <div className="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Sismos Sentidos</h3>
@@ -260,8 +257,8 @@ export default function GeofisicaPage() {
             </div>
           </div>
 
-          {/* LADO DERECHO: Iframe Web INPRES */}
-          <div className="flex flex-col h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
+          {/* LADO DERECHO: Iframe Web INPRES - Altura responsive */}
+          <div className="flex flex-col h-[400px] lg:h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
             <div className="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Registro Web Oficial</h3>
@@ -302,7 +299,8 @@ export default function GeofisicaPage() {
               </p>
             </div>
 
-            <div className="w-full h-[500px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50">
+            {/* Altura responsive: 350px en celu, 500px en PC */}
+            <div className="w-full h-[350px] lg:h-[500px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50">
               <iframe 
                 src="https://earthquakes.volcanodiscovery.com/map/Argentina?L=8" 
                 className="w-full h-full border-0 absolute inset-0" 
@@ -328,7 +326,7 @@ export default function GeofisicaPage() {
         </button>
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
+            <div className="bg-gray-50 p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
               
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <p className="text-[13px] text-gray-600 leading-relaxed">
