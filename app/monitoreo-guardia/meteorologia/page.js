@@ -135,6 +135,7 @@ export default function HidrometeorologiaPage() {
           function formatearFecha(isoString) {
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
+            if (isNaN(d.getTime())) return 'N/A';
             const dia = String(d.getDate()).padStart(2, '0');
             const mes = String(d.getMonth() + 1).padStart(2, '0');
             const horas = String(d.getHours()).padStart(2, '0');
@@ -149,12 +150,18 @@ export default function HidrometeorologiaPage() {
               statusDiv.innerText = "Conectando al SMN...";
               layerGroup.clearLayers();
 
-              const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+              // Se cambia a AllOrigins que es más tolerante a múltiples peticiones
+              const proxyUrl = 'https://api.allorigins.win/raw?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
               const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+              if (!rssRes.ok) throw new Error("Fallo en el proxy");
+              
               const rssText = await rssRes.text();
+              
+              // Evitar que un error del proxy se procese como un XML vacío
+              if (!rssText.includes('<rss')) throw new Error("El proxy no devolvió un XML válido");
 
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
@@ -177,15 +184,22 @@ export default function HidrometeorologiaPage() {
                 return;
               }
 
-              statusDiv.innerText = "Descargando reportes oficiales...";
-              const fetchPromises = linksUnicos.map(link => 
-                fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
-                  .then(res => res.text())
-                  .then(text => ({ link, text }))
-                  .catch(err => null)
-              );
+              statusDiv.innerText = "Descargando " + linksUnicos.length + " reportes oficiales...";
+              
+              // SOLUCIÓN: Carga por lotes (batches de a 5) para no saturar el proxy y evitar error 429
+              const capsDescargados = [];
+              for (let i = 0; i < linksUnicos.length; i += 5) {
+                const batch = linksUnicos.slice(i, i + 5);
+                const fetchPromises = batch.map(link => 
+                  fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
+                    .then(res => res.ok ? res.text() : null)
+                    .then(text => (text && text.includes('<alert')) ? { link, text } : null)
+                    .catch(err => null)
+                );
+                const resultados = await Promise.all(fetchPromises);
+                capsDescargados.push(...resultados);
+              }
 
-              const capsDescargados = await Promise.all(fetchPromises);
               statusDiv.innerText = "Procesando mapas de alerta...";
 
               let alertasDibujadas = 0;
@@ -309,7 +323,8 @@ export default function HidrometeorologiaPage() {
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
 
             } catch (error) {
-              statusDiv.innerText = "Reintentando conexión...";
+              console.error(error);
+              statusDiv.innerText = "Error de conexión o proxy. Reintentando...";
             }
           }
 
