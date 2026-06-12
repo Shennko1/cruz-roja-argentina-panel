@@ -120,7 +120,7 @@ export default function MapaAlertasSMN() {
               statusDiv.innerText = "Conectando al índice...";
               layerGroup.clearLayers();
 
-              const proxyUrl = 'https://api.allorigins.win/raw?url=';
+              const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
