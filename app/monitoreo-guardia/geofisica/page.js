@@ -93,10 +93,8 @@ export default function GeofisicaPage() {
               statusDiv.innerText = "Obteniendo datos del INPRES...";
               layerGroup.clearLayers();
               
-              const targetUrl = 'http://contenidos.inpres.gob.ar/formatos/sentidos.xml?nocache=' + new Date().getTime();
-              const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-              
-              const res = await fetch(proxyUrl);
+              const res = await fetch('/api/inpres');
+              const xmlText = await res.text();
               if (!res.ok) throw new Error("Fallo al conectar con el servidor proxy.");
               
               const xmlText = await res.text();
