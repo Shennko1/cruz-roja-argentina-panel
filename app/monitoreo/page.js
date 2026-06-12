@@ -66,6 +66,7 @@ export default function MapaAlertasSMN() {
       <div id="loading" class="loading">Iniciando sistema...</div>
       <div id="map"></div>
       
+
      <script>
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -253,6 +254,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 });
 </script>
+    
     </body>
     </html>
   `;
