@@ -120,12 +120,18 @@ export default function MapaAlertasSMN() {
               statusDiv.innerText = "Conectando al índice...";
               layerGroup.clearLayers();
 
-              const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+              const proxyUrl = 'https://api.allorigins.win/raw?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
-              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-              const rssText = await rssRes.text();
+const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+
+console.log("RSS STATUS:", rssRes.status);
+
+const rssText = await rssRes.text();
+
+console.log("RSS LENGTH:", rssText.length);
+console.log("RSS PREVIEW:", rssText.substring(0,300));
 
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
@@ -141,6 +147,9 @@ export default function MapaAlertasSMN() {
               }
 
               const linksUnicos = [...new Set(links)];
+
+              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
+              console.log(linksUnicos);
 
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
@@ -163,6 +172,8 @@ export default function MapaAlertasSMN() {
 
               // Esperamos a que TODOS se descarguen al mismo tiempo
               const capsDescargados = await Promise.all(fetchPromises);
+              console.log("CAP DESCARGADOS:", capsDescargados.length);
+              console.log(capsDescargados);
 
               statusDiv.innerText = "Procesando e indexando mapas...";
 
@@ -173,6 +184,7 @@ export default function MapaAlertasSMN() {
 
               // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
+                console.log("CAP ACTUAL:", capData);
                 if (!capData) continue;
 
                 try {
