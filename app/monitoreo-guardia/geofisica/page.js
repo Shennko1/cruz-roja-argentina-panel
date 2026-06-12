@@ -94,7 +94,6 @@ export default function GeofisicaPage() {
               layerGroup.clearLayers();
               
               const res = await fetch('/api/inpres');
-              const xmlText = await res.text();
               if (!res.ok) throw new Error("Fallo al conectar con el servidor proxy.");
               
               const xmlText = await res.text();
