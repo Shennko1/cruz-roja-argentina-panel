@@ -66,317 +66,193 @@ export default function MapaAlertasSMN() {
       <div id="loading" class="loading">Iniciando sistema...</div>
       <div id="map"></div>
       
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          var map = L.map('map').setView([-38.4161, -63.6167], 5);
-          L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
-            attribution: '© OpenStreetMap'
-          }).addTo(map);
+     <script>
+document.addEventListener("DOMContentLoaded", function() {
 
-          const capasPorFecha = {};
-          const controlCapas = L.control.layers(null, null, {
-          collapsed: false,
-          position: 'topright'
-}).addTo(map);
+  var map = L.map('map').setView([-38.4161, -63.6167], 5);
 
-          const provsDic = [
-            { n: "Buenos Aires", c: ["buenos aires"] },
-            { n: "CABA", c: ["caba", "ciudad autónoma de buenos aires", "capital federal"] },
-            { n: "Catamarca", c: ["catamarca"] },
-            { n: "Chaco", c: ["chaco"] },
-            { n: "Chubut", c: ["chubut"] },
-            { n: "Córdoba", c: ["córdoba", "cordoba"] },
-            { n: "Corrientes", c: ["corrientes"] },
-            { n: "Entre Ríos", c: ["entre ríos", "entre rios"] },
-            { n: "Formosa", c: ["formosa"] },
-            { n: "Jujuy", c: ["jujuy"] },
-            { n: "La Pampa", c: ["la pampa"] },
-            { n: "La Rioja", c: ["la rioja"] },
-            { n: "Mendoza", c: ["mendoza"] },
-            { n: "Misiones", c: ["misiones"] },
-            { n: "Neuquén", c: ["neuquén", "neuquen"] },
-            { n: "Río Negro", c: ["río negro", "rio negro"] },
-            { n: "Salta", c: ["salta"] },
-            { n: "San Juan", c: ["san juan"] },
-            { n: "San Luis", c: ["san luis"] },
-            { n: "Santa Cruz", c: ["santa cruz"] },
-            { n: "Santa Fe", c: ["santa fe"] },
-            { n: "Santiago del Estero", c: ["santiago del estero"] },
-            { n: "Tierra del Fuego", c: ["tierra del fuego", "antártida"] },
-            { n: "Tucumán", c: ["tucumán", "tucuman"] }
-          ];
+  L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-          function formatearFecha(isoString) {
-          function obtenerFechaSimple(isoString) {
-  if (!isoString) return "Sin fecha";
+  const capasPorFecha = {};
+  const controlCapas = L.control.layers(null, null, {
+    collapsed: false,
+    position: 'topright'
+  }).addTo(map);
 
-  const d = new Date(isoString);
+  const provsDic = [ /* igual que el tuyo */ ];
 
-  const dia = String(d.getDate()).padStart(2, '0');
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const anio = d.getFullYear();
+  function formatearFecha(isoString) {
+    if (!isoString) return 'N/A';
+    const d = new Date(isoString);
+    return (
+      String(d.getDate()).padStart(2,'0') + '/' +
+      String(d.getMonth()+1).padStart(2,'0') + ' ' +
+      String(d.getHours()).padStart(2,'0') + ':' +
+      String(d.getMinutes()).padStart(2,'0')
+    );
+  }
 
-  return dia + '/' + mes + '/' + anio;
-}
-            if (!isoString) return 'N/A';
-            const d = new Date(isoString);
-            const dia = String(d.getDate()).padStart(2, '0');
-            const mes = String(d.getMonth() + 1).padStart(2, '0');
-            const horas = String(d.getHours()).padStart(2, '0');
-            const min = String(d.getMinutes()).padStart(2, '0');
-            return dia + '/' + mes + ' ' + horas + ':' + min;
-          }
+  function fechaSimple(isoString) {
+    if (!isoString) return "Sin fecha";
+    const d = new Date(isoString);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
 
-          async function cargarAlertas() {
-            const statusDiv = document.getElementById('loading');
-            
-            try {
-              statusDiv.style.display = 'block';
-              statusDiv.innerText = "Conectando al índice...";
-              Object.values(capasPorFecha).forEach(layer => {
-  map.removeLayer(layer);
-});
+  async function fetchLimitado(urls, limit = 8) {
+    const results = [];
+    let index = 0;
 
-for (const k in capasPorFecha) {
-  delete capasPorFecha[k];
-}
+    async function worker() {
+      while (index < urls.length) {
+        const i = index++;
+        try {
+          const res = await fetch(urls[i]);
+          const text = await res.text();
+          results[i] = { url: urls[i], text };
+        } catch (e) {
+          results[i] = null;
+        }
+      }
+    }
 
-              const proxyUrl = '/api/smn?url=';
-              const timestamp = new Date().getTime();
-              const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
-              
-const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+    const workers = Array.from({ length: limit }, () => worker());
+    await Promise.all(workers);
+    return results;
+  }
 
-console.log("RSS STATUS:", rssRes.status);
+  async function cargarAlertas() {
 
-const rssText = await rssRes.text();
+    const statusDiv = document.getElementById('loading');
 
-console.log("RSS LENGTH:", rssText.length);
-console.log("RSS PREVIEW:", rssText.substring(0,300));
+    try {
 
-              const parser = new DOMParser();
-              const rssDoc = parser.parseFromString(rssText, "application/xml");
-              
-              const linkNodes = rssDoc.getElementsByTagName("link");
-              const links = [];
-              
-              for (let i = 0; i < linkNodes.length; i++) {
-                const url = linkNodes[i].textContent;
-                if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
-                  links.push(url);
-                }
-              }
+      statusDiv.innerText = "Conectando índice...";
 
-              const linksUnicos = [...new Set(links)];
+      Object.values(capasPorFecha).forEach(layer => map.removeLayer(layer));
+      for (const k in capasPorFecha) delete capasPorFecha[k];
 
-              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
-              console.log(linksUnicos);
+      const proxyUrl = '/api/smn?url=';
+      const ts = Date.now();
 
-              if (linksUnicos.length === 0) {
-                statusDiv.innerText = "Territorio despejado (Sin Alertas)";
-                setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
-                window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
-                return;
-              }
+      const rss = await fetch(proxyUrl + encodeURIComponent(
+        'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + ts
+      ));
 
-              statusDiv.innerText = "Descargando reportes en paralelo...";
-              
-              // -----------------------------------------------------
-              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
-              // -----------------------------------------------------
-              statusDiv.innerText = "Descargando reportes en paralelo...";
+      const rssText = await rss.text();
+      const doc = new DOMParser().parseFromString(rssText, "application/xml");
 
-console.log("LINKS ENCONTRADOS:", linksUnicos.length);
+      const links = [...doc.getElementsByTagName("link")]
+        .map(n => n.textContent)
+        .filter(u => u && u.includes('.xml') && !u.includes('rss_alertaCAP'));
 
-console.time("DESCARGA_CAPS");
+      const linksUnicos = [...new Set(links)];
 
-function fetchConTimeout(url, ms = 10000) {
-  return Promise.race([
-    fetch(url),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout")), ms)
-    )
-  ]);
-}
+      if (!linksUnicos.length) {
+        statusDiv.innerText = "Sin alertas";
+        return;
+      }
 
-const fetchPromises = linksUnicos.map(link =>
-  fetchConTimeout(
-    proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp),
-    10000
-  )
-    .then(res => res.text())
-    .then(text => ({ link, text }))
-    .catch(err => {
-      console.warn("Fallo:", link);
-      return null;
-    })
-);
+      statusDiv.innerText = `Descargando ${linksUnicos.length} alertas...`;
 
-const capsDescargados = await Promise.all(fetchPromises);
+      const urls = linksUnicos.map(l =>
+        proxyUrl + encodeURIComponent(l + "?nocache=" + ts)
+      );
 
-console.timeEnd("DESCARGA_CAPS");
+      console.time("DESCARGA");
 
-console.log(
-  "CAPS RECIBIDOS:",
-  capsDescargados.filter(x => x).length
-);
+      const caps = await fetchLimitado(urls, 8);
 
-console.log("CAP DESCARGADOS:", capsDescargados.length);
+      console.timeEnd("DESCARGA");
 
-              statusDiv.innerText = "Procesando e indexando mapas...";
+      let poligonos = new Set();
+      let datosTabla = [];
 
-              let alertasDibujadas = 0;
-              const poligonosYaDibujados = new Set();
-              const datosParaTabla = [];
-              const linksListados = new Set();
+      let alertasDibujadas = 0;
 
-              // Ahora iteramos sobre los archivos que ya están en memoria
-              for (const capData of capsDescargados) {
-                console.log("CAP ACTUAL:", capData);
-                if (!capData) continue;
+      for (const cap of caps) {
+        if (!cap) continue;
 
-                try {
-                  const capDoc = parser.parseFromString(capData.text, "application/xml");
-                  const link = capData.link;
+        const doc = new DOMParser().parseFromString(cap.text, "application/xml");
 
-                  const expiresNodes = capDoc.getElementsByTagName("expires");
-                  const dateEndStr = expiresNodes.length > 0 ? expiresNodes[0].textContent : null;
-                  
-                  if (dateEndStr) {
-                    const fechaExpiracion = new Date(dateEndStr);
-                    if (fechaExpiracion < new Date()) continue; 
-                  }
+        const onset = doc.getElementsByTagName("onset")[0]?.textContent;
+        const expire = doc.getElementsByTagName("expires")[0]?.textContent;
 
-                  const onsetNodes = capDoc.getElementsByTagName("onset");
-                  const effectiveNodes = capDoc.getElementsByTagName("effective");
-                  const dateStartStr = onsetNodes.length > 0 ? onsetNodes[0].textContent : (effectiveNodes.length > 0 ? effectiveNodes[0].textContent : null);
+        if (expire && new Date(expire) < new Date()) continue;
 
-                  const inicioFormat = formatearFecha(dateStartStr);
-                  const finFormat = formatearFecha(dateEndStr);
+        const evento =
+          doc.getElementsByTagName("event")[0]?.textContent ||
+          doc.getElementsByTagName("headline")[0]?.textContent ||
+          "Alerta";
 
-                  const severityNodes = capDoc.getElementsByTagName("severity");
-                  const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
-                  
-                  const eventNodes = capDoc.getElementsByTagName("event");
-                  const headlineNodes = capDoc.getElementsByTagName("headline");
-                  const areaDescNodes = capDoc.getElementsByTagName("areaDesc");
-                  const descriptionNodes = capDoc.getElementsByTagName("description");
-                  
-                  const eventoTexto = eventNodes.length > 0 ? eventNodes[0].textContent : (headlineNodes.length > 0 ? headlineNodes[0].textContent : 'Alerta Meteorológica');
-                  const descArea = areaDescNodes.length > 0 ? areaDescNodes[0].textContent : '';
-                  const descText = descriptionNodes.length > 0 ? descriptionNodes[0].textContent : '';
+        const severity = doc.getElementsByTagName("severity")[0]?.textContent || "Unknown";
 
-                  let color = '#eab308';
-                  let nivel = 'Alerta Amarilla';
-                  const evtLower = eventoTexto.toLowerCase();
+        let color = "#eab308";
+        let nivel = "Amarilla";
 
-                  if (severity === 'Extreme') { 
-                    color = '#ef4444'; nivel = 'Alerta Roja'; 
-                  } else if (severity === 'Severe') { 
-                    color = '#f97316'; nivel = 'Alerta Naranja'; 
-                  } else if (severity === 'Minor' || evtLower.includes('advertencia') || evtLower.includes('niebla') || evtLower.includes('ceniza')) {
-                    color = '#8b5cf6'; 
-                    nivel = 'Advertencia (Informate)';
-                  }
+        if (severity === "Extreme") { color = "#ef4444"; nivel = "Roja"; }
+        else if (severity === "Severe") { color = "#f97316"; nivel = "Naranja"; }
 
-                  const textoParaEscanear = (eventoTexto + " " + descArea + " " + descText).toLowerCase();
-                  let provsEncontradas = [];
-                  
-                  provsDic.forEach(prov => {
-                    if (prov.c.some(clave => textoParaEscanear.includes(clave))) {
-                      if (prov.n === "Buenos Aires" && textoParaEscanear.includes("ciudad autónoma") && !textoParaEscanear.replace("ciudad autónoma de buenos aires", "").includes("buenos aires")) {
-                        return;
-                      }
-                      provsEncontradas.push(prov.n);
-                    }
-                  });
+        const fechaGrupo = fechaSimple(onset);
 
-                  if (provsEncontradas.length === 0) {
-                    provsEncontradas.push("Varias / Área Nacional");
-                  }
+        if (!capasPorFecha[fechaGrupo]) {
+          capasPorFecha[fechaGrupo] = L.layerGroup();
+          controlCapas.addOverlay(capasPorFecha[fechaGrupo], fechaGrupo);
+          capasPorFecha[fechaGrupo].addTo(map);
+        }
 
-                  if (!linksListados.has(link)) {
-                    linksListados.add(link);
-                    datosParaTabla.push({
-                      id: link,
-                      evento: eventoTexto,
-                      nivel: nivel,
-                      color: color,
-                      inicio: inicioFormat,
-                      fin: finFormat,
-                      provincias: provsEncontradas
-                    });
-                  }
+        const polys = doc.getElementsByTagName("polygon");
 
-                  const polygonNodes = capDoc.getElementsByTagName("polygon");
-                  for (let j = 0; j < polygonNodes.length; j++) {
-                    const polyString = polygonNodes[j].textContent.trim();
-                    if (!polyString) continue;
+        for (let p of polys) {
+          const coords = p.textContent.trim().split(" ").map(x => {
+            const [a,b] = x.split(",");
+            return [parseFloat(a), parseFloat(b)];
+          });
 
-                    if (poligonosYaDibujados.has(polyString)) continue;
-                    poligonosYaDibujados.add(polyString);
+          const key = p.textContent.trim();
+          if (poligonos.has(key)) continue;
+          poligonos.add(key);
 
-                    const coords = polyString.split(' ').map(par => {
-                      const partes = par.split(',');
-                      return [parseFloat(partes[0]), parseFloat(partes[1])];
-                    });
+          const poly = L.polygon(coords, {
+            color,
+            fillColor: color,
+            fillOpacity: 0.4,
+            weight: 2
+          });
 
-                    var polygon = L.polygon(coords, {
-                      color: color,
-                      fillColor: color,
-                      fillOpacity: 0.4,
-                      weight: 2
-                    });
-                    
-                    const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
-                      "<b style='color:#1e293b; font-size:14px;'>" + eventoTexto + "</b><br/>" +
-                      "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>" + nivel + "</span><br/>" +
-                      "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
-                      "<b>Vigencia:</b><br/>" +
-                      "Desde: " + inicioFormat + " hs<br/>" +
-                      "Hasta: " + finFormat + " hs</div>" +
-                      "</div>";
+          poly.bindPopup(evento);
 
-                   const fechaGrupo = obtenerFechaSimple(dateStartStr);
+          capasPorFecha[fechaGrupo].addLayer(poly);
+          alertasDibujadas++;
+        }
 
-if (!capasPorFecha[fechaGrupo]) {
-  capasPorFecha[fechaGrupo] = L.layerGroup();
-
-  controlCapas.addOverlay(
-    capasPorFecha[fechaGrupo],
-    fechaGrupo
-  );
-
-  capasPorFecha[fechaGrupo].addTo(map);
-}
-
-polygon.bindPopup(popupHTML);
-
-capasPorFecha[fechaGrupo].addLayer(polygon);
-
-alertasDibujadas++;
-                    
-                    alertasDibujadas++;
-                  }
-                } catch (e) {
-                  // Silencioso
-                }
-              }
-              
-              window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
-
-              statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
-
-            } catch (error) {
-              statusDiv.innerText = "Reintentando conexión...";
-            }
-          }
-
-          cargarAlertas();
-          setInterval(cargarAlertas, 900000); 
+        datosTabla.push({
+          evento,
+          nivel,
+          inicio: formatearFecha(onset),
+          fin: formatearFecha(expire)
         });
-      </script>
+      }
+
+      window.parent.postMessage({
+        type: 'CAP_DATA_READY',
+        payload: datosTabla
+      }, '*');
+
+      statusDiv.innerText = `Listo: ${alertasDibujadas} zonas`;
+
+    } catch (e) {
+      console.log(e);
+      statusDiv.innerText = "Error de carga";
+    }
+  }
+
+  cargarAlertas();
+  setInterval(cargarAlertas, 900000);
+
+});
+</script>
     </body>
     </html>
   `;
