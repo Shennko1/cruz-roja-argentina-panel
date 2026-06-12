@@ -73,7 +73,11 @@ export default function MapaAlertasSMN() {
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
-          var layerGroup = L.layerGroup().addTo(map);
+          const capasPorFecha = {};
+          const controlCapas = L.control.layers(null, null, {
+          collapsed: false,
+          position: 'topright'
+}).addTo(map);
 
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
@@ -103,6 +107,17 @@ export default function MapaAlertasSMN() {
           ];
 
           function formatearFecha(isoString) {
+          function obtenerFechaSimple(isoString) {
+  if (!isoString) return "Sin fecha";
+
+  const d = new Date(isoString);
+
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const anio = d.getFullYear();
+
+  return dia + '/' + mes + '/' + anio;
+}
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
             const dia = String(d.getDate()).padStart(2, '0');
@@ -118,7 +133,13 @@ export default function MapaAlertasSMN() {
             try {
               statusDiv.style.display = 'block';
               statusDiv.innerText = "Conectando al índice...";
-              layerGroup.clearLayers();
+              Object.values(capasPorFecha).forEach(layer => {
+  map.removeLayer(layer);
+});
+
+for (const k in capasPorFecha) {
+  delete capasPorFecha[k];
+}
 
               const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
@@ -163,17 +184,44 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               // -----------------------------------------------------
               // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
               // -----------------------------------------------------
-              const fetchPromises = linksUnicos.map(link => 
-                fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
-                  .then(res => res.text())
-                  .then(text => ({ link, text }))
-                  .catch(err => null) // Si uno falla, no rompe el resto
-              );
+              statusDiv.innerText = "Descargando reportes en paralelo...";
 
-              // Esperamos a que TODOS se descarguen al mismo tiempo
-              const capsDescargados = await Promise.all(fetchPromises);
-              console.log("CAP DESCARGADOS:", capsDescargados.length);
-              console.log(capsDescargados);
+console.log("LINKS ENCONTRADOS:", linksUnicos.length);
+
+console.time("DESCARGA_CAPS");
+
+function fetchConTimeout(url, ms = 10000) {
+  return Promise.race([
+    fetch(url),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), ms)
+    )
+  ]);
+}
+
+const fetchPromises = linksUnicos.map(link =>
+  fetchConTimeout(
+    proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp),
+    10000
+  )
+    .then(res => res.text())
+    .then(text => ({ link, text }))
+    .catch(err => {
+      console.warn("Fallo:", link);
+      return null;
+    })
+);
+
+const capsDescargados = await Promise.all(fetchPromises);
+
+console.timeEnd("DESCARGA_CAPS");
+
+console.log(
+  "CAPS RECIBIDOS:",
+  capsDescargados.filter(x => x).length
+);
+
+console.log("CAP DESCARGADOS:", capsDescargados.length);
 
               statusDiv.innerText = "Procesando e indexando mapas...";
 
@@ -289,8 +337,24 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                       "Hasta: " + finFormat + " hs</div>" +
                       "</div>";
 
-                    polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
+                   const fechaGrupo = obtenerFechaSimple(dateStartStr);
+
+if (!capasPorFecha[fechaGrupo]) {
+  capasPorFecha[fechaGrupo] = L.layerGroup();
+
+  controlCapas.addOverlay(
+    capasPorFecha[fechaGrupo],
+    fechaGrupo
+  );
+
+  capasPorFecha[fechaGrupo].addTo(map);
+}
+
+polygon.bindPopup(popupHTML);
+
+capasPorFecha[fechaGrupo].addLayer(polygon);
+
+alertasDibujadas++;
                     
                     alertasDibujadas++;
                   }
