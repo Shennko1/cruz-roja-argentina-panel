@@ -200,6 +200,10 @@ if (controlCapas) {
               }
 
               const linksUnicos = [...new Set(links)];
+              console.log("XML encontrados:", linksUnicos.length);
+              console.log(linksUnicos.slice(0,10));
+              console.log("Polígonos dibujados:", alertasDibujadas);
+              console.log("Alertas tabla:", datosParaTabla.length);
 
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
