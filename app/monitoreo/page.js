@@ -158,7 +158,13 @@ document.addEventListener("DOMContentLoaded", function () {
         poly.addTo(map);
       }
 
-      output.push({ evento: event, nivel });
+     output.push({
+  evento: event,
+  nivel,
+  inicio: xml.getElementsByTagName("onset")[0]?.textContent || null,
+  fin: xml.getElementsByTagName("expires")[0]?.textContent || null,
+  provincias: [] // temporal si no estás parseando provincias todavía
+});
     }
 
     window.parent.postMessage({
