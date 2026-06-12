@@ -105,6 +105,9 @@ export default function HidrometeorologiaPage() {
 
           var layerGroup = L.layerGroup().addTo(map);
 
+const capasPorFecha = {};
+let controlCapas = null;
+
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
             { n: "CABA", c: ["caba", "ciudad autónoma de buenos aires", "capital federal"] },
@@ -133,6 +136,15 @@ export default function HidrometeorologiaPage() {
           ];
 
           function formatearFecha(isoString) {
+          function obtenerFechaCorta(isoString) {
+          if (!isoString) return 'Sin fecha';
+          const d = new Date(isoString);
+          if (isNaN(d.getTime())) return 'Sin fecha';
+          const dia = String(d.getDate()).padStart(2, '0');
+          const mes = String(d.getMonth() + 1).padStart(2, '0');
+          const anio = d.getFullYear();
+          return dia + '-' + mes + '-' + anio;
+          }
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
             if (isNaN(d.getTime())) return 'N/A';
@@ -149,8 +161,20 @@ export default function HidrometeorologiaPage() {
               statusDiv.style.display = 'block';
               statusDiv.innerText = "Conectando al SMN...";
               layerGroup.clearLayers();
+              Object.values(capasPorFecha).forEach(capa => {
+  map.removeLayer(capa);
+});
 
-              // Se cambia a AllOrigins que es más tolerante a múltiples peticiones
+Object.keys(capasPorFecha).forEach(key => {
+  delete capasPorFecha[key];
+});
+
+if (controlCapas) {
+  map.removeControl(controlCapas);
+  controlCapas = null;
+}
+
+              // Se cambia a API interno
               const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
@@ -227,6 +251,7 @@ export default function HidrometeorologiaPage() {
 
                   const inicioFormat = formatearFecha(dateStartStr);
                   const finFormat = formatearFecha(dateEndStr);
+                  const fechaMapa = obtenerFechacorta(dateStartStr);
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
@@ -294,7 +319,9 @@ export default function HidrometeorologiaPage() {
                       const partes = par.split(',');
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
-
+if (!capasPorFecha[fechaMapa]) {
+  capasPorFecha[fechaMapa] = L.layerGroup().addTo(map);
+}
                     var polygon = L.polygon(coords, {
                       color: color,
                       fillColor: color,
@@ -312,12 +339,20 @@ export default function HidrometeorologiaPage() {
                       "</div>";
 
                     polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
+                   capasPorFecha[fechaMapa].addLayer(polygon);
                     alertasDibujadas++;
                   }
                 } catch (e) {}
               }
-              
+              if (Object.keys(capasPorFecha).length > 0) {
+  controlCapas = L.control.layers(
+    null,
+    capasPorFecha,
+    {
+      collapsed: false
+    }
+  ).addTo(map);
+}
               window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
               statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " alertas activas";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
