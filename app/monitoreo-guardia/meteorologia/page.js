@@ -104,7 +104,11 @@ export default function HidrometeorologiaPage() {
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
-          var layerGroup = L.layerGroup().addTo(map);
+          const capasPorFecha = {};
+const controlCapas = L.control.layers(null, null, {
+  collapsed: false,
+  position: 'topright'
+}).addTo(map);
 
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
@@ -134,6 +138,17 @@ export default function HidrometeorologiaPage() {
           ];
 
           function formatearFecha(isoString) {
+          function obtenerFechaSimple(isoString) {
+  if (!isoString) return "Sin fecha";
+
+  const d = new Date(isoString);
+
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const anio = d.getFullYear();
+
+  return dia + '/' + mes + '/' + anio;
+}
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
             const dia = String(d.getDate()).padStart(2, '0');
@@ -149,7 +164,13 @@ export default function HidrometeorologiaPage() {
             try {
               statusDiv.style.display = 'block';
               statusDiv.innerText = "Conectando al índice...";
-              layerGroup.clearLayers();
+              Object.values(capasPorFecha).forEach(layer => {
+  map.removeLayer(layer);
+});
+
+for (const k in capasPorFecha) {
+  delete capasPorFecha[k];
+}
 
               const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
@@ -320,10 +341,24 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                       "Hasta: " + finFormat + " hs</div>" +
                       "</div>";
 
-                    polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
-                    
-                    alertasDibujadas++;
+                  const fechaGrupo = obtenerFechaSimple(dateStartStr);
+
+if (!capasPorFecha[fechaGrupo]) {
+  capasPorFecha[fechaGrupo] = L.layerGroup();
+
+  controlCapas.addOverlay(
+    capasPorFecha[fechaGrupo],
+    fechaGrupo
+  );
+
+  capasPorFecha[fechaGrupo].addTo(map);
+}
+
+polygon.bindPopup(popupHTML);
+
+capasPorFecha[fechaGrupo].addLayer(polygon);
+
+alertasDibujadas++;
                   }
                 } catch (e) {
                   // Silencioso
