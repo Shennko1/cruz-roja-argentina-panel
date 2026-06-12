@@ -151,7 +151,7 @@ export default function HidrometeorologiaPage() {
               layerGroup.clearLayers();
 
               // Se cambia a AllOrigins que es más tolerante a múltiples peticiones
-              const proxyUrl = 'https://api.allorigins.win/raw?url=';
+              const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
