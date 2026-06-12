@@ -76,19 +76,20 @@ export default function HidrometeorologiaPage() {
         #map { width: 100%; height: 100vh; z-index: 1; }
         .loading { 
           position: absolute; 
-          top: 15px; left: 50%; 
+          top: 20px; left: 50%; 
           transform: translateX(-50%); 
           z-index: 1000; 
           background: rgba(255, 255, 255, 0.95); 
-          padding: 8px 16px; 
+          padding: 10px 20px; 
           border-radius: 30px; 
           font-weight: bold; 
           box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-          font-size: 11px; 
+          font-size: 12px; 
           color: #1e293b;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           border: 1px solid #e2e8f0;
+          transition: all 0.3s ease;
         }
       </style>
     </head>
@@ -98,15 +99,12 @@ export default function HidrometeorologiaPage() {
       
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          var map = L.map('map').setView([-38.4161, -63.6167], 4);
+          var map = L.map('map').setView([-38.4161, -63.6167], 5);
           L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
-            attribution: '© Instituto Geográfico Nacional'
+            attribution: '© OpenStreetMap'
           }).addTo(map);
 
           var layerGroup = L.layerGroup().addTo(map);
-
-const capasPorFecha = {};
-let controlCapas = null;
 
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
@@ -136,18 +134,8 @@ let controlCapas = null;
           ];
 
           function formatearFecha(isoString) {
-          function obtenerFechaCorta(isoString) {
-          if (!isoString) return 'Sin fecha';
-          const d = new Date(isoString);
-          if (isNaN(d.getTime())) return 'Sin fecha';
-          const dia = String(d.getDate()).padStart(2, '0');
-          const mes = String(d.getMonth() + 1).padStart(2, '0');
-          const anio = d.getFullYear();
-          return dia + '-' + mes + '-' + anio;
-          }
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
-            if (isNaN(d.getTime())) return 'N/A';
             const dia = String(d.getDate()).padStart(2, '0');
             const mes = String(d.getMonth() + 1).padStart(2, '0');
             const horas = String(d.getHours()).padStart(2, '0');
@@ -157,38 +145,28 @@ let controlCapas = null;
 
           async function cargarAlertas() {
             const statusDiv = document.getElementById('loading');
+            
             try {
               statusDiv.style.display = 'block';
-              statusDiv.innerText = "Conectando al SMN...";
+              statusDiv.innerText = "Conectando al índice...";
               layerGroup.clearLayers();
-              Object.values(capasPorFecha).forEach(capa => {
-  map.removeLayer(capa);
-});
 
-Object.keys(capasPorFecha).forEach(key => {
-  delete capasPorFecha[key];
-});
-
-if (controlCapas) {
-  map.removeControl(controlCapas);
-  controlCapas = null;
-}
-
-              // Se cambia a API interno
               const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
-              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-              if (!rssRes.ok) throw new Error("Fallo en el proxy");
-              
-              const rssText = await rssRes.text();
-              
-              // Evitar que un error del proxy se procese como un XML vacío
-              if (!rssText.includes('<rss')) throw new Error("El proxy no devolvió un XML válido");
+const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+
+console.log("RSS STATUS:", rssRes.status);
+
+const rssText = await rssRes.text();
+
+console.log("RSS LENGTH:", rssText.length);
+console.log("RSS PREVIEW:", rssText.substring(0,300));
 
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
+              
               const linkNodes = rssDoc.getElementsByTagName("link");
               const links = [];
               
@@ -200,10 +178,9 @@ if (controlCapas) {
               }
 
               const linksUnicos = [...new Set(links)];
-              console.log("XML encontrados:", linksUnicos.length);
-              console.log(linksUnicos.slice(0,10));
-              console.log("Polígonos dibujados:", alertasDibujadas);
-              console.log("Alertas tabla:", datosParaTabla.length);
+
+              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
+              console.log(linksUnicos);
 
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
@@ -212,31 +189,35 @@ if (controlCapas) {
                 return;
               }
 
-              statusDiv.innerText = "Descargando " + linksUnicos.length + " reportes oficiales...";
+              statusDiv.innerText = "Descargando reportes en paralelo...";
               
-              // SOLUCIÓN: Carga por lotes (batches de a 5) para no saturar el proxy y evitar error 429
-              const capsDescargados = [];
-              for (let i = 0; i < linksUnicos.length; i += 5) {
-                const batch = linksUnicos.slice(i, i + 5);
-                const fetchPromises = batch.map(link => 
-                  fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
-                    .then(res => res.ok ? res.text() : null)
-                    .then(text => (text && text.includes('<alert')) ? { link, text } : null)
-                    .catch(err => null)
-                );
-                const resultados = await Promise.all(fetchPromises);
-                capsDescargados.push(...resultados);
-              }
+              // -----------------------------------------------------
+              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
+              // -----------------------------------------------------
+              const fetchPromises = linksUnicos.map(link => 
+                fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
+                  .then(res => res.text())
+                  .then(text => ({ link, text }))
+                  .catch(err => null) // Si uno falla, no rompe el resto
+              );
 
-              statusDiv.innerText = "Procesando mapas de alerta...";
+              // Esperamos a que TODOS se descarguen al mismo tiempo
+              const capsDescargados = await Promise.all(fetchPromises);
+              console.log("CAP DESCARGADOS:", capsDescargados.length);
+              console.log(capsDescargados);
+
+              statusDiv.innerText = "Procesando e indexando mapas...";
 
               let alertasDibujadas = 0;
               const poligonosYaDibujados = new Set();
               const datosParaTabla = [];
               const linksListados = new Set();
 
+              // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
+                console.log("CAP ACTUAL:", capData);
                 if (!capData) continue;
+
                 try {
                   const capDoc = parser.parseFromString(capData.text, "application/xml");
                   const link = capData.link;
@@ -255,7 +236,6 @@ if (controlCapas) {
 
                   const inicioFormat = formatearFecha(dateStartStr);
                   const finFormat = formatearFecha(dateEndStr);
-                  const fechaMapa = obtenerFechacorta(dateStartStr);
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
@@ -323,9 +303,7 @@ if (controlCapas) {
                       const partes = par.split(',');
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
-if (!capasPorFecha[fechaMapa]) {
-  capasPorFecha[fechaMapa] = L.layerGroup().addTo(map);
-}
+
                     var polygon = L.polygon(coords, {
                       color: color,
                       fillColor: color,
@@ -335,7 +313,7 @@ if (!capasPorFecha[fechaMapa]) {
                     
                     const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
                       "<b style='color:#1e293b; font-size:14px;'>" + eventoTexto + "</b><br/>" +
-                      "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'> " + nivel + "</span><br/>" +
+                      "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>" + nivel + "</span><br/>" +
                       "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
                       "<b>Vigencia:</b><br/>" +
                       "Desde: " + inicioFormat + " hs<br/>" +
@@ -343,27 +321,22 @@ if (!capasPorFecha[fechaMapa]) {
                       "</div>";
 
                     polygon.bindPopup(popupHTML);
-                   capasPorFecha[fechaMapa].addLayer(polygon);
+                    layerGroup.addLayer(polygon);
+                    
                     alertasDibujadas++;
                   }
-                } catch (e) {}
+                } catch (e) {
+                  // Silencioso
+                }
               }
-              if (Object.keys(capasPorFecha).length > 0) {
-  controlCapas = L.control.layers(
-    null,
-    capasPorFecha,
-    {
-      collapsed: false
-    }
-  ).addTo(map);
-}
+              
               window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
-              statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " alertas activas";
+
+              statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
 
             } catch (error) {
-              console.error(error);
-              statusDiv.innerText = "Error de conexión o proxy. Reintentando...";
+              statusDiv.innerText = "Reintentando conexión...";
             }
           }
 
