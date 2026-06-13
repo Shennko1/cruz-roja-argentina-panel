@@ -155,6 +155,26 @@ export default function HidrometeorologiaPage() {
             return dia + '/' + mes + ' ' + horas + ':' + min;
           }
 
+          // NUEVA FUNCIÓN: Obtiene todos los días en los que la alerta está vigente
+          function obtenerDiasVigencia(isoInicio, isoFin) {
+            if (!isoInicio) return [];
+            const inicio = new Date(isoInicio);
+            const fin = isoFin ? new Date(isoFin) : new Date(); 
+            const dias = [];
+            
+            // Ignoramos la hora para comparar solo los días
+            let actual = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+            const ultimo = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+
+            while (actual <= ultimo) {
+              const d = String(actual.getDate()).padStart(2, '0');
+              const m = String(actual.getMonth() + 1).padStart(2, '0');
+              dias.push(d + '/' + m);
+              actual.setDate(actual.getDate() + 1); // Sumar 1 día
+            }
+            return dias;
+          }
+
           async function cargarAlertas() {
             const statusDiv = document.getElementById('loading');
             
@@ -190,7 +210,6 @@ export default function HidrometeorologiaPage() {
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
                 
-                // Limpiar control de fechas si existía
                 if (window.dateFilterControl) {
                   map.removeControl(window.dateFilterControl);
                 }
@@ -215,7 +234,6 @@ export default function HidrometeorologiaPage() {
               const datosParaTabla = [];
               const linksListados = new Set();
               
-              // Array para almacenar polígonos y fechas antes de dibujarlos
               const todasLasAlertasParaFiltro = [];
 
               for (const capData of capsDescargados) {
@@ -325,12 +343,11 @@ export default function HidrometeorologiaPage() {
 
                     polygon.bindPopup(popupHTML);
                     
-                    // Extraemos solo el día (DD/MM) del string "DD/MM HH:MM"
-                    var diaInicio = inicioFormat.split(' ')[0];
+                    // CORRECCIÓN: Guardamos TODOS los días en los que rige la alerta
+                    var diasActivos = obtenerDiasVigencia(dateStartStr, dateEndStr);
                     
-                    // Guardamos la referencia para el filtro en vez de añadirlo directo
                     todasLasAlertasParaFiltro.push({
-                      fecha: diaInicio,
+                      dias: diasActivos, // Array de fechas de vigencia
                       capa: polygon
                     });
                     
@@ -350,7 +367,10 @@ export default function HidrometeorologiaPage() {
                 map.removeControl(window.dateFilterControl);
               }
 
-              const fechasUnicas = [...new Set(todasLasAlertasParaFiltro.map(a => a.fecha))].sort();
+              // Aplanamos todos los arrays de días para obtener las fechas únicas globales
+              const todasLasFechas = todasLasAlertasParaFiltro.reduce((acc, curr) => acc.concat(curr.dias), []);
+              const fechasUnicas = [...new Set(todasLasFechas)].sort();
+              
               const seleccionadas = {};
               fechasUnicas.forEach(f => seleccionadas[f] = true);
 
@@ -368,7 +388,8 @@ export default function HidrometeorologiaPage() {
                   div.style.minWidth = '140px';
 
                   const titulo = document.createElement('strong');
-                  titulo.innerText = 'Filtrar por Inicio';
+                  // CORRECCIÓN: Cambio de texto
+                  titulo.innerText = 'Filtrar por Vigencia';
                   titulo.style.display = 'block';
                   titulo.style.fontSize = '12px';
                   titulo.style.marginBottom = '10px';
@@ -429,7 +450,9 @@ export default function HidrometeorologiaPage() {
               function renderizarMapa() {
                 layerGroup.clearLayers();
                 todasLasAlertasParaFiltro.forEach(item => {
-                  if (seleccionadas[item.fecha]) {
+                  // CORRECCIÓN: Si la alerta rige en al menos UNO de los días seleccionados, se dibuja
+                  const esVisible = item.dias.some(dia => seleccionadas[dia]);
+                  if (esVisible) {
                     layerGroup.addLayer(item.capa);
                   }
                 });
@@ -484,7 +507,6 @@ export default function HidrometeorologiaPage() {
           
           {/* COLUMNA 1: MAPA DE LLUVIA (WINDY) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                Mapa de Lluvia y Radar (Windy)
@@ -510,7 +532,6 @@ export default function HidrometeorologiaPage() {
               ></iframe>
             </div>
 
-            {/* Instrucciones movidas al subtítulo */}
             <div className="p-3 bg-blue-50/40 border-t border-blue-100 text-[11px] text-gray-600 leading-relaxed">
               Permite visualizar fenómenos en tiempo real. Puede cambiar el modelo o la capa activa (Lluvia, Nubes, Viento, Radar) presionando el menú en la esquina superior derecha. Los colores inferiores indican intensidad.
             </div>
@@ -518,7 +539,6 @@ export default function HidrometeorologiaPage() {
 
           {/* COLUMNA 2: MAPA DE ALERTAS (SMN) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                 Alertas del Servicio Meteorológico Nacional
@@ -534,7 +554,6 @@ export default function HidrometeorologiaPage() {
               />
             </div>
 
-            {/* Leyenda movida al subtítulo para mantener la simetría con Windy */}
             <div className="p-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider justify-center">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
@@ -557,7 +576,7 @@ export default function HidrometeorologiaPage() {
 
         </div>
 
-        {/* TABLA DE RESUMEN OPERATIVO SMN (Ubicada debajo de los dos mapas) */}
+        {/* TABLA DE RESUMEN OPERATIVO SMN */}
         <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
