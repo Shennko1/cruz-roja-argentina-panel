@@ -12,6 +12,14 @@ export default function HidrometeorologiaPage() {
   // Estado para la tabla resumida de alertas del SMN
   const [alertasTabla, setAlertasTabla] = useState([]);
 
+  // NUEVO: Definición de prioridades para el ordenamiento visual en React (debe coincidir con las strings de smnMapHtml)
+  const prioridadesNivel = {
+    'Alerta Roja': 4,
+    'Alerta Naranja': 3,
+    'Alerta Amarilla': 2,
+    'Advertencia (Informate)': 1
+  };
+
   // Escuchar los reportes procesados por el iframe del mapa del SMN
   useEffect(() => {
     const handleMessage = (event) => {
@@ -22,6 +30,7 @@ export default function HidrometeorologiaPage() {
         payload.forEach(alerta => {
           alerta.provincias.forEach(prov => {
             if (!agrupado[prov]) agrupado[prov] = {};
+            // La lógica de agrupación original ya previene que alertas naranjas sean *reemplazadas* por amarillas
             const llaveUnica = `${alerta.nivel}-${alerta.evento}`;
             if (!agrupado[prov][llaveUnica]) {
               agrupado[prov][llaveUnica] = { ...alerta };
@@ -29,10 +38,22 @@ export default function HidrometeorologiaPage() {
           });
         });
 
-        const tablaFinal = Object.keys(agrupado).sort().map(prov => ({
-          provincia: prov,
-          alertas: Object.values(agrupado[prov])
-        }));
+        // SOLUCIÓN AL PROBLEMA DE "TAPADO VISUAL": Ordenar alertas dentro de cada provincia
+        const tablaFinal = Object.keys(agrupado).sort().map(prov => {
+            const alertasProvincia = Object.values(agrupado[prov]);
+
+            // NUEVO: Ordenar alertas de la provincia por prioridad descendente (mayor número primero)
+            alertasProvincia.sort((a, b) => {
+                const priorityA = prioridadesNivel[a.nivel] || 0;
+                const priorityB = prioridadesNivel[b.nivel] || 0;
+                return priorityB - priorityA; 
+            });
+
+            return {
+              provincia: prov,
+              alertas: alertasProvincia
+            };
+        });
 
         setAlertasTabla(tablaFinal);
       }
