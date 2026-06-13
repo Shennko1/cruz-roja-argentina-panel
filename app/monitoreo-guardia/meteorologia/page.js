@@ -72,6 +72,30 @@ export default function HidrometeorologiaPage() {
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
       <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
       <style>
+      #tabs {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  color: white;
+}
         body { margin: 0; padding: 0; font-family: sans-serif; background: #f8fafc; }
         #map { width: 100%; height: 100vh; z-index: 1; }
         .loading { 
@@ -96,6 +120,7 @@ export default function HidrometeorologiaPage() {
     <body>
       <div id="loading" class="loading">Iniciando sistema...</div>
       <div id="map"></div>
+      <div id="tabs"></div>
       
       <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -104,7 +129,8 @@ export default function HidrometeorologiaPage() {
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
-          var layerGroup = L.layerGroup().addTo(map);
+          const capasPorFecha = {};
+          let fechaActiva = null;
 
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
@@ -134,6 +160,19 @@ export default function HidrometeorologiaPage() {
           ];
 
           function formatearFecha(isoString) {
+          function fechaGrupo(isoString) {
+  if (!isoString) return "Sin fecha";
+
+  const d = new Date(isoString);
+
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
             if (!isoString) return 'N/A';
             const d = new Date(isoString);
             const dia = String(d.getDate()).padStart(2, '0');
@@ -185,6 +224,39 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+                const tabs = document.getElementById("tabs");
+
+tabs.innerHTML = "";
+
+Object.keys(capasPorFecha)
+  .sort()
+  .forEach(fecha => {
+
+    const btn = document.createElement("button");
+
+    btn.className =
+      "tab-btn" +
+      (fecha === fechaActiva ? " active" : "");
+
+    btn.textContent = fecha;
+
+    btn.onclick = () => {
+
+      Object.values(capasPorFecha).forEach(layer => {
+        map.removeLayer(layer);
+      });
+
+      capasPorFecha[fecha].addTo(map);
+
+      document
+        .querySelectorAll(".tab-btn")
+        .forEach(b => b.classList.remove("active"));
+
+      btn.classList.add("active");
+    };
+
+    tabs.appendChild(btn);
+  });
                 window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
                 return;
               }
@@ -236,6 +308,16 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
                   const inicioFormat = formatearFecha(dateStartStr);
                   const finFormat = formatearFecha(dateEndStr);
+                  const grupoFecha = fechaGrupo(dateStartStr);
+
+if (!capasPorFecha[grupoFecha]) {
+  capasPorFecha[grupoFecha] = L.layerGroup();
+
+  if (!fechaActiva) {
+    fechaActiva = grupoFecha;
+    capasPorFecha[grupoFecha].addTo(map);
+  }
+}
 
                   const severityNodes = capDoc.getElementsByTagName("severity");
                   const severity = severityNodes.length > 0 ? severityNodes[0].textContent : 'Unknown';
@@ -321,7 +403,7 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                       "</div>";
 
                     polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
+                    capasPorFecha[grupoFecha].addLayer(polygon);
                     
                     alertasDibujadas++;
                   }
