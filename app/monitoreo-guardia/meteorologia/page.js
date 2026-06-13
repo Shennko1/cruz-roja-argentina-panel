@@ -12,14 +12,6 @@ export default function HidrometeorologiaPage() {
   // Estado para la tabla resumida de alertas del SMN
   const [alertasTabla, setAlertasTabla] = useState([]);
 
-  // NUEVO: Definición de prioridades para el ordenamiento visual en React (debe coincidir con las strings de smnMapHtml)
-  const prioridadesNivel = {
-    'Alerta Roja': 4,
-    'Alerta Naranja': 3,
-    'Alerta Amarilla': 2,
-    'Advertencia (Informate)': 1
-  };
-
   // Escuchar los reportes procesados por el iframe del mapa del SMN
   useEffect(() => {
     const handleMessage = (event) => {
@@ -30,7 +22,6 @@ export default function HidrometeorologiaPage() {
         payload.forEach(alerta => {
           alerta.provincias.forEach(prov => {
             if (!agrupado[prov]) agrupado[prov] = {};
-            // La lógica de agrupación original ya previene que alertas naranjas sean *reemplazadas* por amarillas
             const llaveUnica = `${alerta.nivel}-${alerta.evento}`;
             if (!agrupado[prov][llaveUnica]) {
               agrupado[prov][llaveUnica] = { ...alerta };
@@ -38,22 +29,10 @@ export default function HidrometeorologiaPage() {
           });
         });
 
-        // SOLUCIÓN AL PROBLEMA DE "TAPADO VISUAL": Ordenar alertas dentro de cada provincia
-        const tablaFinal = Object.keys(agrupado).sort().map(prov => {
-            const alertasProvincia = Object.values(agrupado[prov]);
-
-            // NUEVO: Ordenar alertas de la provincia por prioridad descendente (mayor número primero)
-            alertasProvincia.sort((a, b) => {
-                const priorityA = prioridadesNivel[a.nivel] || 0;
-                const priorityB = prioridadesNivel[b.nivel] || 0;
-                return priorityB - priorityA; 
-            });
-
-            return {
-              provincia: prov,
-              alertas: alertasProvincia
-            };
-        });
+        const tablaFinal = Object.keys(agrupado).sort().map(prov => ({
+          provincia: prov,
+          alertas: Object.values(agrupado[prov])
+        }));
 
         setAlertasTabla(tablaFinal);
       }
@@ -112,18 +91,6 @@ export default function HidrometeorologiaPage() {
           border: 1px solid #e2e8f0;
           transition: all 0.3s ease;
         }
-        /* Ajuste de scroll para el control de fechas si hay muchas */
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 4px;
-        }
       </style>
     </head>
     <body>
@@ -176,26 +143,6 @@ export default function HidrometeorologiaPage() {
             return dia + '/' + mes + ' ' + horas + ':' + min;
           }
 
-          // NUEVA FUNCIÓN: Obtiene todos los días en los que la alerta está vigente
-          function obtenerDiasVigencia(isoInicio, isoFin) {
-            if (!isoInicio) return [];
-            const inicio = new Date(isoInicio);
-            const fin = isoFin ? new Date(isoFin) : new Date(); 
-            const dias = [];
-            
-            // Ignoramos la hora para comparar solo los días
-            let actual = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
-            const ultimo = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
-
-            while (actual <= ultimo) {
-              const d = String(actual.getDate()).padStart(2, '0');
-              const m = String(actual.getMonth() + 1).padStart(2, '0');
-              dias.push(d + '/' + m);
-              actual.setDate(actual.getDate() + 1); // Sumar 1 día
-            }
-            return dias;
-          }
-
           async function cargarAlertas() {
             const statusDiv = document.getElementById('loading');
             
@@ -208,8 +155,14 @@ export default function HidrometeorologiaPage() {
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
-              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-              const rssText = await rssRes.text();
+const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+
+console.log("RSS STATUS:", rssRes.status);
+
+const rssText = await rssRes.text();
+
+console.log("RSS LENGTH:", rssText.length);
+console.log("RSS PREVIEW:", rssText.substring(0,300));
 
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
@@ -226,27 +179,32 @@ export default function HidrometeorologiaPage() {
 
               const linksUnicos = [...new Set(links)];
 
+              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
+              console.log(linksUnicos);
+
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
-                
-                if (window.dateFilterControl) {
-                  map.removeControl(window.dateFilterControl);
-                }
                 return;
               }
 
               statusDiv.innerText = "Descargando reportes en paralelo...";
               
+              // -----------------------------------------------------
+              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
+              // -----------------------------------------------------
               const fetchPromises = linksUnicos.map(link => 
                 fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
                   .then(res => res.text())
                   .then(text => ({ link, text }))
-                  .catch(err => null) 
+                  .catch(err => null) // Si uno falla, no rompe el resto
               );
 
+              // Esperamos a que TODOS se descarguen al mismo tiempo
               const capsDescargados = await Promise.all(fetchPromises);
+              console.log("CAP DESCARGADOS:", capsDescargados.length);
+              console.log(capsDescargados);
 
               statusDiv.innerText = "Procesando e indexando mapas...";
 
@@ -254,10 +212,10 @@ export default function HidrometeorologiaPage() {
               const poligonosYaDibujados = new Set();
               const datosParaTabla = [];
               const linksListados = new Set();
-              
-              const todasLasAlertasParaFiltro = [];
 
+              // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
+                console.log("CAP ACTUAL:", capData);
                 if (!capData) continue;
 
                 try {
@@ -363,14 +321,7 @@ export default function HidrometeorologiaPage() {
                       "</div>";
 
                     polygon.bindPopup(popupHTML);
-                    
-                    // CORRECCIÓN: Guardamos TODOS los días en los que rige la alerta
-                    var diasActivos = obtenerDiasVigencia(dateStartStr, dateEndStr);
-                    
-                    todasLasAlertasParaFiltro.push({
-                      dias: diasActivos, // Array de fechas de vigencia
-                      capa: polygon
-                    });
+                    layerGroup.addLayer(polygon);
                     
                     alertasDibujadas++;
                   }
@@ -380,108 +331,6 @@ export default function HidrometeorologiaPage() {
               }
               
               window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
-
-              // -------------------------------------------------------------
-              // CREACIÓN DEL CONTROL DE FILTRADO POR FECHAS EN LEAFLET
-              // -------------------------------------------------------------
-              if (window.dateFilterControl) {
-                map.removeControl(window.dateFilterControl);
-              }
-
-              // Aplanamos todos los arrays de días para obtener las fechas únicas globales
-              const todasLasFechas = todasLasAlertasParaFiltro.reduce((acc, curr) => acc.concat(curr.dias), []);
-              const fechasUnicas = [...new Set(todasLasFechas)].sort();
-              
-              const seleccionadas = {};
-              fechasUnicas.forEach(f => seleccionadas[f] = true);
-
-              const DateControl = L.Control.extend({
-                options: { position: 'topright' },
-                onAdd: function(map) {
-                  const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-scrollbar');
-                  div.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                  div.style.padding = '12px';
-                  div.style.borderRadius = '8px';
-                  div.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
-                  div.style.fontFamily = 'sans-serif';
-                  div.style.maxHeight = '250px';
-                  div.style.overflowY = 'auto';
-                  div.style.minWidth = '140px';
-
-                  const titulo = document.createElement('strong');
-                  // CORRECCIÓN: Cambio de texto
-                  titulo.innerText = 'Filtrar por Vigencia';
-                  titulo.style.display = 'block';
-                  titulo.style.fontSize = '12px';
-                  titulo.style.marginBottom = '10px';
-                  titulo.style.color = '#1e293b';
-                  titulo.style.borderBottom = '1px solid #e2e8f0';
-                  titulo.style.paddingBottom = '6px';
-                  titulo.style.textTransform = 'uppercase';
-                  titulo.style.letterSpacing = '0.05em';
-                  div.appendChild(titulo);
-
-                  if (fechasUnicas.length === 0) {
-                    const sinFechas = document.createElement('span');
-                    sinFechas.innerText = 'Sin alertas activas';
-                    sinFechas.style.fontSize = '11px';
-                    sinFechas.style.color = '#64748b';
-                    div.appendChild(sinFechas);
-                  } else {
-                    fechasUnicas.forEach(fecha => {
-                      const label = document.createElement('label');
-                      label.style.display = 'flex';
-                      label.style.alignItems = 'center';
-                      label.style.marginBottom = '8px';
-                      label.style.fontSize = '13px';
-                      label.style.cursor = 'pointer';
-                      label.style.color = '#334155';
-                      label.style.fontWeight = '500';
-
-                      const cb = document.createElement('input');
-                      cb.type = 'checkbox';
-                      cb.checked = true;
-                      cb.style.marginRight = '8px';
-                      cb.style.cursor = 'pointer';
-                      cb.style.accentColor = '#3b82f6';
-                      cb.style.width = '14px';
-                      cb.style.height = '14px';
-                      
-                      cb.onchange = function(e) {
-                        seleccionadas[fecha] = e.target.checked;
-                        renderizarMapa();
-                      };
-
-                      label.appendChild(cb);
-                      label.appendChild(document.createTextNode(fecha));
-                      div.appendChild(label);
-                    });
-                  }
-
-                  L.DomEvent.disableClickPropagation(div);
-                  L.DomEvent.disableScrollPropagation(div);
-                  return div;
-                }
-              });
-
-              window.dateFilterControl = new DateControl();
-              map.addControl(window.dateFilterControl);
-
-              // Función que redibuja las capas activas según los checkboxes
-              function renderizarMapa() {
-                layerGroup.clearLayers();
-                todasLasAlertasParaFiltro.forEach(item => {
-                  // CORRECCIÓN: Si la alerta rige en al menos UNO de los días seleccionados, se dibuja
-                  const esVisible = item.dias.some(dia => seleccionadas[dia]);
-                  if (esVisible) {
-                    layerGroup.addLayer(item.capa);
-                  }
-                });
-              }
-
-              // Llamada inicial para dibujar todo lo seleccionado
-              renderizarMapa();
-              // -------------------------------------------------------------
 
               statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
@@ -528,6 +377,7 @@ export default function HidrometeorologiaPage() {
           
           {/* COLUMNA 1: MAPA DE LLUVIA (WINDY) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                Mapa de Lluvia y Radar (Windy)
@@ -553,6 +403,7 @@ export default function HidrometeorologiaPage() {
               ></iframe>
             </div>
 
+            {/* Instrucciones movidas al subtítulo */}
             <div className="p-3 bg-blue-50/40 border-t border-blue-100 text-[11px] text-gray-600 leading-relaxed">
               Permite visualizar fenómenos en tiempo real. Puede cambiar el modelo o la capa activa (Lluvia, Nubes, Viento, Radar) presionando el menú en la esquina superior derecha. Los colores inferiores indican intensidad.
             </div>
@@ -560,6 +411,7 @@ export default function HidrometeorologiaPage() {
 
           {/* COLUMNA 2: MAPA DE ALERTAS (SMN) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                 Alertas del Servicio Meteorológico Nacional
@@ -575,6 +427,7 @@ export default function HidrometeorologiaPage() {
               />
             </div>
 
+            {/* Leyenda movida al subtítulo para mantener la simetría con Windy */}
             <div className="p-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider justify-center">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
@@ -597,7 +450,7 @@ export default function HidrometeorologiaPage() {
 
         </div>
 
-        {/* TABLA DE RESUMEN OPERATIVO SMN */}
+        {/* TABLA DE RESUMEN OPERATIVO SMN (Ubicada debajo de los dos mapas) */}
         <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
