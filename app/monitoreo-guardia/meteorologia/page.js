@@ -91,6 +91,18 @@ export default function HidrometeorologiaPage() {
           border: 1px solid #e2e8f0;
           transition: all 0.3s ease;
         }
+        /* Ajuste de scroll para el control de fechas si hay muchas */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
       </style>
     </head>
     <body>
@@ -155,14 +167,8 @@ export default function HidrometeorologiaPage() {
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
-const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-
-console.log("RSS STATUS:", rssRes.status);
-
-const rssText = await rssRes.text();
-
-console.log("RSS LENGTH:", rssText.length);
-console.log("RSS PREVIEW:", rssText.substring(0,300));
+              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+              const rssText = await rssRes.text();
 
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
@@ -179,32 +185,28 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
               const linksUnicos = [...new Set(links)];
 
-              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
-              console.log(linksUnicos);
-
               if (linksUnicos.length === 0) {
                 statusDiv.innerText = "Territorio despejado (Sin Alertas)";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
+                
+                // Limpiar control de fechas si existía
+                if (window.dateFilterControl) {
+                  map.removeControl(window.dateFilterControl);
+                }
                 return;
               }
 
               statusDiv.innerText = "Descargando reportes en paralelo...";
               
-              // -----------------------------------------------------
-              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
-              // -----------------------------------------------------
               const fetchPromises = linksUnicos.map(link => 
                 fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
                   .then(res => res.text())
                   .then(text => ({ link, text }))
-                  .catch(err => null) // Si uno falla, no rompe el resto
+                  .catch(err => null) 
               );
 
-              // Esperamos a que TODOS se descarguen al mismo tiempo
               const capsDescargados = await Promise.all(fetchPromises);
-              console.log("CAP DESCARGADOS:", capsDescargados.length);
-              console.log(capsDescargados);
 
               statusDiv.innerText = "Procesando e indexando mapas...";
 
@@ -212,10 +214,11 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               const poligonosYaDibujados = new Set();
               const datosParaTabla = [];
               const linksListados = new Set();
+              
+              // Array para almacenar polígonos y fechas antes de dibujarlos
+              const todasLasAlertasParaFiltro = [];
 
-              // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
-                console.log("CAP ACTUAL:", capData);
                 if (!capData) continue;
 
                 try {
@@ -321,7 +324,15 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                       "</div>";
 
                     polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
+                    
+                    // Extraemos solo el día (DD/MM) del string "DD/MM HH:MM"
+                    var diaInicio = inicioFormat.split(' ')[0];
+                    
+                    // Guardamos la referencia para el filtro en vez de añadirlo directo
+                    todasLasAlertasParaFiltro.push({
+                      fecha: diaInicio,
+                      capa: polygon
+                    });
                     
                     alertasDibujadas++;
                   }
@@ -331,6 +342,102 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               }
               
               window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
+
+              // -------------------------------------------------------------
+              // CREACIÓN DEL CONTROL DE FILTRADO POR FECHAS EN LEAFLET
+              // -------------------------------------------------------------
+              if (window.dateFilterControl) {
+                map.removeControl(window.dateFilterControl);
+              }
+
+              const fechasUnicas = [...new Set(todasLasAlertasParaFiltro.map(a => a.fecha))].sort();
+              const seleccionadas = {};
+              fechasUnicas.forEach(f => seleccionadas[f] = true);
+
+              const DateControl = L.Control.extend({
+                options: { position: 'topright' },
+                onAdd: function(map) {
+                  const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-scrollbar');
+                  div.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                  div.style.padding = '12px';
+                  div.style.borderRadius = '8px';
+                  div.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+                  div.style.fontFamily = 'sans-serif';
+                  div.style.maxHeight = '250px';
+                  div.style.overflowY = 'auto';
+                  div.style.minWidth = '140px';
+
+                  const titulo = document.createElement('strong');
+                  titulo.innerText = 'Filtrar por Inicio';
+                  titulo.style.display = 'block';
+                  titulo.style.fontSize = '12px';
+                  titulo.style.marginBottom = '10px';
+                  titulo.style.color = '#1e293b';
+                  titulo.style.borderBottom = '1px solid #e2e8f0';
+                  titulo.style.paddingBottom = '6px';
+                  titulo.style.textTransform = 'uppercase';
+                  titulo.style.letterSpacing = '0.05em';
+                  div.appendChild(titulo);
+
+                  if (fechasUnicas.length === 0) {
+                    const sinFechas = document.createElement('span');
+                    sinFechas.innerText = 'Sin alertas activas';
+                    sinFechas.style.fontSize = '11px';
+                    sinFechas.style.color = '#64748b';
+                    div.appendChild(sinFechas);
+                  } else {
+                    fechasUnicas.forEach(fecha => {
+                      const label = document.createElement('label');
+                      label.style.display = 'flex';
+                      label.style.alignItems = 'center';
+                      label.style.marginBottom = '8px';
+                      label.style.fontSize = '13px';
+                      label.style.cursor = 'pointer';
+                      label.style.color = '#334155';
+                      label.style.fontWeight = '500';
+
+                      const cb = document.createElement('input');
+                      cb.type = 'checkbox';
+                      cb.checked = true;
+                      cb.style.marginRight = '8px';
+                      cb.style.cursor = 'pointer';
+                      cb.style.accentColor = '#3b82f6';
+                      cb.style.width = '14px';
+                      cb.style.height = '14px';
+                      
+                      cb.onchange = function(e) {
+                        seleccionadas[fecha] = e.target.checked;
+                        renderizarMapa();
+                      };
+
+                      label.appendChild(cb);
+                      label.appendChild(document.createTextNode(fecha));
+                      div.appendChild(label);
+                    });
+                  }
+
+                  L.DomEvent.disableClickPropagation(div);
+                  L.DomEvent.disableScrollPropagation(div);
+                  return div;
+                }
+              });
+
+              window.dateFilterControl = new DateControl();
+              map.addControl(window.dateFilterControl);
+
+              // Función que redibuja las capas activas según los checkboxes
+              function renderizarMapa() {
+                layerGroup.clearLayers();
+                todasLasAlertasParaFiltro.forEach(item => {
+                  if (seleccionadas[item.fecha]) {
+                    layerGroup.addLayer(item.capa);
+                  }
+                });
+              }
+
+              // Llamada inicial para dibujar todo lo seleccionado
+              renderizarMapa();
+              // -------------------------------------------------------------
 
               statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
               setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
