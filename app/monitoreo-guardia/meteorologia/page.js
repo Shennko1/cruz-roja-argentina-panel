@@ -1,15 +1,21 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function HidrometeorologiaPage() {
   const [isRiesgoOpen, setIsRiesgoOpen] = useState(false);
   const [isRedesOpen, setIsRedesOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
   
-  // Estado para la ubicación del buscador de noticias
-  const [ubicacion, setUbicacion] = useState("Argentina");
+  // Estado para el filtro de fechas (inicia en hoy, ajustado a huso horario local)
+  const [fechaFiltro, setFechaFiltro] = useState(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  });
+
+  const mapIframeRef = useRef(null);
   
-  // Estado para la tabla resumida de alertas del SMN
+  const [ubicacion, setUbicacion] = useState("Argentina");
   const [alertasTabla, setAlertasTabla] = useState([]);
 
   // Escuchar los reportes procesados por el iframe del mapa del SMN
@@ -41,7 +47,13 @@ export default function HidrometeorologiaPage() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Configuración de las búsquedas dinámicas de noticias
+  // Enviar la fecha seleccionada al iframe cuando cambie
+  useEffect(() => {
+    if (mapIframeRef.current && mapIframeRef.current.contentWindow) {
+      mapIframeRef.current.contentWindow.postMessage({ type: 'SET_DATE', payload: fechaFiltro }, '*');
+    }
+  }, [fechaFiltro]);
+
   const busquedas = [
     {
       titulo: "Tormentas y Vientos",
@@ -57,14 +69,12 @@ export default function HidrometeorologiaPage() {
     }
   ];
 
-  // Función para construir la URL de Google News
   const generarUrlGoogleNews = (terminos) => {
     const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
     const query = `${ubicacionFinal}${terminos} when:24h`;
     return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
   };
 
-  // Código fuente inyectado en el iframe del SMN (Leaflet + CAP RSS)
   const smnMapHtml = `
     <!DOCTYPE html>
     <html>
@@ -75,21 +85,11 @@ export default function HidrometeorologiaPage() {
         body { margin: 0; padding: 0; font-family: sans-serif; background: #f8fafc; }
         #map { width: 100%; height: 100vh; z-index: 1; }
         .loading { 
-          position: absolute; 
-          top: 20px; left: 50%; 
-          transform: translateX(-50%); 
-          z-index: 1000; 
-          background: rgba(255, 255, 255, 0.95); 
-          padding: 10px 20px; 
-          border-radius: 30px; 
-          font-weight: bold; 
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-          font-size: 12px; 
-          color: #1e293b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border: 1px solid #e2e8f0;
-          transition: all 0.3s ease;
+          position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
+          z-index: 1000; background: rgba(255, 255, 255, 0.95); 
+          padding: 10px 20px; border-radius: 30px; font-weight: bold; 
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 12px; color: #1e293b;
+          text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #e2e8f0;
         }
       </style>
     </head>
@@ -105,6 +105,19 @@ export default function HidrometeorologiaPage() {
           }).addTo(map);
 
           var layerGroup = L.layerGroup().addTo(map);
+          var allParsedAlerts = []; // Almacena todas las alertas para filtrarlas localmente
+          
+          // Obtener fecha actual al iniciar
+          var d = new Date();
+          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+          var currentDateStr = d.toISOString().slice(0, 10); 
+
+          window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'SET_DATE') {
+              currentDateStr = event.data.payload;
+              if (allParsedAlerts.length > 0) renderMap();
+            }
+          });
 
           const provsDic = [
             { n: "Buenos Aires", c: ["buenos aires"] },
@@ -135,41 +148,80 @@ export default function HidrometeorologiaPage() {
 
           function formatearFecha(isoString) {
             if (!isoString) return 'N/A';
-            const d = new Date(isoString);
-            const dia = String(d.getDate()).padStart(2, '0');
-            const mes = String(d.getMonth() + 1).padStart(2, '0');
-            const horas = String(d.getHours()).padStart(2, '0');
-            const min = String(d.getMinutes()).padStart(2, '0');
+            const dt = new Date(isoString);
+            const dia = String(dt.getDate()).padStart(2, '0');
+            const mes = String(dt.getMonth() + 1).padStart(2, '0');
+            const horas = String(dt.getHours()).padStart(2, '0');
+            const min = String(dt.getMinutes()).padStart(2, '0');
             return dia + '/' + mes + ' ' + horas + ':' + min;
+          }
+
+          function isAlertActiveOnDate(startStr, endStr, targetDateStr) {
+            if (!startStr || !endStr) return true; 
+            var targetStart = new Date(targetDateStr + "T00:00:00").getTime();
+            var targetEnd = new Date(targetDateStr + "T23:59:59").getTime();
+            var aStart = new Date(startStr).getTime();
+            var aEnd = new Date(endStr).getTime();
+            return (aStart <= targetEnd && aEnd >= targetStart);
+          }
+
+          function renderMap() {
+            layerGroup.clearLayers();
+            var datosParaTabla = [];
+            var linksListados = new Set();
+            var alertasDibujadas = 0;
+
+            // 1. Filtrar por fecha seleccionada
+            var filtered = allParsedAlerts.filter(a => isAlertActiveOnDate(a.rawStart, a.rawEnd, currentDateStr));
+
+            // 2. Ordenar por prioridad (para que el naranja/rojo se dibuje ÚLTIMO y tape al amarillo)
+            filtered.sort((a, b) => a.priority - b.priority);
+
+            // 3. Dibujar
+            filtered.forEach(alerta => {
+              if (!linksListados.has(alerta.link)) {
+                linksListados.add(alerta.link);
+                datosParaTabla.push(alerta.tableData);
+              }
+
+              alerta.polygons.forEach(coords => {
+                var polygon = L.polygon(coords, {
+                  color: alerta.color,
+                  fillColor: alerta.color,
+                  fillOpacity: 0.6, // Ligeramente más opaco para destacar las prioritarias
+                  weight: 2
+                });
+                polygon.bindPopup(alerta.popupHTML);
+                layerGroup.addLayer(polygon);
+                alertasDibujadas++;
+              });
+            });
+
+            window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
+            
+            const statusDiv = document.getElementById('loading');
+            statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas en alerta";
+            statusDiv.style.display = 'block';
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
           }
 
           async function cargarAlertas() {
             const statusDiv = document.getElementById('loading');
-            
             try {
               statusDiv.style.display = 'block';
               statusDiv.innerText = "Conectando al índice...";
-              layerGroup.clearLayers();
-
+              
               const proxyUrl = '/api/smn?url=';
               const timestamp = new Date().getTime();
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
-const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-
-console.log("RSS STATUS:", rssRes.status);
-
-const rssText = await rssRes.text();
-
-console.log("RSS LENGTH:", rssText.length);
-console.log("RSS PREVIEW:", rssText.substring(0,300));
-
+              const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+              const rssText = await rssRes.text();
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
               
               const linkNodes = rssDoc.getElementsByTagName("link");
               const links = [];
-              
               for (let i = 0; i < linkNodes.length; i++) {
                 const url = linkNodes[i].textContent;
                 if (url && url.includes('.xml') && !url.includes('rss_alertaCAP')) {
@@ -179,45 +231,29 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
               const linksUnicos = [...new Set(links)];
 
-              console.log("LINKS ENCONTRADOS:", linksUnicos.length);
-              console.log(linksUnicos);
-
               if (linksUnicos.length === 0) {
-                statusDiv.innerText = "Territorio despejado (Sin Alertas)";
+                statusDiv.innerText = "Territorio despejado";
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
                 window.parent.postMessage({ type: 'CAP_DATA_READY', payload: [] }, '*');
                 return;
               }
 
-              statusDiv.innerText = "Descargando reportes en paralelo...";
+              statusDiv.innerText = "Descargando reportes...";
               
-              // -----------------------------------------------------
-              // NUEVA LÓGICA DE DESCARGA PARALELA (MUCHO MÁS RÁPIDA)
-              // -----------------------------------------------------
               const fetchPromises = linksUnicos.map(link => 
                 fetch(proxyUrl + encodeURIComponent(link + "?nocache=" + timestamp))
                   .then(res => res.text())
                   .then(text => ({ link, text }))
-                  .catch(err => null) // Si uno falla, no rompe el resto
+                  .catch(err => null)
               );
 
-              // Esperamos a que TODOS se descarguen al mismo tiempo
               const capsDescargados = await Promise.all(fetchPromises);
-              console.log("CAP DESCARGADOS:", capsDescargados.length);
-              console.log(capsDescargados);
-
               statusDiv.innerText = "Procesando e indexando mapas...";
 
-              let alertasDibujadas = 0;
-              const poligonosYaDibujados = new Set();
-              const datosParaTabla = [];
-              const linksListados = new Set();
+              allParsedAlerts = []; // Limpiamos caché anterior
 
-              // Ahora iteramos sobre los archivos que ya están en memoria
               for (const capData of capsDescargados) {
-                console.log("CAP ACTUAL:", capData);
                 if (!capData) continue;
-
                 try {
                   const capDoc = parser.parseFromString(capData.text, "application/xml");
                   const link = capData.link;
@@ -225,10 +261,8 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                   const expiresNodes = capDoc.getElementsByTagName("expires");
                   const dateEndStr = expiresNodes.length > 0 ? expiresNodes[0].textContent : null;
                   
-                  if (dateEndStr) {
-                    const fechaExpiracion = new Date(dateEndStr);
-                    if (fechaExpiracion < new Date()) continue; 
-                  }
+                  // Desactivado: Filtro estricto de expiración se reemplazó por el filtro matemático dinámico
+                  // if (dateEndStr && new Date(dateEndStr) < new Date()) continue; 
 
                   const onsetNodes = capDoc.getElementsByTagName("onset");
                   const effectiveNodes = capDoc.getElementsByTagName("effective");
@@ -251,15 +285,15 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
                   let color = '#eab308';
                   let nivel = 'Alerta Amarilla';
+                  let weight = 2; // Prioridad visual
                   const evtLower = eventoTexto.toLowerCase();
 
                   if (severity === 'Extreme') { 
-                    color = '#ef4444'; nivel = 'Alerta Roja'; 
+                    color = '#ef4444'; nivel = 'Alerta Roja'; weight = 4;
                   } else if (severity === 'Severe') { 
-                    color = '#f97316'; nivel = 'Alerta Naranja'; 
+                    color = '#f97316'; nivel = 'Alerta Naranja'; weight = 3;
                   } else if (severity === 'Minor' || evtLower.includes('advertencia') || evtLower.includes('niebla') || evtLower.includes('ceniza')) {
-                    color = '#8b5cf6'; 
-                    nivel = 'Advertencia (Informate)';
+                    color = '#8b5cf6'; nivel = 'Advertencia (Informate)'; weight = 1;
                   }
 
                   const textoParaEscanear = (eventoTexto + " " + descArea + " " + descText).toLowerCase();
@@ -274,66 +308,48 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                     }
                   });
 
-                  if (provsEncontradas.length === 0) {
-                    provsEncontradas.push("Varias / Área Nacional");
-                  }
+                  if (provsEncontradas.length === 0) provsEncontradas.push("Varias / Área Nacional");
 
-                  if (!linksListados.has(link)) {
-                    linksListados.add(link);
-                    datosParaTabla.push({
-                      id: link,
-                      evento: eventoTexto,
-                      nivel: nivel,
-                      color: color,
-                      inicio: inicioFormat,
-                      fin: finFormat,
-                      provincias: provsEncontradas
-                    });
-                  }
-
+                  // Parsear polígonos
                   const polygonNodes = capDoc.getElementsByTagName("polygon");
+                  let polyCoords = [];
                   for (let j = 0; j < polygonNodes.length; j++) {
                     const polyString = polygonNodes[j].textContent.trim();
                     if (!polyString) continue;
-
-                    if (poligonosYaDibujados.has(polyString)) continue;
-                    poligonosYaDibujados.add(polyString);
-
                     const coords = polyString.split(' ').map(par => {
                       const partes = par.split(',');
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
-
-                    var polygon = L.polygon(coords, {
-                      color: color,
-                      fillColor: color,
-                      fillOpacity: 0.4,
-                      weight: 2
-                    });
-                    
-                    const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
-                      "<b style='color:#1e293b; font-size:14px;'>" + eventoTexto + "</b><br/>" +
-                      "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>" + nivel + "</span><br/>" +
-                      "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
-                      "<b>Vigencia:</b><br/>" +
-                      "Desde: " + inicioFormat + " hs<br/>" +
-                      "Hasta: " + finFormat + " hs</div>" +
-                      "</div>";
-
-                    polygon.bindPopup(popupHTML);
-                    layerGroup.addLayer(polygon);
-                    
-                    alertasDibujadas++;
+                    polyCoords.push(coords);
                   }
-                } catch (e) {
-                  // Silencioso
-                }
+
+                  const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
+                    "<b style='color:#1e293b; font-size:14px;'>" + eventoTexto + "</b><br/>" +
+                    "<span style='display:inline-block; margin:6px 0; padding:3px 8px; border-radius:4px; background:" + color + "; color:white; font-size:11px; font-weight:bold;'>" + nivel + "</span><br/>" +
+                    "<div style='background:#f1f5f9; padding:8px; border-radius:4px; font-size:12px; color:#475569; margin-top:4px;'>" +
+                    "<b>Vigencia:</b><br/>" +
+                    "Desde: " + inicioFormat + " hs<br/>" +
+                    "Hasta: " + finFormat + " hs</div>" +
+                    "</div>";
+
+                  allParsedAlerts.push({
+                    link: link,
+                    priority: weight,
+                    color: color,
+                    rawStart: dateStartStr,
+                    rawEnd: dateEndStr,
+                    polygons: polyCoords,
+                    popupHTML: popupHTML,
+                    tableData: {
+                      id: link, evento: eventoTexto, nivel: nivel, color: color,
+                      inicio: inicioFormat, fin: finFormat, provincias: provsEncontradas
+                    }
+                  });
+                } catch (e) {}
               }
               
-              window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
-
-              statusDiv.innerText = "Mapa listo: " + alertasDibujadas + " zonas bajo alerta";
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+              // Una vez parseado todo, dibujamos
+              renderMap();
 
             } catch (error) {
               statusDiv.innerText = "Reintentando conexión...";
@@ -358,18 +374,33 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
         </h2>
       </div>
 
-      {/* ÁREA DE TRABAJO (Blank State) */}
       <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
         Incluye herramientas de monitoreo meteorológico en tiempo real, seguimiento de riesgo hídrico, visualización de alertas, monitoreo de redes sociales y búsqueda de noticias relacionadas a fenómenos hidrometeorológicos.
       </div>
 
-      {/* SECCIÓN DE MAPAS METEOROLÓGICOS Y ALERTAS (Side by Side / Vertical Argentina) */}
+      {/* SECCIÓN DE MAPAS METEOROLÓGICOS Y ALERTAS */}
       <div className="mb-10">
-        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-            Monitoreo en Tiempo Real y Alertas Oficiales
-          </h3>
+        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+          <div className="flex items-center gap-3">
+            <img src="/storm.png" alt="Ícono Lluvia" className="w-9 h-9 object-contain" />
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              Monitoreo en Tiempo Real y Alertas Oficiales
+            </h3>
+          </div>
+          
+          {/* NUEVO: Control de Fechas */}
+          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+            <label htmlFor="fechaFiltro" className="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              Filtro de Fecha:
+            </label>
+            <input
+              id="fechaFiltro"
+              type="date"
+              value={fechaFiltro}
+              onChange={(e) => setFechaFiltro(e.target.value)}
+              className="text-sm bg-white border border-gray-300 rounded px-2 py-1 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         {/* Grilla principal de mapas */}
@@ -377,7 +408,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
           
           {/* COLUMNA 1: MAPA DE LLUVIA (WINDY) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                Mapa de Lluvia y Radar (Windy)
@@ -403,7 +433,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               ></iframe>
             </div>
 
-            {/* Instrucciones movidas al subtítulo */}
             <div className="p-3 bg-blue-50/40 border-t border-blue-100 text-[11px] text-gray-600 leading-relaxed">
               Permite visualizar fenómenos en tiempo real. Puede cambiar el modelo o la capa activa (Lluvia, Nubes, Viento, Radar) presionando el menú en la esquina superior derecha. Los colores inferiores indican intensidad.
             </div>
@@ -411,7 +440,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
           {/* COLUMNA 2: MAPA DE ALERTAS (SMN) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            {/* Cabecera con altura fija (h-12) para alinear perfectamente con el otro mapa */}
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                 Alertas del Servicio Meteorológico Nacional
@@ -420,6 +448,7 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
             
             <div className="w-full h-[600px] relative bg-gray-100">
               <iframe 
+                ref={mapIframeRef}
                 srcDoc={smnMapHtml} 
                 className="w-full h-full border-0 absolute inset-0" 
                 title="Mapa CAP SMN" 
@@ -427,7 +456,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               />
             </div>
 
-            {/* Leyenda movida al subtítulo para mantener la simetría con Windy */}
             <div className="p-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider justify-center">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
@@ -450,12 +478,15 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
 
         </div>
 
-        {/* TABLA DE RESUMEN OPERATIVO SMN (Ubicada debajo de los dos mapas) */}
+        {/* TABLA DE RESUMEN OPERATIVO SMN */}
         <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Resumen Operativo de Eventos Activos por Provincia
             </h3>
+            <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded text-gray-600 font-bold">
+              Mostrando eventos para: {fechaFiltro.split('-').reverse().join('/')}
+            </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-600">
@@ -470,7 +501,7 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                 {alertasTabla.length === 0 ? (
                   <tr>
                     <td colSpan="3" className="px-4 py-8 text-center text-gray-500 text-xs">
-                      Analizando reportes oficiales o sin novedades críticas en el territorio.
+                      Analizando reportes oficiales o sin novedades críticas en la fecha seleccionada.
                     </td>
                   </tr>
                 ) : (
@@ -509,7 +540,7 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
         </div>
       </div>
 
-      {/* 2. RIESGO HÍDRICO (Launchers) - Desplegable */}
+      {/* 2. RIESGO HÍDRICO (Launchers) */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsRiesgoOpen(!isRiesgoOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -548,7 +579,7 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
         )}
       </div>
 
-      {/* 3. REPORTES EN TIEMPO REAL (Feeds) - Desplegable */}
+      {/* 3. REPORTES EN TIEMPO REAL (Feeds) */}
       <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsRedesOpen(!isRedesOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -569,32 +600,25 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
               <p className="text-[12px] text-gray-600 leading-relaxed mb-4"> Deben usarse para obtener un panorama rápido de la situación y saber dónde orientar las búsquedas concretas de información. </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
-                {/* Tiempo en Arg */}
                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
                   <span className="text-[11px] font-bold text-gray-600 mb-2 uppercase">Tiempo en Arg</span>
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FTiempoenArg&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
-
-                {/* Pronostico Extendido */}
                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
                   <span className="text-[11px] font-bold text-gray-600 mb-2 uppercase">Pronóstico Extendido</span>
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fpronosticoextendido&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
-
-                {/* METRA */}
                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
                   <span className="text-[11px] font-bold text-gray-600 mb-2 uppercase">METRA Argentina</span>
                   <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FMETRArgentina&tabs=timeline&width=340&height=500&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" width="100%" height="500" style={{ border: "none", overflow: "hidden" }} scrolling="no" frameBorder="0" allowFullScreen={true}></iframe>
                 </div>
-
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* 4. NOTICIAS (Launchers) - Desplegable */}
+      {/* 4. NOTICIAS (Launchers) */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
           <div className="flex items-center gap-3">
@@ -610,15 +634,11 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
         {isNoticiasOpen && (
           <div className="p-4 border-t border-gray-200 bg-white">
             <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-              
-              {/* Descripción del funcionamiento (ARRIBA) */}
               <div className="mb-5 pb-4 border-b border-gray-200">
                 <p className="text-[13px] text-gray-600 leading-relaxed">
                   Este buscador automatizado utiliza operadores booleanos avanzados (como la palabra <code>OR</code>). Esto permite agrupar múltiples términos similares en una sola consulta estructurada, expandiendo la cobertura a cualquier noticia que incluya al menos una de estas palabras clave. Todas las solicitudes filtran cronológicamente resultados de las <strong>últimas 24 horas</strong>.
                 </p>
               </div>
-
-              {/* Grilla de Botones y Transparencia (AL MEDIO) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                 {busquedas.map((item, index) => (
                   <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between shadow-sm">
@@ -639,8 +659,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                   </div>
                 ))}
               </div>
-
-              {/* Input de Ubicación (ABAJO DE TODO) */}
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#ee3224] shadow-sm">
                 <label htmlFor="ubicacion" className="text-sm font-bold text-gray-700 whitespace-nowrap">
                   📍 Ubicación a monitorear:
@@ -654,7 +672,6 @@ console.log("RSS PREVIEW:", rssText.substring(0,300));
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ee3224] focus:border-transparent transition-all"
                 />
               </div>
-
             </div>
           </div>
         )}
