@@ -6,12 +6,18 @@ export default function HidrometeorologiaPage() {
   const [isRedesOpen, setIsRedesOpen] = useState(false);
   const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
   
-  // Estado para el filtro de fechas (inicia en hoy, ajustado a huso horario local)
-  const [fechaFiltro, setFechaFiltro] = useState(() => {
+  // Opciones dinámicas para el dropdown (Hoy, Mañana, Pasado)
+  const opcionesFecha = Array.from({ length: 3 }).map((_, i) => {
     const d = new Date();
+    d.setDate(d.getDate() + i);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().split('T')[0];
+    const iso = d.toISOString().split('T')[0];
+    const label = i === 0 ? "Hoy" : i === 1 ? "Mañana" : "Pasado mañana";
+    return { value: iso, label: `${label} (${iso.split('-').reverse().join('/')})` };
   });
+
+  // Inicia en "Hoy"
+  const [fechaFiltro, setFechaFiltro] = useState(opcionesFecha[0].value);
 
   const mapIframeRef = useRef(null);
   
@@ -28,16 +34,20 @@ export default function HidrometeorologiaPage() {
         payload.forEach(alerta => {
           alerta.provincias.forEach(prov => {
             if (!agrupado[prov]) agrupado[prov] = {};
-            const llaveUnica = `${alerta.nivel}-${alerta.evento}`;
-            if (!agrupado[prov][llaveUnica]) {
+            // Usamos solo el nombre del evento (ej: "Tormentas") para agrupar
+            const llaveUnica = alerta.evento; 
+            
+            // Si no existe, o si la nueva alerta tiene MAYOR prioridad que la guardada, la reemplazamos
+            if (!agrupado[prov][llaveUnica] || alerta.prioridad > agrupado[prov][llaveUnica].prioridad) {
               agrupado[prov][llaveUnica] = { ...alerta };
             }
           });
         });
 
+        // Convertimos a arreglo y ordenamos las alertas internamente (Roja > Naranja > Amarilla)
         const tablaFinal = Object.keys(agrupado).sort().map(prov => ({
           provincia: prov,
-          alertas: Object.values(agrupado[prov])
+          alertas: Object.values(agrupado[prov]).sort((a, b) => b.prioridad - a.prioridad)
         }));
 
         setAlertasTabla(tablaFinal);
@@ -105,9 +115,8 @@ export default function HidrometeorologiaPage() {
           }).addTo(map);
 
           var layerGroup = L.layerGroup().addTo(map);
-          var allParsedAlerts = []; // Almacena todas las alertas para filtrarlas localmente
+          var allParsedAlerts = []; 
           
-          // Obtener fecha actual al iniciar
           var d = new Date();
           d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
           var currentDateStr = d.toISOString().slice(0, 10); 
@@ -188,7 +197,7 @@ export default function HidrometeorologiaPage() {
                 var polygon = L.polygon(coords, {
                   color: alerta.color,
                   fillColor: alerta.color,
-                  fillOpacity: 0.6, // Ligeramente más opaco para destacar las prioritarias
+                  fillOpacity: 0.6,
                   weight: 2
                 });
                 polygon.bindPopup(alerta.popupHTML);
@@ -250,7 +259,7 @@ export default function HidrometeorologiaPage() {
               const capsDescargados = await Promise.all(fetchPromises);
               statusDiv.innerText = "Procesando e indexando mapas...";
 
-              allParsedAlerts = []; // Limpiamos caché anterior
+              allParsedAlerts = []; 
 
               for (const capData of capsDescargados) {
                 if (!capData) continue;
@@ -261,9 +270,6 @@ export default function HidrometeorologiaPage() {
                   const expiresNodes = capDoc.getElementsByTagName("expires");
                   const dateEndStr = expiresNodes.length > 0 ? expiresNodes[0].textContent : null;
                   
-                  // Desactivado: Filtro estricto de expiración se reemplazó por el filtro matemático dinámico
-                  // if (dateEndStr && new Date(dateEndStr) < new Date()) continue; 
-
                   const onsetNodes = capDoc.getElementsByTagName("onset");
                   const effectiveNodes = capDoc.getElementsByTagName("effective");
                   const dateStartStr = onsetNodes.length > 0 ? onsetNodes[0].textContent : (effectiveNodes.length > 0 ? effectiveNodes[0].textContent : null);
@@ -285,7 +291,7 @@ export default function HidrometeorologiaPage() {
 
                   let color = '#eab308';
                   let nivel = 'Alerta Amarilla';
-                  let weight = 2; // Prioridad visual
+                  let weight = 2; 
                   const evtLower = eventoTexto.toLowerCase();
 
                   if (severity === 'Extreme') { 
@@ -310,7 +316,6 @@ export default function HidrometeorologiaPage() {
 
                   if (provsEncontradas.length === 0) provsEncontradas.push("Varias / Área Nacional");
 
-                  // Parsear polígonos
                   const polygonNodes = capDoc.getElementsByTagName("polygon");
                   let polyCoords = [];
                   for (let j = 0; j < polygonNodes.length; j++) {
@@ -342,13 +347,13 @@ export default function HidrometeorologiaPage() {
                     popupHTML: popupHTML,
                     tableData: {
                       id: link, evento: eventoTexto, nivel: nivel, color: color,
-                      inicio: inicioFormat, fin: finFormat, provincias: provsEncontradas
+                      inicio: inicioFormat, fin: finFormat, provincias: provsEncontradas,
+                      prioridad: weight // IMPORTANTE: Enviamos la prioridad a React
                     }
                   });
                 } catch (e) {}
               }
               
-              // Una vez parseado todo, dibujamos
               renderMap();
 
             } catch (error) {
@@ -388,18 +393,23 @@ export default function HidrometeorologiaPage() {
             </h3>
           </div>
           
-          {/* NUEVO: Control de Fechas */}
+          {/* NUEVO: Control de Fechas Dropdown */}
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
             <label htmlFor="fechaFiltro" className="text-xs font-bold text-gray-600 uppercase tracking-wide">
               Filtro de Fecha:
             </label>
-            <input
+            <select
               id="fechaFiltro"
-              type="date"
               value={fechaFiltro}
               onChange={(e) => setFechaFiltro(e.target.value)}
-              className="text-sm bg-white border border-gray-300 rounded px-2 py-1 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              className="text-sm bg-white border border-gray-300 rounded px-2 py-1 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              {opcionesFecha.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -410,7 +420,7 @@ export default function HidrometeorologiaPage() {
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
             <div className="bg-gray-50 px-4 h-12 border-b border-gray-200 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-               Mapa de Lluvia y Radar (Windy)
+                Mapa de Lluvia y Radar (Windy)
               </span>
               <a 
                 href="https://www.youtube.com/watch?v=RhNgxywKjw4" 
@@ -516,7 +526,7 @@ export default function HidrometeorologiaPage() {
                         <tr key={`${grupo.provincia}-${index}`} className="hover:bg-gray-50/80 transition-colors">
                           <td className="px-4 py-3 pl-6">
                             <span 
-                              className="px-2.5 py-1 rounded-md text-white text-[11px] font-bold whitespace-nowrap" 
+                              className="px-2.5 py-1 rounded-md text-white text-[11px] font-bold whitespace-nowrap shadow-sm" 
                               style={{ backgroundColor: alerta.color }}
                             >
                               {alerta.nivel}
