@@ -179,31 +179,44 @@ export default function HidrometeorologiaPage() {
             var datosParaTabla = [];
             var linksListados = new Set();
             var alertasDibujadas = 0;
+            
+            // Set para registrar qué polígonos exactos ya fueron pintados
+            var poligonosDibujados = new Set(); 
 
-            // 1. Filtrar por fecha seleccionada
             var filtered = allParsedAlerts.filter(a => isAlertActiveOnDate(a.rawStart, a.rawEnd, currentDateStr));
 
-            // 2. Ordenar por prioridad (para que el naranja/rojo se dibuje ÚLTIMO y tape al amarillo)
-            filtered.sort((a, b) => a.priority - b.priority);
+            // Ordenar por prioridad DESCENDENTE (Roja=4 primero, luego Naranja=3, Amarilla=2)
+            // De esta forma procesamos y dibujamos las más graves primero.
+            filtered.sort((a, b) => b.priority - a.priority);
 
-            // 3. Dibujar
             filtered.forEach(alerta => {
-              if (!linksListados.has(alerta.link)) {
+              let dibujoAlMenosUnPoligono = false;
+
+              alerta.polygons.forEach((coords, idx) => {
+                const polyStringIdentity = alerta.polyStrings[idx];
+
+                // Si este polígono geográfico exacto NO fue pintado aún por una alerta más grave...
+                if (!poligonosDibujados.has(polyStringIdentity)) {
+                  poligonosDibujados.add(polyStringIdentity);
+                  dibujoAlMenosUnPoligono = true;
+
+                  var polygon = L.polygon(coords, {
+                    color: alerta.color,
+                    fillColor: alerta.color,
+                    fillOpacity: 0.7,
+                    weight: 2
+                  });
+                  polygon.bindPopup(alerta.popupHTML);
+                  layerGroup.addLayer(polygon);
+                  alertasDibujadas++;
+                }
+              });
+
+              // Solo enviar a la tabla si la alerta tiene al menos una zona visible que no fue tapada
+              if (dibujoAlMenosUnPoligono && !linksListados.has(alerta.link)) {
                 linksListados.add(alerta.link);
                 datosParaTabla.push(alerta.tableData);
               }
-
-              alerta.polygons.forEach(coords => {
-                var polygon = L.polygon(coords, {
-                  color: alerta.color,
-                  fillColor: alerta.color,
-                  fillOpacity: 0.6,
-                  weight: 2
-                });
-                polygon.bindPopup(alerta.popupHTML);
-                layerGroup.addLayer(polygon);
-                alertasDibujadas++;
-              });
             });
 
             window.parent.postMessage({ type: 'CAP_DATA_READY', payload: datosParaTabla }, '*');
@@ -225,6 +238,10 @@ export default function HidrometeorologiaPage() {
               const targetUrl = 'https://ssl.smn.gob.ar/feeds/CAP/rss_alertaCAP_nuevo.xml?nocache=' + timestamp;
               
               const rssRes = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+              
+              // Verificación temprana por si el proxy falla
+              if (!rssRes.ok) throw new Error("Fallo en el proxy: " + rssRes.status);
+              
               const rssText = await rssRes.text();
               const parser = new DOMParser();
               const rssDoc = parser.parseFromString(rssText, "application/xml");
@@ -318,6 +335,8 @@ export default function HidrometeorologiaPage() {
 
                   const polygonNodes = capDoc.getElementsByTagName("polygon");
                   let polyCoords = [];
+                  let polyStrings = []; // Guardamos la cadena exacta para evitar duplicados topográficos
+                  
                   for (let j = 0; j < polygonNodes.length; j++) {
                     const polyString = polygonNodes[j].textContent.trim();
                     if (!polyString) continue;
@@ -326,6 +345,7 @@ export default function HidrometeorologiaPage() {
                       return [parseFloat(partes[0]), parseFloat(partes[1])];
                     });
                     polyCoords.push(coords);
+                    polyStrings.push(polyString);
                   }
 
                   const popupHTML = "<div style='font-family:sans-serif; min-width:180px;'>" +
@@ -344,11 +364,12 @@ export default function HidrometeorologiaPage() {
                     rawStart: dateStartStr,
                     rawEnd: dateEndStr,
                     polygons: polyCoords,
+                    polyStrings: polyStrings,
                     popupHTML: popupHTML,
                     tableData: {
                       id: link, evento: eventoTexto, nivel: nivel, color: color,
                       inicio: inicioFormat, fin: finFormat, provincias: provsEncontradas,
-                      prioridad: weight // IMPORTANTE: Enviamos la prioridad a React
+                      prioridad: weight 
                     }
                   });
                 } catch (e) {}
@@ -357,7 +378,9 @@ export default function HidrometeorologiaPage() {
               renderMap();
 
             } catch (error) {
-              statusDiv.innerText = "Reintentando conexión...";
+              console.error("Detalle del error de conexión:", error);
+              statusDiv.innerText = "Error de conexión (Ver consola)";
+              setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
             }
           }
 
