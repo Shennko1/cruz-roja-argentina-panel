@@ -1,376 +1,359 @@
-"use client";
-import React, { useState } from "react";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import {
+  Activity, ExternalLink, MapPin, Search, ChevronDown, 
+  Info, Loader2, Target, X, Orbit, List, Mountain, Volcano
+} from 'lucide-react';
+
+// --- INTERFACES PARA MAPAMONITOR ---
+interface SismoINPRES {
+  id: string;
+  fecha: string;
+  magnitud: string;
+  profundidad: string;
+  epicentro: string;
+  lat: number;
+  lon: number;
+}
+
+interface BusquedaNoticia {
+  titulo: string;
+  terminos: string;
+}
+
+// Carga dinámica del mapa global de tu proyecto
+const MapaMonitorDinamico = dynamic(() => import('../../MapaMonitor'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center bg-[#e5e3df] dark:bg-slate-900 transition-colors">
+      <Loader2 className="animate-spin text-slate-400 dark:text-slate-500" size={32} />
+    </div>
+  )
+});
 
 export default function GeofisicaPage() {
-  const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
-  const [isNoticiasOpen, setIsNoticiasOpen] = useState(false);
-  const [ubicacion, setUbicacion] = useState("Argentina");
+  // Estados de carga y datos para el mapa nativo
+  const [sismos, setSismos] = useState<SismoINPRES[]>([]);
+  const [loadingSismos, setLoadingSismos] = useState<boolean>(true);
 
-  const busquedas = [
-    {
-      titulo: "Sismos y Terremotos",
-      terminos: '(sismo OR terremoto OR temblor)'
-    },
-    {
-      titulo: "Deslizamientos y Derrumbes",
-      terminos: '(deslizamiento OR alud OR derrumbe)'
-    },
-    {
-      titulo: "Actividad Volcánica",
-      terminos: '(volcán OR erupción OR ceniza)'
-    }
+  // Estados de colapso/desplegables
+  const [isMapOpen, setIsMapOpen] = useState<boolean>(true);
+  const [isSegemarOpen, setIsSegemarOpen] = useState<boolean>(false);
+  const [isNoticiasOpen, setIsNoticiasOpen] = useState<boolean>(false);
+
+  // Estados para el buscador de noticias
+  const [inputValue, setInputValue] = useState("");
+  const [localidades, setLocalidades] = useState<string[]>([]);
+
+  // Búsquedas dinámicas de noticias de impacto
+  const busquedas: BusquedaNoticia[] = [
+    { titulo: "Sismos y Terremotos", terminos: '(sismo OR terremoto OR temblor)' },
+    { titulo: "Deslizamientos y Derrumbes", terminos: '(deslizamiento OR alud OR derrumbe OR aluvión)' },
+    { titulo: "Actividad Volcánica", terminos: '(volcán OR erupción OR ceniza OR "pluma de humo")' }
   ];
 
-  const generarUrlGoogleNews = (terminos) => {
-    const ubicacionFinal = ubicacion.trim() !== "" ? `${ubicacion.trim()} ` : "";
-    const query = `${ubicacionFinal}${terminos} when:24h`; 
-    return `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=es-419&gl=AR&ceid=AR%3Aes-419`;
+  // Fetch de sismos para el MapaMonitorDinamico
+  useEffect(() => {
+    const cargarSismos = async () => {
+      try {
+        setLoadingSismos(true);
+        const proxyUrl = '/api/smn?url='; // Reutilizamos tu proxy
+        const resSismos = await fetch(proxyUrl + encodeURIComponent('http://contenidos.inpres.gob.ar/formatos/sentidos.xml'));
+        const textSismos = await resSismos.text();
+        const parser = new DOMParser();
+        const xmlSismos = parser.parseFromString(textSismos, "application/xml");
+        const items = xmlSismos.getElementsByTagName("item");
+        
+        const sismosProcesados: SismoINPRES[] = Array.from(items).map(item => ({
+          id: item.getElementsByTagName("idSismo")[0]?.textContent || crypto.randomUUID(),
+          fecha: item.getElementsByTagName("pubDate")[0]?.textContent || '',
+          magnitud: item.getElementsByTagName("magnitude")[0]?.textContent || '0',
+          profundidad: item.getElementsByTagName("depth")[0]?.textContent || '',
+          epicentro: item.getElementsByTagName("epiczone")[0]?.textContent || '',
+          lat: parseFloat(item.getElementsByTagName("latitude")[0]?.textContent || '0'),
+          lon: parseFloat(item.getElementsByTagName("longitude")[0]?.textContent || '0')
+        }));
+        setSismos(sismosProcesados);
+      } catch (e) {
+        console.error("Error cargando sismos del INPRES", e);
+      } finally {
+        setLoadingSismos(false);
+      }
+    };
+
+    cargarSismos();
+    const interval = setInterval(cargarSismos, 300000); // Refresco cada 5 mins
+    return () => clearInterval(interval);
+  }, []);
+
+  // Controladores del Buscador de Noticias
+  const handleAddLocalidad = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputValue.trim() !== '') {
+      e.preventDefault();
+      if (!localidades.includes(inputValue.trim())) {
+        setLocalidades([...localidades, inputValue.trim()]);
+      }
+      setInputValue('');
+    }
   };
 
-  const mapHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-      <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; background: #f8fafc; }
-        #map { width: 100%; height: 100vh; z-index: 1; }
-        .loading { 
-          position: absolute; 
-          top: 20px; left: 50%; 
-          transform: translateX(-50%); 
-          z-index: 1000; 
-          background: rgba(255, 255, 255, 0.95); 
-          padding: 10px 20px; 
-          border-radius: 30px; 
-          font-weight: bold; 
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-          font-size: 12px; 
-          color: #1e293b;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border: 1px solid #e2e8f0;
-        }
-        .leaflet-tooltip.custom-tooltip {
-          background: white;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          border-radius: 8px;
-          padding: 8px 12px;
-        }
-      </style>
-    </head>
-    <body>
-      <div id="loading" class="loading">Sincronizando XML...</div>
-      <div id="map"></div>
-      
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          var map = L.map('map').setView([-38.4161, -63.6167], 4);
-          
-          L.tileLayer('https://wms.ign.gob.ar/geoserver/gwc/service/tms/1.0.0/mapabase_gris@EPSG%3A3857@png/{z}/{x}/{-y}.png', {
-            minZoom: 1, maxZoom: 20,
-            attribution: 'IGN | INPRES'
-          }).addTo(map);
+  const removeLocalidad = (locToRemove: string) => {
+    setLocalidades(localidades.filter(loc => loc !== locToRemove));
+  };
 
-          L.tileLayer.wms('https://wms.ign.gob.ar/geoserver/ows?', {
-            layers: 'provincia,capa_capitales',
-            format: 'image/png',
-            transparent: true,
-            opacity: 0.6
-          }).addTo(map);
-
-          var layerGroup = L.layerGroup().addTo(map);
-
-          const DIAS_LIMITE = 7; 
-          const meses = { 'Jan':0, 'Feb':1, 'Mar':2, 'Apr':3, 'May':4, 'Jun':5, 'Jul':6, 'Aug':7, 'Sep':8, 'Oct':9, 'Nov':10, 'Dec':11 };
-
-          async function cargarSismos() {
-            const statusDiv = document.getElementById('loading');
-            try {
-              statusDiv.style.display = 'block';
-              statusDiv.innerText = "Obteniendo datos del INPRES...";
-              layerGroup.clearLayers();
-              
-              const res = await fetch('/api/inpres');
-              if (!res.ok) throw new Error("Fallo al conectar con el servidor proxy.");
-              
-              const xmlText = await res.text();
-              
-              if (xmlText.trim().startsWith("<!DOCTYPE") || xmlText.trim().startsWith("<html")) {
-                 throw new Error("El proxy devolvió un HTML en lugar de XML.");
-              }
-
-              const parser = new DOMParser();
-              const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-              
-              const parseError = xmlDoc.getElementsByTagName("parsererror");
-              if (parseError.length > 0) throw new Error("Error en la estructura del XML del INPRES");
-
-              const items = xmlDoc.getElementsByTagName("item");
-              let sismosCargados = 0;
-              const ahora = new Date();
-
-              for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                
-                const latNode = item.getElementsByTagName("latitude")[0];
-                const lonNode = item.getElementsByTagName("longitude")[0];
-                const magNode = item.getElementsByTagName("magnitude")[0];
-                const dateNode = item.getElementsByTagName("pubDate")[0];
-                const provNode = item.getElementsByTagName("province")[0];
-                const depthNode = item.getElementsByTagName("depth")[0];
-
-                if (latNode && lonNode) {
-                  const lat = parseFloat(latNode.textContent.trim());
-                  const lon = parseFloat(lonNode.textContent.trim());
-                  const mag = magNode ? parseFloat(magNode.textContent.trim()) : NaN;
-                  const dateStr = dateNode ? dateNode.textContent.trim() : "Fecha desconocida";
-                  const prov = provNode ? provNode.textContent.trim() : "";
-                  const depth = depthNode ? depthNode.textContent.trim() : "";
-
-                  if (!isNaN(lat) && !isNaN(lon)) {
-                    let sismoFecha = new Date();
-                    const parts = dateStr.split(' ');
-                    
-                    if(parts.length >= 3) {
-                       const day = parseInt(parts[0]);
-                       const monthStr = parts[1];
-                       const timeParts = parts[2].split(':');
-                       if(timeParts.length === 2 && meses[monthStr] !== undefined) {
-                         sismoFecha = new Date(ahora.getFullYear(), meses[monthStr], day, parseInt(timeParts[0]), parseInt(timeParts[1]));
-                         if (sismoFecha > ahora) sismoFecha.setFullYear(sismoFecha.getFullYear() - 1);
-                       }
-                    }
-
-                    let mostrarSismo = true;
-                    if (!isNaN(sismoFecha.getTime())) {
-                      const diferenciaDias = (ahora - sismoFecha) / (1000 * 60 * 60 * 24);
-                      if (diferenciaDias > DIAS_LIMITE) mostrarSismo = false;
-                    }
-
-                    if (mostrarSismo) {
-                      let color = '#3b82f6'; // Azul (< 3)
-                      let radius = 6;
-                      if (mag >= 3 && mag < 4.5) { color = '#eab308'; radius = 10; } // Amarillo
-                      if (mag >= 4.5 && mag < 6) { color = '#f97316'; radius = 14; } // Naranja
-                      if (mag >= 6) { color = '#ef4444'; radius = 18; } // Rojo
-
-                      const marker = L.circleMarker([lat, lon], {
-                        radius: radius,
-                        fillColor: color,
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                      });
-
-                      const tooltipHTML = "<div style='font-family:sans-serif; text-align:left; min-width:160px;'>" +
-                                          "<div style='background:" + color + "; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; display:inline-block; margin-bottom:6px;'>" +
-                                          "Magnitud: " + (isNaN(mag) ? 'N/D' : mag) + "</div>" +
-                                          (prov ? "<br/><span style='font-size:11px; font-weight:bold; color:#1e293b;'>📍 " + prov + "</span>" : "") +
-                                          (depth ? "<br/><span style='font-size:11px; color:#475569;'>Profundidad: " + depth + "</span>" : "") +
-                                          "<br/><span style='font-size:11px; color:#475569; font-weight:bold;'>" + dateStr + "</span>" +
-                                          "</div>";
-                      
-                      marker.bindTooltip(tooltipHTML, {
-                        direction: 'top',
-                        className: 'custom-tooltip',
-                        offset: [0, -10]
-                      });
-                      
-                      layerGroup.addLayer(marker);
-                      sismosCargados++;
-                    }
-                  }
-                }
-              }
-              
-              if (sismosCargados > 0) {
-                statusDiv.innerText = "Actualizado (" + sismosCargados + " recientes)";
-                setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-              } else {
-                statusDiv.innerText = "No hay sismos en los últimos " + DIAS_LIMITE + " días";
-              }
-            } catch(e) {
-              console.error("Fallo al cargar INPRES:", e);
-              statusDiv.innerText = "Error cargando datos. Reintentando en breve...";
-              setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
-            }
-          }
-
-          cargarSismos();
-          setInterval(cargarSismos, 300000); // 5 minutos
-        });
-      </script>
-    </body>
-    </html>
-  `;
+  const generarUrlGoogleNews = (terminos: string) => {
+    const locsQuery = localidades.length > 0 
+      ? ` AND (${localidades.map(l => `"${l}"`).join(' OR ')})` 
+      : '';
+    const query = `${terminos}${locsQuery}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=nws&tbs=qdr:d,sbd:1`;
+  };
 
   return (
-    // Se ajustó p-6 a p-3 sm:p-6 para celulares
-    <div className="bg-white p-3 sm:p-6 rounded-xl border border-gray-200 shadow-sm font-sans">
+    <main className="max-w-[1920px] mx-auto p-4 md:p-6 bg-[#f5f6f8] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       
-      {/* CABECERA */}
-      <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-800">
-          Sismos y Geofísica
-        </h2>
-      </div>
-  
-      {/* ÁREA DE TRABAJO */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 mb-8">
-        Incluye herramientas de detección de sismos en tiempo real, lista de sismos sentidos por INPRES, mapa de sismos registrados por el Centro Sismológico Euro-Mediterráneo (EMSC) mediante VolcanoDiscovery, y búsqueda dinámica de noticias para corroborar incidentes en el territorio.
-      </div>
-  
-      {/* 1. MAPAS OFICIALES INPRES */}
-      <div className="mb-10">
+      {/* ENCABEZADO DE LA CONSOLA */}
+      <div className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+            <Orbit className="text-purple-600 dark:text-purple-500" size={28} />
+            Geofísica y Sismos
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Consola táctica de monitoreo telúrico, alertas del INPRES y actividad volcánica regional.</p>
+        </div>
         
-        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
-          <img src="/geo.png" alt="Ícono Sismo" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
-          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-            Reporte Oficial INPRES
-          </h3>
+        {/* Lanzador INPRES */}
+        <div className="flex shrink-0">
+          <a 
+            href="https://www.inpres.gob.ar/desktop/" 
+            target="_blank" 
+            rel="noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors"
+          >
+            <Target size={14} className="text-purple-600 dark:text-purple-400" /> Registro Oficial INPRES ↗
+          </a>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* PROCEDIMIENTO OPERATIVO ESTÁNDAR (SOP) */}
+      <section className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-4 md:p-5 transition-colors">
+        <h2 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest mb-3 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-1.5">
+          <Info size={14} className="text-purple-600 dark:text-purple-500" /> Procedimiento Operativo Estándar (SOP)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded border border-slate-100 dark:border-slate-800">
+            <span className="font-bold text-slate-800 dark:text-slate-200 block mb-1">1. Detección Local (INPRES)</span>
+            Monitorear el Visor SIG Nativo y la tabla operativa para identificar sismos sentidos recientes. Atender especialmente eventos con magnitud superior a 4.5 ML.
+          </div>
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded border border-slate-100 dark:border-slate-800">
+            <span className="font-bold text-slate-800 dark:text-slate-200 block mb-1">2. Detección Geológica (SEGEMAR)</span>
+            Consultar la plataforma SIGAM y el OAVV para cruzar actividad sísmica con riesgo geológico y alertas de emisión de ceniza volcánica (impacto aerocomercial).
+          </div>
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded border border-slate-100 dark:border-slate-800">
+            <span className="font-bold text-slate-800 dark:text-slate-200 block mb-1">3. Verificación Comunitaria</span>
+            Ante un evento de magnitud moderada/fuerte, utilizar el Buscador de Noticias para detectar daños colaterales (derrumbes, interrupción de servicios).
+          </div>
+        </div>
+      </section>
+
+      {/* BUSCADOR DE NOTICIAS PRIORITARIO */}
+      <section className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden transition-colors">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-colors">
+          <Search size={18} className="text-emerald-600 dark:text-emerald-500" />
+          <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Buscador de Noticias (Últimas 24h)</h2>
+        </div>
+        <div className="p-4 md:p-5 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
           
-          {/* LADO IZQUIERDO: Mapa Sismos Sentidos (XML) - Altura responsive */}
-          <div className="flex flex-col h-[400px] lg:h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
-            <div className="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Sismos Sentidos</h3>
-                <p className="text-[10px] text-gray-500 uppercase">Datos XML - Últimos 7 Días</p>
-              </div>
-            </div>
-            <div className="flex-grow relative z-0">
-              <iframe 
-                srcDoc={mapHtml}
-                className="w-full h-full border-0 absolute inset-0" 
-                title="Mapa INPRES XML" 
-                sandbox="allow-scripts allow-same-origin"
-              ></iframe>
+          <div className="w-full lg:w-1/3 flex flex-col gap-2">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Añadir Localidades (Presione Enter)
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleAddLocalidad}
+              placeholder="Ej: Mendoza, San Juan, Neuquén..."
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+            />
+            <div className="flex flex-wrap gap-2 mt-1">
+              {localidades.length === 0 && (
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">Búsqueda general. Ingrese localidad para filtrar.</span>
+              )}
+              {localidades.map((loc, idx) => (
+                <span key={idx} className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2 py-1 rounded text-xs font-semibold transition-colors">
+                  {loc}
+                  <button onClick={() => removeLocalidad(loc)} className="hover:text-emerald-900 dark:hover:text-emerald-200 focus:outline-none">
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* LADO DERECHO: Iframe Web INPRES - Altura responsive */}
-          <div className="flex flex-col h-[400px] lg:h-[600px] border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-gray-50">
-            <div className="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Registro Web Oficial</h3>
-                <p className="text-[10px] text-gray-500 uppercase">INPRES.gob.ar</p>
-              </div>
-            </div>
-            <div className="flex-grow relative z-0 bg-white">
-              <iframe 
-                src="https://www.inpres.gob.ar/desktop/" 
-                className="w-full h-full border-0 absolute inset-0" 
-                title="Sitio INPRES Oficial" 
-              />
-            </div>
+          <div className="w-full lg:w-2/3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {busquedas.map((item, index) => (
+              <a 
+                key={index}
+                href={generarUrlGoogleNews(item.terminos)} 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex justify-between items-center w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700/80 hover:shadow-sm transition-all group"
+              >
+                <div className="flex flex-col overflow-hidden w-full pr-2">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">{item.titulo}</span>
+                  <span className="text-[9px] text-slate-400 dark:text-slate-500 truncate mt-0.5" title={item.terminos}>
+                    Filtros: {item.terminos}
+                  </span>
+                </div>
+                <ExternalLink size={16} className="text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 shrink-0 transition-colors" />
+              </a>
+            ))}
           </div>
 
         </div>
-      </div>
+      </section>
 
-      {/* 2. MONITOREO GLOBAL (Volcano Discovery) */}
-      <div className="mb-6 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <button onClick={() => setIsVolcanoOpen(!isVolcanoOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+      {/* MAPAS OPERATIVOS SÍSMICOS (COLAPSABLE) */}
+      <section className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden transition-colors">
+        <button 
+          onClick={() => setIsMapOpen(!isMapOpen)} 
+          className="w-full flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
           <div className="flex items-center gap-3">
-            <img src="/media.png" alt="Ícono Global" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Monitoreo Global (VolcanoDiscovery)
+            <Target size={20} className="text-purple-600 dark:text-purple-500" />
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+              Monitor de Sismos Oficial (INPRES)
             </h3>
           </div>
-          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isVolcanoOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <ChevronDown size={18} className={`text-slate-500 transition-transform duration-300 ${isMapOpen ? 'rotate-180' : ''}`} />
         </button>
-        {isVolcanoOpen && (
-          <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-r-lg shadow-sm">
-              <h4 className="text-sm font-bold text-yellow-800 mb-1">Aviso sobre esta fuente:</h4>
-              <p className="text-[12px] text-yellow-700 leading-relaxed">
-                VolcanoDiscovery es una plataforma <strong>complementaria y extraoficial</strong>. La cartografía base está en inglés y contiene topónimos no reconocidos oficialmente (ej. Islas Malvinas). Además, la magnitud o ubicación exacta puede diferir de los registros oficiales del INPRES. Utilizar solo como referencia rápida.
-              </p>
-            </div>
 
-            {/* Altura responsive: 350px en celu, 500px en PC */}
-            <div className="w-full h-[350px] lg:h-[500px] rounded-xl overflow-hidden border border-gray-200 relative bg-gray-50">
-              <iframe 
-                src="https://earthquakes.volcanodiscovery.com/map/Argentina?L=8" 
-                className="w-full h-full border-0 absolute inset-0" 
-                title="Volcano Discovery Map" 
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 3. NOTICIAS */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <button onClick={() => setIsNoticiasOpen(!isNoticiasOpen)} className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-          <div className="flex items-center gap-3">
-            <img src="/news.png" alt="Ícono Noticias" className="w-9 h-9 object-contain" onError={(e) => e.target.style.display='none'} />
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              Buscador de Noticias
-            </h3>
-          </div>
-          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isNoticiasOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {isNoticiasOpen && (
-          <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="bg-gray-50 p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+        {isMapOpen && (
+          <div className="p-4 md:p-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              <div className="mb-5 pb-4 border-b border-gray-200">
-                <p className="text-[13px] text-gray-600 leading-relaxed">
-                  Buscador automatizado para corroborar incidentes en el territorio a través de medios digitales. Todas las solicitudes filtran cronológicamente resultados de los <strong>últimas 24 hs.</strong>.
-                </p>
+              {/* LADO IZQUIERDO: Mapa Nativo */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors h-[650px]">
+                <div className="bg-slate-50 dark:bg-slate-800/50 px-4 h-11 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Activity size={14} className="text-purple-500" /> Visor SIG (Capa Geofísica Activa)
+                  </span>
+                  {loadingSismos && (
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Sincronizando INPRES...</span>
+                  )}
+                </div>
+                <div className="w-full flex-1 bg-[#e5e3df] dark:bg-slate-800 relative z-0 isolate transition-colors">
+                  <MapaMonitorDinamico 
+                    alertasSMN={[]} 
+                    eventos={[]} 
+                    sismos={sismos} 
+                    capasIniciales={['sismos']}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                {busquedas.map((item, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between shadow-sm">
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-800 mb-2">{item.titulo}</h4>
-                      <p className="text-[11px] text-gray-500 font-mono bg-gray-50 p-2 rounded border border-gray-100 mb-4 break-words">
-                        {item.terminos}
-                      </p>
-                    </div>
-                    <a 
-                      href={generarUrlGoogleNews(item.terminos)} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="w-full text-center bg-white border border-gray-300 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 text-gray-700 text-xs font-bold py-2 px-4 rounded-md transition-all shadow-sm"
-                    >
-                      Buscar en Google News
-                    </a>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 border-l-4 border-l-[#3b82f6] shadow-sm">
-                <label htmlFor="ubicacion" className="text-sm font-bold text-gray-700 whitespace-nowrap">
-                  📍 Ubicación a monitorear:
-                </label>
-                <input
-                  id="ubicacion"
-                  type="text"
-                  value={ubicacion}
-                  onChange={(e) => setUbicacion(e.target.value)}
-                  placeholder="Ej: Mendoza, San Juan, Neuquén..."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
-                />
+              {/* LADO DERECHO: Iframe Listado INPRES */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors h-[650px]">
+                <div className="bg-slate-50 dark:bg-slate-800/50 px-4 h-11 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <List size={14} className="text-purple-500" /> Listado Oficial (INPRES.gob.ar)
+                  </span>
+                  <a href="https://www.inpres.gob.ar/desktop/" target="_blank" rel="noreferrer" className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold flex items-center gap-1 transition-colors">
+                    Abrir Externo <ExternalLink size={10} />
+                  </a>
+                </div>
+                <div className="w-full flex-1 bg-white dark:bg-slate-200 relative z-0 transition-colors">
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src="https://www.inpres.gob.ar/desktop/" 
+                    frameBorder="0" 
+                    title="Listado INPRES" 
+                    allowFullScreen 
+                  />
+                </div>
               </div>
 
             </div>
+
           </div>
         )}
-      </div>
+      </section>
 
-    </div>
+      {/* MONITOREO GEOLÓGICO Y VOLCÁNICO (SEGEMAR) (COLAPSABLE) */}
+      <section className="mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden transition-colors">
+        <button 
+          onClick={() => setIsSegemarOpen(!isSegemarOpen)}
+          className="w-full flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Mountain size={20} className="text-amber-600 dark:text-amber-500" />
+            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              Monitoreo Geológico y Volcánico (SEGEMAR)
+            </h2>
+          </div>
+          <ChevronDown size={18} className={`text-slate-500 transition-transform duration-300 ${isSegemarOpen ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {isSegemarOpen && (
+          <div className="flex flex-col border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 gap-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* LADO IZQUIERDO: Mapa SIGAM */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors h-[650px]">
+                <div className="bg-slate-50 dark:bg-slate-800/50 px-4 h-11 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <MapPin size={14} className="text-amber-500" /> Sistema de Información Geológica (SIGAM)
+                  </span>
+                  <a href="https://sigam.segemar.gov.ar/mapstore/#/viewer/480" target="_blank" rel="noreferrer" className="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold flex items-center gap-1 transition-colors">
+                    Abrir Externo <ExternalLink size={10} />
+                  </a>
+                </div>
+                <div className="w-full flex-1 bg-white dark:bg-slate-950 relative z-0 transition-colors">
+                  <iframe 
+                    src="https://sigam.segemar.gov.ar/mapstore/#/viewer/480" 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    title="Visor SIGAM"
+                    className="dark:opacity-90 transition-opacity" 
+                  />
+                </div>
+              </div>
+
+              {/* LADO DERECHO: Observatorio Volcánico (OAVV) */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors h-[650px]">
+                <div className="bg-slate-50 dark:bg-slate-800/50 px-4 h-11 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Volcano size={14} className="text-amber-500" /> Vigilancia Volcánica (OAVV)
+                  </span>
+                  <a href="https://oavv.segemar.gob.ar/monitoreo-volcanico/" target="_blank" rel="noreferrer" className="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold flex items-center gap-1 transition-colors">
+                    Abrir Externo <ExternalLink size={10} />
+                  </a>
+                </div>
+                <div className="w-full flex-1 bg-white dark:bg-slate-200 relative z-0 transition-colors">
+                  <iframe 
+                    src="https://oavv.segemar.gob.ar/monitoreo-volcanico/" 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    title="Observatorio Volcánico"
+                    className="transition-opacity" 
+                  />
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+      </section>
+
+    </main>
   );
 }
